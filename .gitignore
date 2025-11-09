@@ -1,3 +1,5 @@
 .env
 /generated-pepes
 /node_modules
+/input_dir
+/complete-cards

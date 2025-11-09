@@ -1,12 +1,11 @@
 {
-  "name": "unified-card-generator",
-  "version": "1.0.0",
-  "description": "Complete pipeline for generating SURF trading cards from images",
+  "name": "surf-card-generator",
+  "version": "2.0.0",
+  "description": "Complete card generation pipeline: images, colors, themes, data, and metadata",
   "type": "module",
-  "main": "unifiedCardGenerator.mjs",
   "scripts": {
     "generate": "node unifiedCardGenerator.mjs",
-    "test": "node unifiedCardGenerator.mjs",
+    "generate-complete": "node completeCardPipeline.mjs",
     "test-colors": "node testColorExtraction.mjs"
   },
   "keywords": [
@@ -14,17 +13,18 @@
     "nft",
     "metadata",
     "gemini",
+    "imagen",
     "ai",
     "card-generator"
   ],
   "author": "SURF FINANCE STUDIOS",
   "license": "MIT",
   "dependencies": {
-    "@ai-sdk/google": "^1.2.22",
-    "@google/genai": "^1.29.0",
-    "ai": "^4.3.19",
-    "dotenv": "^16.6.1",
-    "node-vibrant": "^4.0.3"
+    "@google/genai": "^0.2.0",
+    "@ai-sdk/google": "^1.0.10",
+    "ai": "^4.0.0",
+    "dotenv": "^16.4.5",
+    "node-vibrant": "^4.0.0"
   },
   "engines": {
     "node": ">=18.0.0"
