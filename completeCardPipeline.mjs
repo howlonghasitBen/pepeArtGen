@@ -1,5 +1,5 @@
-// completeCardPipeline.mjs - Full end-to-end card generation
-// Generates: Image → Colors → Flavor Text → Theme → Card Data → Metadata
+// completeCardPipeline.mjs - MEGA VERSION
+// 50+ FLAVOR TEXT STYLES for maximum diversity!
 
 import { GoogleGenAI } from "@google/genai";
 import { google } from "@ai-sdk/google";
@@ -23,23 +23,14 @@ async function initVibrant() {
 // ==================== CONFIGURATION ====================
 
 const CONFIG = {
-  // Output directories
   outputDir: "./complete-cards",
   imageOutputDir: "./complete-cards/generated-images",
-
-  // API settings
   imagenModel: "imagen-4.0-generate-001",
   geminiModel: "gemini-2.5-flash-lite",
-
-  // Generation settings
-  numberOfCards: 10, // How many cards to generate
-  imageAspectRatio: "16:9", // "1:1", "16:9", "9:16", "4:3", "3:4"
-
-  // Rate limiting (ms between API calls)
-  delayBetweenImages: 5000, // 5 seconds between image generation
-  delayBetweenFlavorText: 4000, // 4 seconds between flavor text
-
-  // Card data defaults
+  numberOfCards: 10,
+  imageAspectRatio: "16:9",
+  delayBetweenImages: 5000,
+  delayBetweenFlavorText: 4000,
   baseUrl: "https://howlonghasitben.github.io/surf-works",
   externalUrl: "https://howlonghasitben.github.io/surf-works",
   imageBasePath: "/images/card-images",
@@ -53,20 +44,294 @@ const CONFIG = {
     manaCost: "2",
     terrain: "?",
   },
-
-  // Image generation prompts
-  promptMode: "dnd-monsters", // "dnd-monsters" or "custom"
-  customPrompts: [
-    // If promptMode is "custom", use these prompts
-    "A mystical dragon warrior in epic fantasy art style",
-    "A cyberpunk hacker with neon aesthetics",
-    "An ancient forest guardian made of living wood",
-  ],
-
-  // Prompt template for D&D monsters
+  promptMode: "dnd-monsters",
+  customPrompts: [],
   imagePromptTemplate: (monsterName) =>
     `A high-resolution, detailed, digital art illustration of a ${monsterName} monster in the distinct visual style of "Pepe the Frog". Complete Background.`,
 };
+
+// ==================== 50+ FLAVOR TEXT STYLES ====================
+
+const FLAVOR_TEXT_STYLES = [
+  // CLASSIC STYLES
+  {
+    name: "Prophecy",
+    prompt:
+      "Write a cryptic prophecy or ancient legend about this creature in 1-2 sentences. Use poetic, archaic language that speaks of destiny and doom.",
+  },
+  {
+    name: "Battle Moment",
+    prompt:
+      "Describe this creature's most terrifying or awe-inspiring moment in battle. Make it visceral, dramatic, and unforgettable in 1-2 sentences.",
+  },
+  {
+    name: "Survivor's Tale",
+    prompt:
+      "Write what a survivor whispered about encountering this creature. Make it haunting, personal, and filled with dread in 1-2 sentences.",
+  },
+  {
+    name: "Origin Myth",
+    prompt:
+      "Describe this creature's origin or the myth surrounding its creation. Use mystical, cosmic language in 1-2 sentences.",
+  },
+  {
+    name: "Last Words",
+    prompt:
+      "Write the last coherent words or thoughts of someone who faced this creature. Make it chilling and powerful in 1-2 sentences.",
+  },
+  {
+    name: "Sensory Horror",
+    prompt:
+      "Describe the sound, smell, or feeling of this creature's presence approaching. Use sensory, atmospheric language that builds dread in 1-2 sentences.",
+  },
+  {
+    name: "Ancient Text",
+    prompt:
+      "Write what ancient texts or forbidden scrolls say about this creature. Use formal, ominous language in 1-2 sentences.",
+  },
+  {
+    name: "Domain",
+    prompt:
+      "Describe this creature's lair or domain and what fate befalls those who enter. Make it atmospheric and foreboding in 1-2 sentences.",
+  },
+  {
+    name: "Reputation",
+    prompt:
+      "Describe this creature's reputation among warriors, scholars, or common folk. Use dramatic, legend-building language in 1-2 sentences.",
+  },
+  {
+    name: "Moment Before",
+    prompt:
+      "Describe the moment just before this creature strikes or reveals itself. Build tension and atmosphere in 1-2 sentences.",
+  },
+
+  // POETIC & LITERARY
+  {
+    name: "Dark Poetry",
+    prompt:
+      "Write a dark, poetic verse about this creature using metaphor and symbolism. Make it lyrical and haunting in 1-2 sentences.",
+  },
+  {
+    name: "Haiku-Like",
+    prompt:
+      "Write an extremely concise, zen-like observation about this creature that captures its essence. Use sparse, impactful language in 1 sentence.",
+  },
+  {
+    name: "Epic Verse",
+    prompt:
+      "Write in the style of epic poetry - grand, sweeping, and mythological. Make this creature sound legendary in 1-2 sentences.",
+  },
+  {
+    name: "Nursery Rhyme Dark",
+    prompt:
+      "Write like a twisted children's rhyme or folk song about this creature. Make it deceptively simple but deeply unsettling in 1-2 sentences.",
+  },
+
+  // PERSPECTIVE SHIFTS
+  {
+    name: "First Person Encounter",
+    prompt:
+      "Write from the perspective of someone who encountered this creature using 'I'. Make it immediate and personal in 1-2 sentences.",
+  },
+  {
+    name: "Scholar's Notes",
+    prompt:
+      "Write as a scholar's research note or field observation about this creature. Be clinical but hint at underlying dread in 1-2 sentences.",
+  },
+  {
+    name: "Victim's Diary",
+    prompt:
+      "Write as a diary entry from someone who doesn't yet know they're doomed. Make it naive with dark irony in 1-2 sentences.",
+  },
+  {
+    name: "Soldier's Report",
+    prompt:
+      "Write as a military or guard report about an encounter with this creature. Use formal language that barely contains the horror in 1-2 sentences.",
+  },
+
+  // EMOTIONAL TONES
+  {
+    name: "Melancholy",
+    prompt:
+      "Write with sadness and loss about this creature - perhaps it was once something else, or its existence is tragic. Make it mournful in 1-2 sentences.",
+  },
+  {
+    name: "Primal Fear",
+    prompt:
+      "Tap into instinctual, evolutionary fear. Describe how this creature triggers ancient survival responses in 1-2 sentences.",
+  },
+  {
+    name: "Awe and Wonder",
+    prompt:
+      "Write with reverence and wonder at this creature's existence. Make it sublime and magnificent, even if dangerous, in 1-2 sentences.",
+  },
+  {
+    name: "Rage and Fury",
+    prompt:
+      "Describe the sheer fury and rage this creature embodies or inspires. Make it violent and intense in 1-2 sentences.",
+  },
+  {
+    name: "Madness",
+    prompt:
+      "Write as if the observer is losing their sanity from witnessing this creature. Make it fractured and unhinged in 1-2 sentences.",
+  },
+
+  // TEMPORAL PERSPECTIVES
+  {
+    name: "Ancient Past",
+    prompt:
+      "Set this in the deep past - describe this creature as it was in the world's youth. Use primordial, timeless language in 1-2 sentences.",
+  },
+  {
+    name: "Distant Future",
+    prompt:
+      "Write from far future archaeologists or historians looking back at this creature. Make it mysterious and half-forgotten in 1-2 sentences.",
+  },
+  {
+    name: "Eternal Present",
+    prompt:
+      "Describe this creature as something that exists outside time, always has and always will. Make it cosmic and inevitable in 1-2 sentences.",
+  },
+  {
+    name: "Countdown",
+    prompt:
+      "Write about the time before this creature arrives or awakens. Build dread through inevitability in 1-2 sentences.",
+  },
+
+  // FOLKLORE & CULTURE
+  {
+    name: "Folk Warning",
+    prompt:
+      "Write as a folk saying or traditional warning parents tell children. Make it sound like wisdom passed down for generations in 1-2 sentences.",
+  },
+  {
+    name: "Bardic Tale",
+    prompt:
+      "Write as a fragment from a bard's tale or traveling minstrel's song. Make it dramatic and performative in 1-2 sentences.",
+  },
+  {
+    name: "Religious Text",
+    prompt:
+      "Write as if from a holy book or religious scripture about this creature. Use reverent, formal language in 1-2 sentences.",
+  },
+  {
+    name: "Tribal Legend",
+    prompt:
+      "Write as an oral tradition passed down in remote villages. Make it sound like ancestral wisdom in 1-2 sentences.",
+  },
+
+  // ENVIRONMENTAL
+  {
+    name: "Nature's Balance",
+    prompt:
+      "Describe this creature's role in the natural order - predator, scavenger, or force of nature itself. Use ecological language in 1-2 sentences.",
+  },
+  {
+    name: "Environmental Warning",
+    prompt:
+      "Write about how the environment changes when this creature is near - weather, plants, animals. Make it ominous in 1-2 sentences.",
+  },
+  {
+    name: "Ecosystem Horror",
+    prompt:
+      "Describe this creature as an invasive force or corruption in nature. Make it feel like an infection spreading in 1-2 sentences.",
+  },
+
+  // PHILOSOPHICAL
+  {
+    name: "Existential Dread",
+    prompt:
+      "Write about the existential questions or cosmic insignificance this creature represents. Make it philosophically disturbing in 1-2 sentences.",
+  },
+  {
+    name: "Metaphysical",
+    prompt:
+      "Describe this creature as a concept or idea made flesh - death, hunger, fear itself. Make it abstract and profound in 1-2 sentences.",
+  },
+  {
+    name: "Moral Parable",
+    prompt:
+      "Write this creature as a lesson or moral warning about hubris, greed, or other failings. Make it sound like a cautionary tale in 1-2 sentences.",
+  },
+
+  // VISCERAL
+  {
+    name: "Body Horror",
+    prompt:
+      "Focus on the physical wrongness or grotesque nature of this creature. Make it viscerally disturbing without being graphic in 1-2 sentences.",
+  },
+  {
+    name: "Predator's Perspective",
+    prompt:
+      "Write from the creature's viewpoint as it hunts. Make it alien and predatory in 1-2 sentences.",
+  },
+  {
+    name: "Anatomical Study",
+    prompt:
+      "Write as a medical or scientific description that reveals something deeply wrong. Keep it clinical but unsettling in 1-2 sentences.",
+  },
+
+  // SOCIAL & POLITICAL
+  {
+    name: "Weapon of War",
+    prompt:
+      "Describe this creature as something used or created for war. Write about the consequences in 1-2 sentences.",
+  },
+  {
+    name: "Symbol of Power",
+    prompt:
+      "Write about how rulers or factions use this creature as their symbol or weapon. Make it about dominance in 1-2 sentences.",
+  },
+  {
+    name: "Revolutionary Symbol",
+    prompt:
+      "Describe this creature as an icon of rebellion or change. Make it about upheaval and transformation in 1-2 sentences.",
+  },
+
+  // UNIQUE FORMATS
+  {
+    name: "Wanted Poster",
+    prompt:
+      "Write as a bounty notice or wanted poster for this creature. Use formal announcements style but reveal the danger in 1-2 sentences.",
+  },
+  {
+    name: "Field Guide Entry",
+    prompt:
+      "Write as a naturalist's guide entry that starts factual but reveals something terrifying. Keep it informative but ominous in 1-2 sentences.",
+  },
+  {
+    name: "Auction Description",
+    prompt:
+      "Write as if this creature is being sold or traded. Make the commerce of it darkly ironic in 1-2 sentences.",
+  },
+  {
+    name: "Museum Placard",
+    prompt:
+      "Write as a museum display text about this creature. Be informative but hint at suppressed knowledge in 1-2 sentences.",
+  },
+  {
+    name: "Ship's Log",
+    prompt:
+      "Write as a captain's log or travel journal entry encountering this creature. Use dated, formal language that grows more desperate in 1-2 sentences.",
+  },
+
+  // MYSTERY
+  {
+    name: "Conspiracy",
+    prompt:
+      "Write about hidden knowledge or cover-ups regarding this creature. Make it paranoid and secretive in 1-2 sentences.",
+  },
+  {
+    name: "Lost Civilization",
+    prompt:
+      "Connect this creature to a vanished empire or forgotten people. Make it archaeological and mysterious in 1-2 sentences.",
+  },
+  {
+    name: "Sealed Knowledge",
+    prompt:
+      "Write about why information about this creature was deliberately hidden or destroyed. Make it about forbidden truth in 1-2 sentences.",
+  },
+];
 
 // ==================== D&D API ====================
 
@@ -75,9 +340,8 @@ const DND_API_URL = "https://www.dnd5eapi.co/api/monsters";
 async function getRandomMonsterName() {
   console.log(`  🎲 Fetching D&D monster...`);
   const response = await fetch(DND_API_URL);
-  if (!response.ok) {
+  if (!response.ok)
     throw new Error(`Failed to fetch monster list: ${response.statusText}`);
-  }
   const data = await response.json();
   const randomIndex = Math.floor(Math.random() * data.results.length);
   const monsterName = data.results[randomIndex].name;
@@ -90,7 +354,6 @@ async function getRandomMonsterName() {
 async function generateImage(ai, prompt, filename) {
   console.log(`  🎨 Generating image...`);
   console.log(`  📝 Prompt: "${prompt.substring(0, 60)}..."`);
-
   try {
     const response = await ai.models.generateImages({
       model: CONFIG.imagenModel,
@@ -101,15 +364,11 @@ async function generateImage(ai, prompt, filename) {
         aspectRatio: CONFIG.imageAspectRatio,
       },
     });
-
     if (response.generatedImages?.[0]?.image?.imageBytes) {
       const base64Data = response.generatedImages[0].image.imageBytes;
       const buffer = Buffer.from(base64Data, "base64");
-
-      // Save image
       const imagePath = path.join(CONFIG.imageOutputDir, `${filename}.png`);
       await fs.writeFile(imagePath, buffer);
-
       console.log(`  ✅ Image saved: ${filename}.png`);
       return imagePath;
     } else {
@@ -174,52 +433,13 @@ async function generateFlavorText(imagePath) {
     const imageBuffer = await fs.readFile(imagePath);
     const base64Image = imageBuffer.toString("base64");
 
-    // Randomly select a flavor text style for variety
-    const styles = [
-      {
-        name: "Prophecy",
-        prompt: "Write a cryptic prophecy or ancient legend about this creature in 1-2 sentences. Use poetic, archaic language that speaks of destiny and doom.",
-      },
-      {
-        name: "Battle Moment",
-        prompt: "Describe this creature's most terrifying or awe-inspiring moment in battle. Make it visceral, dramatic, and unforgettable in 1-2 sentences.",
-      },
-      {
-        name: "Survivor's Tale",
-        prompt: "Write what a survivor whispered about encountering this creature. Make it haunting, personal, and filled with dread in 1-2 sentences.",
-      },
-      {
-        name: "Origin Myth",
-        prompt: "Describe this creature's origin or the myth surrounding its creation. Use mystical, cosmic language in 1-2 sentences.",
-      },
-      {
-        name: "Last Words",
-        prompt: "Write the last coherent words or thoughts of someone who faced this creature. Make it chilling and powerful in 1-2 sentences.",
-      },
-      {
-        name: "Sensory Horror",
-        prompt: "Describe the sound, smell, or feeling of this creature's presence approaching. Use sensory, atmospheric language that builds dread in 1-2 sentences.",
-      },
-      {
-        name: "Ancient Text",
-        prompt: "Write what ancient texts or forbidden scrolls say about this creature. Use formal, ominous language in 1-2 sentences.",
-      },
-      {
-        name: "Domain",
-        prompt: "Describe this creature's lair or domain and what fate befalls those who enter. Make it atmospheric and foreboding in 1-2 sentences.",
-      },
-      {
-        name: "Reputation",
-        prompt: "Describe this creature's reputation among warriors, scholars, or common folk. Use dramatic, legend-building language in 1-2 sentences.",
-      },
-      {
-        name: "Moment Before",
-        prompt: "Describe the moment just before this creature strikes or reveals itself. Build tension and atmosphere in 1-2 sentences.",
-      },
-    ];
-
-    const randomStyle = styles[Math.floor(Math.random() * styles.length)];
-    console.log(`  📖 Style: ${randomStyle.name}`);
+    const randomStyle =
+      FLAVOR_TEXT_STYLES[Math.floor(Math.random() * FLAVOR_TEXT_STYLES.length)];
+    console.log(
+      `  📖 Style: ${randomStyle.name} (${
+        FLAVOR_TEXT_STYLES.findIndex((s) => s === randomStyle) + 1
+      }/${FLAVOR_TEXT_STYLES.length})`
+    );
 
     const { text } = await generateText({
       model: google(CONFIG.geminiModel),
@@ -263,9 +483,7 @@ Generate the flavor text now (NO quotation marks, NO explanation, just the flavo
       ],
     });
 
-    // Clean up any quotation marks that might have been added
     const cleanText = text.replace(/^["']|["']$/g, "").trim();
-
     console.log(`  ✅ Flavor text: "${cleanText.substring(0, 60)}..."`);
     return cleanText;
   } catch (error) {
@@ -295,15 +513,9 @@ function generateCardTheme(palette, cardName) {
     name: cardName,
     colors: colors,
     theme: {
-      background: `radial-gradient(circle at 20% 30%, ${vibrantRgba} 0%, transparent 50%),
-         radial-gradient(circle at 80% 70%, ${darkVibrantRgba} 0%, transparent 40%),
-         radial-gradient(circle at 60% 10%, ${lightVibrantRgba} 0%, transparent 45%),
-         linear-gradient(145deg, ${colors.darkMuted}, ${colors.darkVibrant}, ${colors.muted})`,
-
+      background: `radial-gradient(circle at 20% 30%, ${vibrantRgba} 0%, transparent 50%), radial-gradient(circle at 80% 70%, ${darkVibrantRgba} 0%, transparent 40%), radial-gradient(circle at 60% 10%, ${lightVibrantRgba} 0%, transparent 45%), linear-gradient(145deg, ${colors.darkMuted}, ${colors.darkVibrant}, ${colors.muted})`,
       header: {
-        background: `radial-gradient(circle at 25% 50%, ${vibrantRgba} 0%, transparent 60%),
-           radial-gradient(circle at 75% 50%, ${mutedRgba} 0%, transparent 60%),
-           linear-gradient(135deg, ${colors.vibrant}, ${colors.muted}, ${colors.lightVibrant}, ${colors.vibrant}, ${colors.darkVibrant})`,
+        background: `radial-gradient(circle at 25% 50%, ${vibrantRgba} 0%, transparent 60%), radial-gradient(circle at 75% 50%, ${mutedRgba} 0%, transparent 60%), linear-gradient(135deg, ${colors.vibrant}, ${colors.muted}, ${colors.lightVibrant}, ${colors.vibrant}, ${colors.darkVibrant})`,
         color: getBestTextColor(colors.vibrant),
         textShadow: `2px 2px 4px rgba(0, 0, 0, 0.8), 0 0 10px ${hexToRgba(
           colors.vibrant,
@@ -314,49 +526,37 @@ function generateCardTheme(palette, cardName) {
           0.4
         )}, inset 0 min(0.25vw, 2px) 0 ${hexToRgba(colors.lightVibrant, 0.3)}`,
       },
-
       imageArea: {
-        background: `radial-gradient(circle at 30% 20%, ${vibrantRgba} 0%, transparent 45%),
-           radial-gradient(circle at 70% 80%, ${darkVibrantRgba} 0%, transparent 50%),
-           linear-gradient(145deg, ${colors.darkMuted}, ${colors.darkVibrant}, ${colors.muted})`,
+        background: `radial-gradient(circle at 30% 20%, ${vibrantRgba} 0%, transparent 45%), radial-gradient(circle at 70% 80%, ${darkVibrantRgba} 0%, transparent 50%), linear-gradient(145deg, ${colors.darkMuted}, ${colors.darkVibrant}, ${colors.muted})`,
         border: `min(0.25vw, 2px) solid ${colors.vibrant}`,
         boxShadow: `inset 0 min(0.5vw, 4px) min(1vw, 8px) rgba(0, 0, 0, 0.6), 0 0 min(2vw, 15px) ${hexToRgba(
           colors.vibrant,
           0.3
         )}`,
       },
-
       typeSection: {
-        background: `radial-gradient(circle at 30% 60%, ${vibrantRgba} 0%, transparent 55%),
-           radial-gradient(circle at 70% 60%, ${mutedRgba} 0%, transparent 55%),
-           linear-gradient(135deg, ${colors.vibrant}, ${colors.muted}, ${colors.lightVibrant}, ${colors.vibrant}, ${colors.darkVibrant})`,
+        background: `radial-gradient(circle at 30% 60%, ${vibrantRgba} 0%, transparent 55%), radial-gradient(circle at 70% 60%, ${mutedRgba} 0%, transparent 55%), linear-gradient(135deg, ${colors.vibrant}, ${colors.muted}, ${colors.lightVibrant}, ${colors.vibrant}, ${colors.darkVibrant})`,
         color: getBestTextColor(colors.vibrant),
         textShadow: `2px 2px 4px rgba(0, 0, 0, 0.8), 0 0 10px ${hexToRgba(
           colors.vibrant,
           0.6
         )}`,
       },
-
       flavorText: {
-        background: `radial-gradient(circle at 40% 30%, ${vibrantRgba} 0%, transparent 50%),
-           radial-gradient(circle at 60% 70%, ${mutedRgba} 0%, transparent 50%),
-           linear-gradient(145deg, ${colors.darkMuted}, ${colors.darkVibrant})`,
+        background: `radial-gradient(circle at 40% 30%, ${vibrantRgba} 0%, transparent 50%), radial-gradient(circle at 60% 70%, ${mutedRgba} 0%, transparent 50%), linear-gradient(145deg, ${colors.darkMuted}, ${colors.darkVibrant})`,
         color: colors.lightMuted,
         accentColor: colors.vibrant,
         border: `min(0.25vw, 2px) solid ${colors.vibrant}`,
       },
-
       bottomSection: {
         background: `linear-gradient(135deg, ${colors.darkVibrant}, ${colors.darkMuted})`,
       },
-
       stat: {
         background: hexToRgba(colors.darkVibrant, 0.8),
         border: `min(0.25vw, 2px) solid ${colors.vibrant}`,
         color: colors.lightVibrant,
         boxShadow: `0 0 min(1vw, 8px) ${hexToRgba(colors.vibrant, 0.5)}`,
       },
-
       rarity: {
         background: `linear-gradient(135deg, ${colors.vibrant}, ${colors.muted})`,
         color: getBestTextColor(colors.vibrant),
@@ -378,12 +578,10 @@ function generateCardData(cardName, filename, theme, flavorText) {
         : word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
     )
     .join("");
-
   const displayName = cardName
     .split(/[-_\s]/)
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ");
-
   const cardId = cardName.toLowerCase().replace(/[^a-z0-9]/g, "");
 
   return {
@@ -475,12 +673,9 @@ function generateMetadata(cardData, is1of1 = true) {
 
 async function saveAllOutputs(results) {
   console.log(`\n📝 Saving output files...\n`);
-
-  // Extract data
   const allThemes = results.map((r) => r.theme);
   const allCardData = results.map((r) => r.cardData);
 
-  // Save themes
   const themeObject = {};
   allThemes.forEach((t) => {
     const key = t.name
@@ -494,53 +689,48 @@ async function saveAllOutputs(results) {
     themeObject[key] = t.theme;
   });
 
-  const themeContent = `// Auto-generated themes from completeCardPipeline.mjs
-export const GENERATED_THEMES = ${JSON.stringify(themeObject, null, 2)};
-`;
-
+  const themeContent = `// Auto-generated themes from completeCardPipeline.mjs\nexport const GENERATED_THEMES = ${JSON.stringify(
+    themeObject,
+    null,
+    2
+  )};\n`;
   await fs.writeFile(
     path.join(CONFIG.outputDir, "generatedThemes.js"),
     themeContent
   );
   console.log(`✅ Saved: generatedThemes.js`);
 
-  // Save card data
-  const cardDataContent = `// Auto-generated card data from completeCardPipeline.mjs
-export const GENERATED_CARDS = ${JSON.stringify(allCardData, null, 2)};
-`;
-
+  const cardDataContent = `// Auto-generated card data from completeCardPipeline.mjs\nexport const GENERATED_CARDS = ${JSON.stringify(
+    allCardData,
+    null,
+    2
+  )};\n`;
   await fs.writeFile(
     path.join(CONFIG.outputDir, "generatedCardData.js"),
     cardDataContent
   );
   console.log(`✅ Saved: generatedCardData.js`);
 
-  // Save metadata
   const metadataDir = path.join(CONFIG.outputDir, "metadata");
   await fs.mkdir(metadataDir, { recursive: true });
 
   for (const result of results) {
     const { cardData, metadata1of1, metadataCommon } = result;
-
     await fs.writeFile(
       path.join(metadataDir, `${cardData.id}-1of1.json`),
       JSON.stringify(metadata1of1, null, 2)
     );
-
     await fs.writeFile(
       path.join(metadataDir, `${cardData.id}-common.json`),
       JSON.stringify(metadataCommon, null, 2)
     );
   }
-
   console.log(`✅ Saved: ${results.length * 2} metadata files`);
 
-  // Save flavor texts
   const flavorTextMap = {};
   results.forEach((r) => {
     flavorTextMap[r.filename] = r.cardData.flavorText;
   });
-
   await fs.writeFile(
     path.join(CONFIG.outputDir, "flavorTexts.json"),
     JSON.stringify(flavorTextMap, null, 2)
@@ -562,37 +752,29 @@ async function processOneCard(ai, vibrantInstance, cardName, index, total) {
   const filename = cardName.toLowerCase().replace(/[^a-z0-9]/g, "_");
 
   try {
-    // Step 1: Generate image
     const prompt = CONFIG.imagePromptTemplate(cardName);
     const imagePath = await generateImage(ai, prompt, filename);
-
     if (!imagePath) {
       console.log(`  ⚠️  Skipping card due to image generation failure`);
       return null;
     }
 
-    // Brief pause before color extraction
     await sleep(1000);
 
-    // Step 2: Extract colors
     const palette = await extractColors(imagePath, vibrantInstance);
     if (!palette) {
       console.log(`  ⚠️  Skipping card due to color extraction failure`);
       return null;
     }
 
-    // Step 3: Generate flavor text
     const flavorText = await generateFlavorText(imagePath);
 
-    // Step 4: Generate theme
     console.log(`  🎭 Creating theme...`);
     const theme = generateCardTheme(palette, cardName);
 
-    // Step 5: Generate card data
     console.log(`  🃏 Creating card data...`);
     const cardData = generateCardData(cardName, filename, theme, flavorText);
 
-    // Step 6: Generate metadata
     console.log(`  📝 Creating metadata...`);
     const metadata1of1 = generateMetadata(cardData, true);
     const metadataCommon = generateMetadata(cardData, false);
@@ -618,26 +800,24 @@ async function processOneCard(ai, vibrantInstance, cardName, index, total) {
 async function main() {
   console.log(`
 ╔═══════════════════════════════════════════════════════════╗
-║         🎴 COMPLETE CARD PIPELINE 🎴                      ║
-║   Image → Colors → Flavor → Theme → Data → Metadata     ║
+║      🎴 COMPLETE CARD PIPELINE - MEGA VERSION 🎴         ║
+║   50+ Flavor Text Styles for Maximum Diversity!         ║
 ╚═══════════════════════════════════════════════════════════╝
 `);
 
-  // Check API key
   if (!process.env.API_KEY) {
     console.error(`❌ ERROR: API_KEY not found in .env file`);
-    console.log(`\n💡 Create a .env file with:`);
-    console.log(`   API_KEY=your_google_ai_studio_key\n`);
+    console.log(
+      `\n💡 Create a .env file with: API_KEY=your_google_ai_studio_key\n`
+    );
     console.log(`Get your key: https://aistudio.google.com/app/apikey\n`);
     process.exit(1);
   }
 
-  // Initialize APIs
   console.log(`🔧 Initializing APIs...`);
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   console.log(`✅ GoogleGenAI initialized (Imagen + Gemini)`);
 
-  // Initialize Vibrant
   console.log(`🎨 Initializing node-vibrant...`);
   let vibrantInstance;
   try {
@@ -649,12 +829,10 @@ async function main() {
     process.exit(1);
   }
 
-  // Create output directories
   await fs.mkdir(CONFIG.outputDir, { recursive: true });
   await fs.mkdir(CONFIG.imageOutputDir, { recursive: true });
   console.log(`✅ Created output directories`);
 
-  // Get card names/prompts
   let cardNames = [];
   if (CONFIG.promptMode === "custom") {
     console.log(`\n📝 Using custom prompts (${CONFIG.customPrompts.length})`);
@@ -666,19 +844,20 @@ async function main() {
     for (let i = 0; i < CONFIG.numberOfCards; i++) {
       const monsterName = await getRandomMonsterName();
       cardNames.push(monsterName);
-      await sleep(500); // Brief pause between API calls
+      await sleep(500);
     }
   }
 
   console.log(`\n📊 Generating ${cardNames.length} complete cards`);
   console.log(
-    `⏱️  Estimated time: ~${Math.ceil((cardNames.length * 15) / 60)} minutes`
+    `🎭 Using ${FLAVOR_TEXT_STYLES.length} different flavor text styles!`
   );
-  console.log(`\n${"=".repeat(60)}`);
+  console.log(
+    `⏱️  Estimated time: ~${Math.ceil((cardNames.length * 15) / 60)} minutes\n`
+  );
 
   const allResults = [];
 
-  // Process each card
   for (let i = 0; i < cardNames.length; i++) {
     const cardName = cardNames[i];
     const result = await processOneCard(
@@ -693,7 +872,6 @@ async function main() {
       allResults.push(result);
     }
 
-    // Rate limiting between cards
     if (i < cardNames.length - 1) {
       const delay = Math.max(
         CONFIG.delayBetweenImages,
@@ -709,7 +887,6 @@ async function main() {
     process.exit(1);
   }
 
-  // Save all outputs
   await saveAllOutputs(allResults);
 
   console.log(`
@@ -717,37 +894,25 @@ ${"=".repeat(60)}
 
 🎉 SUCCESS! Generated ${allResults.length} complete cards!
 
+🎭 Flavor Text Diversity: ${FLAVOR_TEXT_STYLES.length} unique styles used!
+
 📁 Output structure:
    ${CONFIG.outputDir}/
-   ├── generated-images/
-   │   ├── ${allResults[0]?.filename}.png
-   │   └── ... (${allResults.length} images)
+   ├── generated-images/ (${allResults.length} images)
    ├── generatedThemes.js
    ├── generatedCardData.js
    ├── flavorTexts.json
-   └── metadata/
-       ├── *-1of1.json (${allResults.length} files)
-       └── *-common.json (${allResults.length} files)
+   └── metadata/ (${allResults.length * 2} files)
 
-📝 Next steps:
-   1. Review generated cards in ${CONFIG.imageOutputDir}/
-   2. Check card data in generatedCardData.js
-   3. Edit any cards you want to customize
-   4. Import into your main cardData.js
-   5. Upload images and metadata for NFT minting
-
-💡 Tips:
-   - Images: ${CONFIG.imageOutputDir}/
-   - Themes: ${CONFIG.outputDir}/generatedThemes.js
-   - Cards: ${CONFIG.outputDir}/generatedCardData.js
-   - All files are ready to use!
-   - Flavor text now uses 10 different styles for variety!
+💡 MEGA VERSION Features:
+   - ${FLAVOR_TEXT_STYLES.length} different flavor text styles
+   - Massive variety in card atmosphere
+   - Every card feels completely unique!
 
 ${"=".repeat(60)}
 `);
 }
 
-// Run it
 main().catch((error) => {
   console.error(`\n❌ FATAL ERROR:`, error);
   console.error(error.stack);
