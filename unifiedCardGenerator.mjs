@@ -79,6 +79,53 @@ async function generateFlavorText(imagePath) {
     const ext = path.extname(imagePath).toLowerCase();
     const mimeType = ext === ".png" ? "image/png" : "image/jpeg";
 
+    // Randomly select a flavor text style for variety
+    const styles = [
+      {
+        name: "Prophecy",
+        prompt: "Write a cryptic prophecy or ancient legend about this creature in 1-2 sentences. Use poetic, archaic language that speaks of destiny and doom.",
+      },
+      {
+        name: "Battle Moment",
+        prompt: "Describe this creature's most terrifying or awe-inspiring moment in battle. Make it visceral, dramatic, and unforgettable in 1-2 sentences.",
+      },
+      {
+        name: "Survivor's Tale",
+        prompt: "Write what a survivor whispered about encountering this creature. Make it haunting, personal, and filled with dread in 1-2 sentences.",
+      },
+      {
+        name: "Origin Myth",
+        prompt: "Describe this creature's origin or the myth surrounding its creation. Use mystical, cosmic language in 1-2 sentences.",
+      },
+      {
+        name: "Last Words",
+        prompt: "Write the last coherent words or thoughts of someone who faced this creature. Make it chilling and powerful in 1-2 sentences.",
+      },
+      {
+        name: "Sensory Horror",
+        prompt: "Describe the sound, smell, or feeling of this creature's presence approaching. Use sensory, atmospheric language that builds dread in 1-2 sentences.",
+      },
+      {
+        name: "Ancient Text",
+        prompt: "Write what ancient texts or forbidden scrolls say about this creature. Use formal, ominous language in 1-2 sentences.",
+      },
+      {
+        name: "Domain",
+        prompt: "Describe this creature's lair or domain and what fate befalls those who enter. Make it atmospheric and foreboding in 1-2 sentences.",
+      },
+      {
+        name: "Reputation",
+        prompt: "Describe this creature's reputation among warriors, scholars, or common folk. Use dramatic, legend-building language in 1-2 sentences.",
+      },
+      {
+        name: "Moment Before",
+        prompt: "Describe the moment just before this creature strikes or reveals itself. Build tension and atmosphere in 1-2 sentences.",
+      },
+    ];
+
+    const randomStyle = styles[Math.floor(Math.random() * styles.length)];
+    console.log(`  📖 Style: ${randomStyle.name}`);
+
     const { text } = await generateText({
       model: google(CONFIG.geminiModel),
       messages: [
@@ -88,14 +135,43 @@ async function generateFlavorText(imagePath) {
             { type: "image", image: base64Image, mimeType },
             {
               type: "text",
-              text: "Generate epic trading card flavor text for this character in 1 dramatic sentence. Make it mysterious and evocative.",
+              text: `You are a master writer creating flavor text for a fantasy trading card game like Magic: The Gathering or Flesh and Blood. Study this creature carefully.
+
+${randomStyle.prompt}
+
+CRITICAL RULES:
+- Maximum 2 sentences (can be 1 long, powerful sentence)
+- NEVER use character names or made-up proper nouns
+- NEVER use quotation marks in the text
+- NEVER describe the image literally ("This creature has...", "The image shows...")
+- Focus on EMOTION, ATMOSPHERE, and VISCERAL DETAILS
+- Use evocative, poetic language that creates a mood
+- Make it MEMORABLE and QUOTABLE
+- Make the reader FEEL something (dread, awe, horror, wonder)
+
+EXCELLENT flavor text examples:
+"In the depths where light fears to tread, even the bravest whisper prayers to forgotten gods."
+"The last thing its prey sees is not fangs, but their own reflection in eyes older than kingdoms."
+"Some say it guards treasure. Those who return speak only of silence and the smell of copper."
+"Where it walks, the earth remembers pain."
+"Three things never return from the deep places: mercy, sanity, and those who seek them."
+
+BAD examples (avoid these):
+"This powerful creature dominates the battlefield."
+"An ancient being of immense power."
+"The dragon breathes fire and destroys everything."
+
+Generate the flavor text now (NO quotation marks, NO explanation, just the flavor text):`,
             },
           ],
         },
       ],
     });
 
-    return text;
+    // Clean up any quotation marks that might have been added
+    const cleanText = text.replace(/^["']|["']$/g, "").trim();
+
+    return cleanText;
   } catch (error) {
     console.error(`  ❌ Error generating flavor text:`, error.message);
     return null;
@@ -590,7 +666,7 @@ ${"=".repeat(60)}
 
 💡 Tips:
    - Each card has a unique theme based on its color palette
-   - Flavor text is AI-generated but can be customized
+   - Flavor text uses 10 different styles for variety!
    - Metadata includes both 1/1 and common versions
    - All files are ready for immediate use!
 
