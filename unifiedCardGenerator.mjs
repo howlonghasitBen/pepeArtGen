@@ -1,5 +1,5 @@
-// unifiedCardGenerator.mjs - MEGA VERSION
-// 50+ FLAVOR TEXT STYLES for maximum diversity!
+// unifiedCardGenerator.mjs - UPDATED VERSION
+// Unified Move + Flavor Text Generation based on image analysis
 // For processing EXISTING images
 
 import { google } from "@ai-sdk/google";
@@ -38,266 +38,6 @@ const CONFIG = {
   },
 };
 
-// ==================== 50+ FLAVOR TEXT STYLES ====================
-
-const FLAVOR_TEXT_STYLES = [
-  {
-    name: "Prophecy",
-    prompt:
-      "Write a cryptic prophecy or ancient legend about this creature in 1-2 sentences. Use poetic, archaic language that speaks of destiny and doom.",
-  },
-  {
-    name: "Battle Moment",
-    prompt:
-      "Describe this creature's most terrifying or awe-inspiring moment in battle. Make it visceral, dramatic, and unforgettable in 1-2 sentences.",
-  },
-  {
-    name: "Survivor's Tale",
-    prompt:
-      "Write what a survivor whispered about encountering this creature. Make it haunting, personal, and filled with dread in 1-2 sentences.",
-  },
-  {
-    name: "Origin Myth",
-    prompt:
-      "Describe this creature's origin or the myth surrounding its creation. Use mystical, cosmic language in 1-2 sentences.",
-  },
-  {
-    name: "Last Words",
-    prompt:
-      "Write the last coherent words or thoughts of someone who faced this creature. Make it chilling and powerful in 1-2 sentences.",
-  },
-  {
-    name: "Sensory Horror",
-    prompt:
-      "Describe the sound, smell, or feeling of this creature's presence approaching. Use sensory, atmospheric language that builds dread in 1-2 sentences.",
-  },
-  {
-    name: "Ancient Text",
-    prompt:
-      "Write what ancient texts or forbidden scrolls say about this creature. Use formal, ominous language in 1-2 sentences.",
-  },
-  {
-    name: "Domain",
-    prompt:
-      "Describe this creature's lair or domain and what fate befalls those who enter. Make it atmospheric and foreboding in 1-2 sentences.",
-  },
-  {
-    name: "Reputation",
-    prompt:
-      "Describe this creature's reputation among warriors, scholars, or common folk. Use dramatic, legend-building language in 1-2 sentences.",
-  },
-  {
-    name: "Moment Before",
-    prompt:
-      "Describe the moment just before this creature strikes or reveals itself. Build tension and atmosphere in 1-2 sentences.",
-  },
-  {
-    name: "Dark Poetry",
-    prompt:
-      "Write a dark, poetic verse about this creature using metaphor and symbolism. Make it lyrical and haunting in 1-2 sentences.",
-  },
-  {
-    name: "Haiku-Like",
-    prompt:
-      "Write an extremely concise, zen-like observation about this creature that captures its essence. Use sparse, impactful language in 1 sentence.",
-  },
-  {
-    name: "Epic Verse",
-    prompt:
-      "Write in the style of epic poetry - grand, sweeping, and mythological. Make this creature sound legendary in 1-2 sentences.",
-  },
-  {
-    name: "Nursery Rhyme Dark",
-    prompt:
-      "Write like a twisted children's rhyme or folk song about this creature. Make it deceptively simple but deeply unsettling in 1-2 sentences.",
-  },
-  {
-    name: "First Person Encounter",
-    prompt:
-      "Write from the perspective of someone who encountered this creature using 'I'. Make it immediate and personal in 1-2 sentences.",
-  },
-  {
-    name: "Scholar's Notes",
-    prompt:
-      "Write as a scholar's research note or field observation about this creature. Be clinical but hint at underlying dread in 1-2 sentences.",
-  },
-  {
-    name: "Victim's Diary",
-    prompt:
-      "Write as a diary entry from someone who doesn't yet know they're doomed. Make it naive with dark irony in 1-2 sentences.",
-  },
-  {
-    name: "Soldier's Report",
-    prompt:
-      "Write as a military or guard report about an encounter with this creature. Use formal language that barely contains the horror in 1-2 sentences.",
-  },
-  {
-    name: "Melancholy",
-    prompt:
-      "Write with sadness and loss about this creature - perhaps it was once something else, or its existence is tragic. Make it mournful in 1-2 sentences.",
-  },
-  {
-    name: "Primal Fear",
-    prompt:
-      "Tap into instinctual, evolutionary fear. Describe how this creature triggers ancient survival responses in 1-2 sentences.",
-  },
-  {
-    name: "Awe and Wonder",
-    prompt:
-      "Write with reverence and wonder at this creature's existence. Make it sublime and magnificent, even if dangerous, in 1-2 sentences.",
-  },
-  {
-    name: "Rage and Fury",
-    prompt:
-      "Describe the sheer fury and rage this creature embodies or inspires. Make it violent and intense in 1-2 sentences.",
-  },
-  {
-    name: "Madness",
-    prompt:
-      "Write as if the observer is losing their sanity from witnessing this creature. Make it fractured and unhinged in 1-2 sentences.",
-  },
-  {
-    name: "Ancient Past",
-    prompt:
-      "Set this in the deep past - describe this creature as it was in the world's youth. Use primordial, timeless language in 1-2 sentences.",
-  },
-  {
-    name: "Distant Future",
-    prompt:
-      "Write from far future archaeologists or historians looking back at this creature. Make it mysterious and half-forgotten in 1-2 sentences.",
-  },
-  {
-    name: "Eternal Present",
-    prompt:
-      "Describe this creature as something that exists outside time, always has and always will. Make it cosmic and inevitable in 1-2 sentences.",
-  },
-  {
-    name: "Countdown",
-    prompt:
-      "Write about the time before this creature arrives or awakens. Build dread through inevitability in 1-2 sentences.",
-  },
-  {
-    name: "Folk Warning",
-    prompt:
-      "Write as a folk saying or traditional warning parents tell children. Make it sound like wisdom passed down for generations in 1-2 sentences.",
-  },
-  {
-    name: "Bardic Tale",
-    prompt:
-      "Write as a fragment from a bard's tale or traveling minstrel's song. Make it dramatic and performative in 1-2 sentences.",
-  },
-  {
-    name: "Religious Text",
-    prompt:
-      "Write as if from a holy book or religious scripture about this creature. Use reverent, formal language in 1-2 sentences.",
-  },
-  {
-    name: "Tribal Legend",
-    prompt:
-      "Write as an oral tradition passed down in remote villages. Make it sound like ancestral wisdom in 1-2 sentences.",
-  },
-  {
-    name: "Nature's Balance",
-    prompt:
-      "Describe this creature's role in the natural order - predator, scavenger, or force of nature itself. Use ecological language in 1-2 sentences.",
-  },
-  {
-    name: "Environmental Warning",
-    prompt:
-      "Write about how the environment changes when this creature is near - weather, plants, animals. Make it ominous in 1-2 sentences.",
-  },
-  {
-    name: "Ecosystem Horror",
-    prompt:
-      "Describe this creature as an invasive force or corruption in nature. Make it feel like an infection spreading in 1-2 sentences.",
-  },
-  {
-    name: "Existential Dread",
-    prompt:
-      "Write about the existential questions or cosmic insignificance this creature represents. Make it philosophically disturbing in 1-2 sentences.",
-  },
-  {
-    name: "Metaphysical",
-    prompt:
-      "Describe this creature as a concept or idea made flesh - death, hunger, fear itself. Make it abstract and profound in 1-2 sentences.",
-  },
-  {
-    name: "Moral Parable",
-    prompt:
-      "Write this creature as a lesson or moral warning about hubris, greed, or other failings. Make it sound like a cautionary tale in 1-2 sentences.",
-  },
-  {
-    name: "Body Horror",
-    prompt:
-      "Focus on the physical wrongness or grotesque nature of this creature. Make it viscerally disturbing without being graphic in 1-2 sentences.",
-  },
-  {
-    name: "Predator's Perspective",
-    prompt:
-      "Write from the creature's viewpoint as it hunts. Make it alien and predatory in 1-2 sentences.",
-  },
-  {
-    name: "Anatomical Study",
-    prompt:
-      "Write as a medical or scientific description that reveals something deeply wrong. Keep it clinical but unsettling in 1-2 sentences.",
-  },
-  {
-    name: "Weapon of War",
-    prompt:
-      "Describe this creature as something used or created for war. Write about the consequences in 1-2 sentences.",
-  },
-  {
-    name: "Symbol of Power",
-    prompt:
-      "Write about how rulers or factions use this creature as their symbol or weapon. Make it about dominance in 1-2 sentences.",
-  },
-  {
-    name: "Revolutionary Symbol",
-    prompt:
-      "Describe this creature as an icon of rebellion or change. Make it about upheaval and transformation in 1-2 sentences.",
-  },
-  {
-    name: "Wanted Poster",
-    prompt:
-      "Write as a bounty notice or wanted poster for this creature. Use formal announcements style but reveal the danger in 1-2 sentences.",
-  },
-  {
-    name: "Field Guide Entry",
-    prompt:
-      "Write as a naturalist's guide entry that starts factual but reveals something terrifying. Keep it informative but ominous in 1-2 sentences.",
-  },
-  {
-    name: "Auction Description",
-    prompt:
-      "Write as if this creature is being sold or traded. Make the commerce of it darkly ironic in 1-2 sentences.",
-  },
-  {
-    name: "Museum Placard",
-    prompt:
-      "Write as a museum display text about this creature. Be informative but hint at suppressed knowledge in 1-2 sentences.",
-  },
-  {
-    name: "Ship's Log",
-    prompt:
-      "Write as a captain's log or travel journal entry encountering this creature. Use dated, formal language that grows more desperate in 1-2 sentences.",
-  },
-  {
-    name: "Conspiracy",
-    prompt:
-      "Write about hidden knowledge or cover-ups regarding this creature. Make it paranoid and secretive in 1-2 sentences.",
-  },
-  {
-    name: "Lost Civilization",
-    prompt:
-      "Connect this creature to a vanished empire or forgotten people. Make it archaeological and mysterious in 1-2 sentences.",
-  },
-  {
-    name: "Sealed Knowledge",
-    prompt:
-      "Write about why information about this creature was deliberately hidden or destroyed. Make it about forbidden truth in 1-2 sentences.",
-  },
-];
-
 // ==================== COLOR UTILITIES ====================
 
 function hexToRgba(hex, alpha = 1) {
@@ -326,22 +66,14 @@ function formatThemeName(themeName) {
     .trim();
 }
 
-// ==================== FLAVOR TEXT GENERATION ====================
+// ==================== MOVE + FLAVOR TEXT GENERATION ====================
 
-async function generateFlavorText(imagePath) {
+async function generateMoveAndFlavorText(imagePath) {
   try {
     const imageBuffer = await fs.readFile(imagePath);
     const base64Image = imageBuffer.toString("base64");
     const ext = path.extname(imagePath).toLowerCase();
     const mimeType = ext === ".png" ? "image/png" : "image/jpeg";
-
-    const randomStyle =
-      FLAVOR_TEXT_STYLES[Math.floor(Math.random() * FLAVOR_TEXT_STYLES.length)];
-    console.log(
-      `  📖 Style: ${randomStyle.name} (${
-        FLAVOR_TEXT_STYLES.findIndex((s) => s === randomStyle) + 1
-      }/${FLAVOR_TEXT_STYLES.length})`
-    );
 
     const { text } = await generateText({
       model: google(CONFIG.geminiModel),
@@ -352,43 +84,83 @@ async function generateFlavorText(imagePath) {
             { type: "image", image: base64Image, mimeType },
             {
               type: "text",
-              text: `You are a master writer creating flavor text for a fantasy trading card game like Magic: The Gathering or Flesh and Blood. Study this creature carefully.
+              text: `You are creating content for a fantasy trading card game. Study this creature image carefully.
 
-${randomStyle.prompt}
+Your task is to create TWO things that work together:
 
-CRITICAL RULES:
-- Maximum 2 sentences (can be 1 long, powerful sentence)
-- NEVER use character names or made-up proper nouns
-- NEVER use quotation marks in the text
-- NEVER describe the image literally ("This creature has...", "The image shows...")
-- Focus on EMOTION, ATMOSPHERE, and VISCERAL DETAILS
-- Use evocative, poetic language that creates a mood
-- Make it MEMORABLE and QUOTABLE
-- Make the reader FEEL something (dread, awe, horror, wonder)
+1. **ONE SIGNATURE MOVE** - A unique ability or attack this creature would use based on what you see
+   - Must be 2-5 words
+   - Should be evocative and memorable
+   - Should relate directly to the creature's visual appearance
+   - Examples: "Tidal Devastation", "Shadow Consumption", "Prismatic Burst", "Bone Shatter"
 
-EXCELLENT flavor text examples:
-"In the depths where light fears to tread, even the bravest whisper prayers to forgotten gods."
-"The last thing its prey sees is not fangs, but their own reflection in eyes older than kingdoms."
-"Some say it guards treasure. Those who return speak only of silence and the smell of copper."
-"Where it walks, the earth remembers pain."
-"Three things never return from the deep places: mercy, sanity, and those who seek them."
+2. **FLAVOR TEXT** - A dramatic 1-2 sentence description that:
+   - References or hints at the signature move
+   - Describes the impact/effect of witnessing this move
+   - Uses vivid, atmospheric language
+   - Makes the reader FEEL something (dread, awe, terror, wonder)
+   - NEVER uses quotation marks
+   - NEVER mentions character names or made-up proper nouns
+   - NEVER describes the image literally
 
-BAD examples (avoid these):
-"This powerful creature dominates the battlefield."
-"An ancient being of immense power."
-"The dragon breathes fire and destroys everything."
+EXCELLENT EXAMPLES:
 
-Generate the flavor text now (NO quotation marks, NO explanation, just the flavor text):`,
+Move: "Void Collapse"
+Flavor: "Where its presence lingers, light itself forgets how to exist. Those who witness the collapse speak only in whispers, if they speak at all."
+
+Move: "Crimson Requiem" 
+Flavor: "The final notes echo through battlefields long after the last warrior falls. Some say the song never truly ends."
+
+Move: "Fracture Reality"
+Flavor: "In the space between heartbeats, the world splits into a thousand reflections, each more wrong than the last."
+
+Move: "Eternal Hunger"
+Flavor: "It doesn't devour flesh or bone—it consumes the very concept of satiation, leaving only endless want."
+
+BAD EXAMPLES (avoid these):
+
+Move: "Big Attack"
+Flavor: "This powerful creature dominates the battlefield with its strength."
+
+Move: "Fire Breath" 
+Flavor: "The dragon breathes fire and burns everything."
+
+Now, respond in this EXACT format:
+MOVE: [Your 2-5 word signature move]
+FLAVOR: [Your 1-2 sentence flavor text]`,
             },
           ],
         },
       ],
     });
 
-    const cleanText = text.replace(/^["']|["']$/g, "").trim();
-    return cleanText;
+    // Parse the response
+    const lines = text.trim().split('\n');
+    let moveName = null;
+    let flavorText = null;
+
+    for (const line of lines) {
+      if (line.startsWith('MOVE:')) {
+        moveName = line.replace('MOVE:', '').trim().replace(/^["']|["']$/g, '');
+      } else if (line.startsWith('FLAVOR:')) {
+        flavorText = line.replace('FLAVOR:', '').trim().replace(/^["']|["']$/g, '');
+      }
+    }
+
+    if (!moveName || !flavorText) {
+      console.log(`  ⚠️  Failed to parse response, using defaults`);
+      return {
+        move: "Signature Move",
+        flavorText: "A legendary ability that echoes through time."
+      };
+    }
+
+    return {
+      move: moveName,
+      flavorText: flavorText
+    };
   } catch (error) {
-    console.error(`  ❌ Error generating flavor text:`, error.message);
+    console.error(`  ❌ Error generating move and flavor text:`, error.message);
     return null;
   }
 }
@@ -470,7 +242,7 @@ function generateCardTheme(palette, imageName) {
 
 // ==================== CARD DATA GENERATION ====================
 
-function generateCardData(imageName, imageExt, theme, flavorText) {
+function generateCardData(imageName, imageExt, theme, moveData) {
   const themeKey = imageName
     .split(/[-_\s]/)
     .map((word, i) =>
@@ -487,7 +259,7 @@ function generateCardData(imageName, imageExt, theme, flavorText) {
   return {
     id: imageName.toLowerCase().replace(/[^a-z0-9]/g, ""),
     name: displayName,
-    subtitle: "⟨Generated⟩",
+    subtitle: `⟨${moveData.move}⟩`,
     level: CONFIG.defaultStats.level,
     theme: themeKey,
     manaCost: [
@@ -516,9 +288,7 @@ function generateCardData(imageName, imageExt, theme, flavorText) {
       attack: CONFIG.defaultStats.attack,
       defense: CONFIG.defaultStats.defense,
     },
-    flavorText:
-      flavorText ||
-      `Auto-generated card from ${imageName}. Customize this text to make it unique!`,
+    flavorText: moveData.flavorText,
     artist: CONFIG.artist,
     rarity: "1/1",
   };
@@ -582,20 +352,25 @@ async function processImage(imagePath, vibrantInstance) {
     console.log(`  🎨 Extracting color palette...`);
     const palette = await vibrantInstance.from(imagePath).getPalette();
 
-    console.log(`  ✍️  Generating flavor text with Gemini...`);
-    const flavorText = await generateFlavorText(imagePath);
+    console.log(`  ✍️  Analyzing image and generating move + flavor text...`);
+    const moveData = await generateMoveAndFlavorText(imagePath);
 
-    if (!flavorText) {
-      console.log(`  ⚠️  Using default flavor text`);
+    if (!moveData) {
+      console.log(`  ⚠️  Using default move and flavor text`);
+      moveData = {
+        move: "Signature Move",
+        flavorText: "A legendary ability that echoes through time."
+      };
     } else {
-      console.log(`  ✅ Flavor text: "${flavorText}"`);
+      console.log(`  🎯 Move: "${moveData.move}"`);
+      console.log(`  ✅ Flavor: "${moveData.flavorText}"`);
     }
 
     console.log(`  🎭 Creating theme object...`);
     const theme = generateCardTheme(palette, imageName);
 
     console.log(`  🃏 Creating card data...`);
-    const cardData = generateCardData(imageName, imageExt, theme, flavorText);
+    const cardData = generateCardData(imageName, imageExt, theme, moveData);
 
     console.log(`  📝 Creating metadata files...`);
     const metadata1of1 = generateMetadata(cardData, true);
@@ -608,6 +383,7 @@ async function processImage(imagePath, vibrantInstance) {
       imageName,
       theme,
       cardData,
+      moveData,
       metadata1of1,
       metadataCommon,
     };
@@ -681,15 +457,21 @@ async function saveMetadataFiles(results) {
 
 async function saveFlavorTextFile(results) {
   const flavorTextMap = {};
+  const movesMap = {};
   results.forEach((r) => {
     flavorTextMap[path.basename(r.cardData.image)] = r.cardData.flavorText;
+    movesMap[path.basename(r.cardData.image)] = r.moveData.move;
   });
 
   await fs.writeFile(
     path.join(CONFIG.outputDir, "flavorTexts.json"),
     JSON.stringify(flavorTextMap, null, 2)
   );
-  console.log(`✅ Saved: ${CONFIG.outputDir}/flavorTexts.json`);
+  await fs.writeFile(
+    path.join(CONFIG.outputDir, "signatureMoves.json"),
+    JSON.stringify(movesMap, null, 2)
+  );
+  console.log(`✅ Saved: ${CONFIG.outputDir}/flavorTexts.json & signatureMoves.json`);
 }
 
 // ==================== MAIN PROCESS ====================
@@ -701,8 +483,8 @@ function sleep(ms) {
 async function main() {
   console.log(`
 ╔═══════════════════════════════════════════════════════════╗
-║      🎴 UNIFIED CARD GENERATOR - MEGA VERSION 🎴         ║
-║   50+ Flavor Text Styles for Maximum Diversity!         ║
+║       🎴 UNIFIED CARD GENERATOR - UPDATED 🎴             ║
+║   Move + Flavor Text Generated Together From Image!     ║
 ╚═══════════════════════════════════════════════════════════╝
 `);
 
@@ -754,9 +536,7 @@ async function main() {
   }
 
   console.log(`\n📊 Found ${imageFiles.length} images to process`);
-  console.log(
-    `🎭 Using ${FLAVOR_TEXT_STYLES.length} different flavor text styles!`
-  );
+  console.log(`🎯 Each card gets a signature move + connected flavor text!`);
   console.log(`⏱️  Rate limit: ${CONFIG.delayMs}ms between Gemini API calls\n`);
 
   const allResults = [];
@@ -804,18 +584,18 @@ ${"=".repeat(60)}
 
 🎉 SUCCESS! Generated ${allResults.length} complete cards!
 
-🎭 Flavor Text Diversity: ${FLAVOR_TEXT_STYLES.length} unique styles used!
+🎯 NEW SYSTEM Features:
+   - Each card analyzed by AI for visual details
+   - Signature move generated based on creature appearance
+   - Flavor text directly references the move
+   - Everything feels cohesive and connected!
 
 📁 Output files:
    ├── ${CONFIG.outputDir}/generatedThemes.js
    ├── ${CONFIG.outputDir}/generatedCardData.js
    ├── ${CONFIG.outputDir}/flavorTexts.json
+   ├── ${CONFIG.outputDir}/signatureMoves.json (NEW!)
    └── ${CONFIG.outputDir}/metadata/ (${allResults.length * 2} files)
-
-💡 MEGA VERSION Features:
-   - ${FLAVOR_TEXT_STYLES.length} different flavor text styles
-   - Massive variety in card atmosphere
-   - Every card feels completely unique!
 
 ${"=".repeat(60)}
 `);
