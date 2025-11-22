@@ -1,6 +1,6 @@
-# 🚀 Quick Start Guide
+# 🚀 Quickstart Guide
 
-Get your card generation pipeline running in 5 minutes!
+Get your first cards generated in 5 minutes!
 
 ## Step 1: Install Dependencies
 
@@ -9,77 +9,125 @@ npm install
 ```
 
 This installs:
+- `@google/genai` - Imagen API for image generation
+- `@ai-sdk/google` - Gemini API for AI text
+- `ai` - Vercel AI SDK
 - `node-vibrant` - Color palette extraction
-- `@ai-sdk/google` + `ai` - Gemini API integration
 - `dotenv` - Environment variable management
 
-## Step 2: Get Your Gemini API Key
+---
+
+## Step 2: Get API Key
 
 1. Go to https://aistudio.google.com/app/apikey
 2. Sign in with your Google account
-3. Click "Create API Key"
+3. Click **"Create API Key"**
 4. Copy your API key
+
+---
 
 ## Step 3: Configure Environment
 
-```bash
-# Copy the example file
-cp .env.example .env
+Create a `.env` file in your project root:
 
-# Edit .env and add your API key
-# GOOGLE_GENERATIVE_AI_API_KEY=your_actual_key_here
+```bash
+# For Complete Pipeline (generates images from scratch)
+API_KEY=your_google_ai_studio_key_here
+
+# For Unified Generator (processes existing images)
+GOOGLE_GENERATIVE_AI_API_KEY=your_google_ai_studio_key_here
 ```
 
-## Step 4: Prepare Your Images
+**Note:** You can use the same key for both! Just add both lines.
+
+---
+
+## Step 4: Choose Your Workflow
+
+### Option A: Generate Cards from Scratch
+
+```bash
+node completeCardPipeline.mjs
+```
+
+**What it does:**
+1. Fetches random D&D monsters (or uses your custom prompts)
+2. Generates images with Imagen
+3. Creates signature moves
+4. Writes flavor text
+5. Builds color themes
+6. Exports everything
+
+**Time:** ~15 seconds per card
+
+**Output:** Complete cards in `complete-cards/` folder
+
+---
+
+### Option B: Process Your Existing Images
 
 ```bash
 # Create input directory
 mkdir input_dir
 
-# Add your card images (copy/move your images here)
-cp /path/to/your/card-images/*.png input_dir/
+# Add your images
+cp /path/to/your/images/*.png input_dir/
+
+# Run the generator
+node unifiedCardGenerator.mjs
 ```
 
-**Supported formats**: `.jpg`, `.jpeg`, `.png`, `.gif`, `.webp`
+**What it does:**
+1. Reads your images
+2. Creates signature moves
+3. Writes flavor text
+4. Builds color themes
+5. Exports everything
 
-## Step 5: Run the Generator!
+**Time:** ~10 seconds per card
 
-```bash
-npm run generate
+**Output:** Complete card data in `generated-cards/` folder
+
+---
+
+## Step 5: Review Your Cards
+
+### Output Files
+
+**For Complete Pipeline:**
+```
+complete-cards/
+├── generated-images/
+│   ├── dragon.png
+│   ├── wizard.png
+│   └── ...
+├── generatedThemes.js
+├── generatedCardData.js
+├── flavorTexts.json
+├── signatureMoves.json
+└── metadata/
+    ├── dragon-1of1.json
+    └── dragon-common.json
 ```
 
-## What Happens Next?
-
-The script will:
-
-1. ✅ Scan `input_dir/` for images
-2. 🎨 Extract colors from each image (instant)
-3. ✍️ Generate flavor text with Gemini AI (~4 seconds per image)
-4. 🎭 Create unique themes based on colors
-5. 🃏 Build card data objects
-6. 📝 Generate NFT metadata (1/1 and common versions)
-7. 💾 Save everything to `generated-cards/`
-
-## Expected Output
-
+**For Unified Generator:**
 ```
 generated-cards/
-├── generatedThemes.js       # ← Import these into your React app
-├── generatedCardData.js     # ← Import these too
-├── flavorTexts.json         # ← Reference for flavor text
+├── generatedThemes.js
+├── generatedCardData.js
+├── flavorTexts.json
+├── signatureMoves.json
 └── metadata/
-    ├── card1-1of1.json
-    ├── card1-common.json
-    ├── card2-1of1.json
-    └── card2-common.json
+    ├── yourimage-1of1.json
+    └── yourimage-common.json
 ```
 
-## Using the Generated Files
+---
 
-### In your React app (e.g., `src/data/cardData.js`):
+## Step 6: Use in Your React App
 
 ```javascript
-// Import generated data
+// src/data/cardData.js
 import { GENERATED_THEMES } from '../../generated-cards/generatedThemes.js';
 import { GENERATED_CARDS } from '../../generated-cards/generatedCardData.js';
 
@@ -87,7 +135,6 @@ import { GENERATED_CARDS } from '../../generated-cards/generatedCardData.js';
 export const CARD_THEMES = {
   // Your existing themes
   cosmicPurple: { ... },
-  silverAgent: { ... },
   
   // Add generated themes
   ...GENERATED_THEMES,
@@ -96,138 +143,245 @@ export const CARD_THEMES = {
 export const CARDS = [
   // Your existing cards
   { id: "lillie007", ... },
-  { id: "40till5", ... },
   
   // Add generated cards
   ...GENERATED_CARDS,
 ];
 ```
 
-## Customizing Generated Cards
+---
 
-After generation, you can edit:
+## 🎯 Quick Examples
 
-### 1. Card Names & Subtitles
+### Example 1: Generate 5 Test Cards
+
+Edit `completeCardPipeline.mjs`:
 ```javascript
-// In generatedCardData.js
-{
-  name: "Dragon Warrior",  // ← Edit this
-  subtitle: "⟨Champion⟩", // ← Change from ⟨Generated⟩
-}
+const CONFIG = {
+  numberOfCards: 5,  // Change from 70 to 5
+  // ... rest of config
+};
 ```
 
-### 2. Stats & Levels
-```javascript
-{
-  level: "5",              // ← Increase level
-  stats: {
-    attack: "7",           // ← Boost stats
-    defense: "6",
-  },
-  manaCost: [
-    { type: "hp", value: "8" },  // ← More HP
-    { type: "mana", value: "4" }, // ← Higher cost
-  ],
-}
-```
-
-### 3. Flavor Text
-```javascript
-{
-  flavorText: "Your custom epic text here!", // ← Rewrite as needed
-}
-```
-
-### 4. Card Type
-```javascript
-{
-  type: "Creature — Dragon Warrior", // ← Change type
-}
-```
-
-## Tips for Best Results
-
-### Image Quality
-- **Recommended**: 1080x1080px or higher
-- **Format**: PNG with transparency works great
-- **Style**: Clear, distinct colors → better themes
-
-### Batch Processing
-- Start with 5-10 images to test
-- Then scale up to 50-100 at a time
-- Max 300 images per run (script limit)
-
-### Rate Limiting
-- Free tier: ~15 API calls per minute
-- Script waits 4 seconds between calls
-- Processing 50 images ≈ 3-4 minutes
-
-### Flavor Text
-- If generation fails, default text is used
-- You can always edit afterward
-- Some images may violate content policies
-
-## Common Issues & Fixes
-
-### Issue: "API_KEY not found"
-**Fix**: Create `.env` file with your Gemini API key
-
-### Issue: "No images found"
-**Fix**: Add images to `input_dir/` folder
-
-### Issue: "Rate limit exceeded"
-**Fix**: Increase delay in config:
-```javascript
-delayMs: 5000,  // 5 seconds instead of 4
-```
-
-### Issue: "node-vibrant not found"
-**Fix**: Run `npm install node-vibrant`
-
-## Next Steps
-
-1. ✅ Run the generator
-2. 📝 Review generated files
-3. ✏️ Edit card data as needed
-4. 🎨 Import into your React app
-5. 🚀 Deploy your cards!
-
-## Example Command Flow
-
+Run:
 ```bash
-# Setup (one time)
-npm install
-cp .env.example .env
-# Edit .env with your API key
-mkdir input_dir
-# Add your images
-
-# Generate cards
-npm run generate
-
-# Review outputs
-cat generated-cards/generatedCardData.js
-cat generated-cards/generatedThemes.js
-
-# Use in your app
-# Import into your React component
+node completeCardPipeline.mjs
 ```
 
-## Production Checklist
-
-Before using in production:
-
-- [ ] Review all generated flavor text
-- [ ] Verify card stats are balanced
-- [ ] Check theme colors match your brand
-- [ ] Test metadata files with NFT platform
-- [ ] Upload images to your hosting
-- [ ] Update baseUrl in config
-- [ ] Test card rendering in React app
-- [ ] Backup all generated files
+Wait ~2 minutes, review output!
 
 ---
 
-**Questions?** Check the main README.md for detailed docs!
+### Example 2: Process 10 Images
 
-**Having fun?** The script processes images fast and generates unique content for each card! 🎴✨
+```bash
+# Add 10 images to input_dir/
+ls input_dir/
+# dragon.png wizard.png knight.png ...
+
+node unifiedCardGenerator.mjs
+```
+
+Wait ~2 minutes, review output!
+
+---
+
+### Example 3: Custom Prompts
+
+Edit `completeCardPipeline.mjs`:
+```javascript
+const CONFIG = {
+  promptMode: "custom",  // Change from "dnd-monsters"
+  customPrompts: [
+    "A mystical dragon warrior in epic fantasy art",
+    "A cyberpunk hacker with neon aesthetics",
+    "An ancient forest guardian made of living wood",
+  ],
+  numberOfCards: 3,
+};
+```
+
+Run:
+```bash
+node completeCardPipeline.mjs
+```
+
+Get cards based on your exact prompts!
+
+---
+
+## 📊 Expected Output
+
+### Card Data Structure
+
+```javascript
+{
+  id: "dragon",
+  name: "Dragon",
+  subtitle: "⟨Generated⟩",
+  level: "1",
+  theme: "dragon",
+  manaCost: [
+    { type: "hp", value: "5", color: "..." },
+    { type: "mana", value: "2", color: "..." },
+    { type: "terrain", value: "?", color: "..." }
+  ],
+  image: "/images/card-images/dragon.png",
+  type: "Creature — Generated",
+  stats: {
+    attack: "3",
+    defense: "3"
+  },
+  flavorText: "Inferno Collapse\nWhen the skies burn and mountains turn to glass, kingdoms learn what true heat means.",
+  artist: "SURF FINANCE STUDIOS",
+  rarity: "1/1"
+}
+```
+
+**Note:** Flavor text format is `[MOVE]\n[FLAVOR]`
+
+---
+
+### Theme Structure
+
+```javascript
+dragon: {
+  background: "radial-gradient(...)",
+  header: {
+    background: "linear-gradient(...)",
+    color: "#ffffff",
+    textShadow: "...",
+    boxShadow: "..."
+  },
+  imageArea: {
+    background: "radial-gradient(...)",
+    border: "2px solid #ff6b35",
+    boxShadow: "..."
+  },
+  // ... complete theme object
+}
+```
+
+---
+
+## 🎨 Customization
+
+### Change Default Stats
+
+Edit the CONFIG in either script:
+
+```javascript
+const CONFIG = {
+  defaultStats: {
+    level: "3",     // Change from "1"
+    attack: "5",    // Change from "3"
+    defense: "4",   // Change from "3"
+    hp: "8",        // Change from "5"
+    manaCost: "3",  // Change from "2"
+    terrain: "?",   // Or set specific terrain
+  },
+};
+```
+
+### Change Artist Name
+
+```javascript
+const CONFIG = {
+  artist: "YOUR NAME HERE",
+  collection: "YOUR COLLECTION NAME",
+};
+```
+
+### Change Image Aspect Ratio (Complete Pipeline only)
+
+```javascript
+const CONFIG = {
+  imageAspectRatio: "1:1",  // Options: "1:1", "16:9", "9:16", "4:3", "3:4"
+};
+```
+
+---
+
+## ⏱️ Performance Tips
+
+### Speed Up Testing
+
+```bash
+# Generate just 1-2 cards for quick tests
+numberOfCards: 2
+```
+
+### Batch Processing
+
+```bash
+# Process images in batches of 50
+# Unified Generator can handle 300 at once
+# But 50 is easier to review
+```
+
+### Rate Limiting
+
+```bash
+# If you hit rate limits, increase delays
+delayMs: 5000,  # Increase from 4000 to 5000
+```
+
+---
+
+## 🐛 Quick Troubleshooting
+
+### "API_KEY not found"
+- Check your `.env` file exists
+- Verify no typos in the key name
+- Make sure key is on a single line
+
+### "No images found"
+- Verify `input_dir/` exists
+- Check images are .png, .jpg, .jpeg, .gif, or .webp
+- Run: `ls input_dir/` to verify
+
+### "Rate limit exceeded"
+- Wait 24 hours for limit reset
+- Reduce `numberOfCards`
+- Increase `delayMs`
+
+### Image generation fails
+- Content may violate policies
+- Try different prompts
+- Check console for specific errors
+
+---
+
+## ✅ Verification
+
+After running, verify you have:
+
+- [ ] `generatedThemes.js` - React theme objects
+- [ ] `generatedCardData.js` - React card objects
+- [ ] `flavorTexts.json` - Reference file
+- [ ] `signatureMoves.json` - Reference file
+- [ ] `metadata/` folder with JSON files
+- [ ] (Complete Pipeline only) `generated-images/` with PNG files
+
+---
+
+## 🎉 You're Ready!
+
+You now have:
+- ✅ Professional card data
+- ✅ Color-matched themes
+- ✅ AI-generated flavor text
+- ✅ Signature moves
+- ✅ NFT metadata
+
+**Next steps:**
+1. Import into your React app
+2. Customize the generated data
+3. Deploy your cards!
+
+---
+
+**Questions?** Check the full guides:
+- [COMPLETE_PIPELINE_GUIDE.md](COMPLETE_PIPELINE_GUIDE.md)
+- [UNIFIED_GENERATOR_GUIDE.md](UNIFIED_GENERATOR_GUIDE.md)
+- [TROUBLESHOOTING.md](TROUBLESHOOTING.md)
