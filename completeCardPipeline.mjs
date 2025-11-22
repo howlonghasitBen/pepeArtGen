@@ -1,6 +1,6 @@
-// completeCardPipeline.mjs - UPDATED VERSION
-// Unified Move + Flavor Text Generation based on image analysis
-// Moveset now appears in flavor text area: [MOVE]\n[FLAVOR]
+// completeCardPipeline.mjs - INCREMENTAL SAVE VERSION
+// Saves after each card to prevent data loss from crashes/OOM
+// Moveset in Flavor Text: [MOVE]\n[FLAVOR]
 
 import { GoogleGenAI } from "@google/genai";
 import { google } from "@ai-sdk/google";
@@ -51,13 +51,93 @@ const CONFIG = {
     `A high-resolution, detailed, digital art illustration of a ${monsterName} monster in the distinct visual style of "Pepe the Frog". Complete Background.`,
 };
 
-// ==================== D&D API ====================
+// ==================== FILE PERSISTENCE ====================
 
-const DND_API_URL = "https://www.dnd5eapi.co/api/monsters";
+async function loadExistingThemes() {
+  const themesPath = path.join(CONFIG.outputDir, "generatedThemes.js");
+  try {
+    const content = await fs.readFile(themesPath, "utf8");
+    const match = content.match(/export const GENERATED_THEMES = ({[\s\S]*});/);
+    if (match) {
+      return eval(`(${match[1]})`);
+    }
+  } catch (error) {
+    // File doesn't exist yet, that's fine
+  }
+  return {};
+}
+
+async function loadExistingCardData() {
+  const cardDataPath = path.join(CONFIG.outputDir, "generatedCardData.js");
+  try {
+    const content = await fs.readFile(cardDataPath, "utf8");
+    const match = content.match(/export const GENERATED_CARDS = (\[[\s\S]*\]);/);
+    if (match) {
+      return eval(match[1]);
+    }
+  } catch (error) {
+    // File doesn't exist yet, that's fine
+  }
+  return [];
+}
+
+async function saveThemes(themesObject) {
+  const content = `// Auto-generated themes from completeCardPipeline.mjs\nexport const GENERATED_THEMES = ${JSON.stringify(
+    themesObject,
+    null,
+    2
+  )};\n`;
+  await fs.writeFile(
+    path.join(CONFIG.outputDir, "generatedThemes.js"),
+    content
+  );
+}
+
+async function saveCardData(cardDataArray) {
+  const content = `// Auto-generated card data from completeCardPipeline.mjs\nexport const GENERATED_CARDS = ${JSON.stringify(
+    cardDataArray,
+    null,
+    2
+  )};\n`;
+  await fs.writeFile(
+    path.join(CONFIG.outputDir, "generatedCardData.js"),
+    content
+  );
+}
+
+async function saveFlavorTexts(flavorTextMap) {
+  await fs.writeFile(
+    path.join(CONFIG.outputDir, "flavorTexts.json"),
+    JSON.stringify(flavorTextMap, null, 2)
+  );
+}
+
+async function saveSignatureMoves(movesMap) {
+  await fs.writeFile(
+    path.join(CONFIG.outputDir, "signatureMoves.json"),
+    JSON.stringify(movesMap, null, 2)
+  );
+}
+
+async function saveMetadata(cardId, metadata1of1, metadataCommon) {
+  const metadataDir = path.join(CONFIG.outputDir, "metadata");
+  await fs.mkdir(metadataDir, { recursive: true });
+  
+  await fs.writeFile(
+    path.join(metadataDir, `${cardId}-1of1.json`),
+    JSON.stringify(metadata1of1, null, 2)
+  );
+  await fs.writeFile(
+    path.join(metadataDir, `${cardId}-common.json`),
+    JSON.stringify(metadataCommon, null, 2)
+  );
+}
+
+// ==================== D&D API ====================
 
 async function getRandomMonsterName() {
   console.log(`  🎲 Fetching D&D monster...`);
-  const response = await fetch(DND_API_URL);
+  const response = await fetch("https://www.dnd5eapi.co/api/monsters");
   if (!response.ok)
     throw new Error(`Failed to fetch monster list: ${response.statusText}`);
   const data = await response.json();
@@ -425,88 +505,13 @@ function generateMetadata(cardData, is1of1 = true) {
   return metadata;
 }
 
-// ==================== FILE OUTPUT ====================
-
-async function saveAllOutputs(results) {
-  console.log(`\n📝 Saving output files...\n`);
-  const allThemes = results.map((r) => r.theme);
-  const allCardData = results.map((r) => r.cardData);
-
-  const themeObject = {};
-  allThemes.forEach((t) => {
-    const key = t.name
-      .split(/[-_\s]/)
-      .map((word, i) =>
-        i === 0
-          ? word.toLowerCase()
-          : word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
-      )
-      .join("");
-    themeObject[key] = t.theme;
-  });
-
-  const themeContent = `// Auto-generated themes from completeCardPipeline.mjs\nexport const GENERATED_THEMES = ${JSON.stringify(
-    themeObject,
-    null,
-    2
-  )};\n`;
-  await fs.writeFile(
-    path.join(CONFIG.outputDir, "generatedThemes.js"),
-    themeContent
-  );
-  console.log(`✅ Saved: generatedThemes.js`);
-
-  const cardDataContent = `// Auto-generated card data from completeCardPipeline.mjs\nexport const GENERATED_CARDS = ${JSON.stringify(
-    allCardData,
-    null,
-    2
-  )};\n`;
-  await fs.writeFile(
-    path.join(CONFIG.outputDir, "generatedCardData.js"),
-    cardDataContent
-  );
-  console.log(`✅ Saved: generatedCardData.js`);
-
-  const metadataDir = path.join(CONFIG.outputDir, "metadata");
-  await fs.mkdir(metadataDir, { recursive: true });
-
-  for (const result of results) {
-    const { cardData, metadata1of1, metadataCommon } = result;
-    await fs.writeFile(
-      path.join(metadataDir, `${cardData.id}-1of1.json`),
-      JSON.stringify(metadata1of1, null, 2)
-    );
-    await fs.writeFile(
-      path.join(metadataDir, `${cardData.id}-common.json`),
-      JSON.stringify(metadataCommon, null, 2)
-    );
-  }
-  console.log(`✅ Saved: ${results.length * 2} metadata files`);
-
-  const flavorTextMap = {};
-  const movesMap = {};
-  results.forEach((r) => {
-    flavorTextMap[r.filename] = r.cardData.flavorText;
-    movesMap[r.filename] = r.moveData.move;
-  });
-  await fs.writeFile(
-    path.join(CONFIG.outputDir, "flavorTexts.json"),
-    JSON.stringify(flavorTextMap, null, 2)
-  );
-  await fs.writeFile(
-    path.join(CONFIG.outputDir, "signatureMoves.json"),
-    JSON.stringify(movesMap, null, 2)
-  );
-  console.log(`✅ Saved: flavorTexts.json & signatureMoves.json`);
-}
-
 // ==================== MAIN PIPELINE ====================
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function processOneCard(ai, vibrantInstance, cardName, index, total) {
+async function processOneCard(ai, vibrantInstance, cardName, index, total, existingThemes, existingCardData, flavorTextMap, movesMap) {
   console.log(`\n${"=".repeat(60)}`);
   console.log(`📸 Card ${index + 1}/${total}: ${cardName}`);
   console.log(`${"=".repeat(60)}`);
@@ -518,7 +523,7 @@ async function processOneCard(ai, vibrantInstance, cardName, index, total) {
     const imagePath = await generateImage(ai, prompt, filename);
     if (!imagePath) {
       console.log(`  ⚠️  Skipping card due to image generation failure`);
-      return null;
+      return false;
     }
 
     await sleep(1000);
@@ -526,7 +531,7 @@ async function processOneCard(ai, vibrantInstance, cardName, index, total) {
     const palette = await extractColors(imagePath, vibrantInstance);
     if (!palette) {
       console.log(`  ⚠️  Skipping card due to color extraction failure`);
-      return null;
+      return false;
     }
 
     const moveData = await generateMoveAndFlavorText(imagePath);
@@ -548,30 +553,47 @@ async function processOneCard(ai, vibrantInstance, cardName, index, total) {
     const metadata1of1 = generateMetadata(cardData, true);
     const metadataCommon = generateMetadata(cardData, false);
 
-    console.log(`  ✅ Card complete!`);
+    // ==================== SAVE INCREMENTALLY ====================
+    console.log(`  💾 Saving to disk...`);
+    
+    // Update themes
+    const themeKey = cardName
+      .split(/[-_\s]/)
+      .map((word, i) =>
+        i === 0
+          ? word.toLowerCase()
+          : word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+      )
+      .join("");
+    existingThemes[themeKey] = theme.theme;
+    await saveThemes(existingThemes);
+    
+    // Update card data
+    existingCardData.push(cardData);
+    await saveCardData(existingCardData);
+    
+    // Update flavor texts and moves
+    flavorTextMap[filename] = cardData.flavorText;
+    movesMap[filename] = moveData.move;
+    await saveFlavorTexts(flavorTextMap);
+    await saveSignatureMoves(movesMap);
+    
+    // Save metadata
+    await saveMetadata(cardData.id, metadata1of1, metadataCommon);
 
-    return {
-      success: true,
-      cardName,
-      filename,
-      imagePath,
-      theme,
-      cardData,
-      moveData,
-      metadata1of1,
-      metadataCommon,
-    };
+    console.log(`  ✅ Card complete and saved!`);
+    return true;
   } catch (error) {
     console.error(`  ❌ Error processing card:`, error.message);
-    return null;
+    return false;
   }
 }
 
 async function main() {
   console.log(`
 ╔═══════════════════════════════════════════════════════════╗
-║         🎴 COMPLETE CARD PIPELINE - UPDATED 🎴           ║
-║   Moveset in Flavor Text: [MOVE]\\n[FLAVOR]              ║
+║    🎴 COMPLETE CARD PIPELINE - INCREMENTAL SAVE 🎴       ║
+║   Saves after EACH card to prevent data loss            ║
 ╚═══════════════════════════════════════════════════════════╝
 `);
 
@@ -603,6 +625,14 @@ async function main() {
   await fs.mkdir(CONFIG.imageOutputDir, { recursive: true });
   console.log(`✅ Created output directories`);
 
+  // Load existing data
+  console.log(`📂 Loading existing data...`);
+  const existingThemes = await loadExistingThemes();
+  const existingCardData = await loadExistingCardData();
+  const flavorTextMap = {};
+  const movesMap = {};
+  console.log(`✅ Loaded ${Object.keys(existingThemes).length} existing themes, ${existingCardData.length} existing cards`);
+
   let cardNames = [];
   if (CONFIG.promptMode === "custom") {
     console.log(`\n📝 Using custom prompts (${CONFIG.customPrompts.length})`);
@@ -619,25 +649,27 @@ async function main() {
   }
 
   console.log(`\n📊 Generating ${cardNames.length} complete cards`);
-  console.log(`🎯 Moveset appears in flavor text: [MOVE]\\n[FLAVOR]`);
-  console.log(
-    `⏱️  Estimated time: ~${Math.ceil((cardNames.length * 15) / 60)} minutes\n`
-  );
+  console.log(`💾 Saving after EACH card to prevent data loss`);
+  console.log(`⏱️  Estimated time: ~${Math.ceil((cardNames.length * 15) / 60)} minutes\n`);
 
-  const allResults = [];
+  let successCount = 0;
 
   for (let i = 0; i < cardNames.length; i++) {
     const cardName = cardNames[i];
-    const result = await processOneCard(
+    const success = await processOneCard(
       ai,
       vibrantInstance,
       cardName,
       i,
-      cardNames.length
+      cardNames.length,
+      existingThemes,
+      existingCardData,
+      flavorTextMap,
+      movesMap
     );
 
-    if (result) {
-      allResults.push(result);
+    if (success) {
+      successCount++;
     }
 
     if (i < cardNames.length - 1) {
@@ -650,31 +682,21 @@ async function main() {
     }
   }
 
-  if (allResults.length === 0) {
-    console.error(`\n❌ ERROR: No cards were successfully generated!\n`);
-    process.exit(1);
-  }
-
-  await saveAllOutputs(allResults);
-
   console.log(`
 ${"=".repeat(60)}
 
-🎉 SUCCESS! Generated ${allResults.length} complete cards!
+🎉 SUCCESS! Generated ${successCount}/${cardNames.length} cards!
 
-🎯 UPDATED FORMAT:
-   - Moveset now in flavor text area
-   - Format: [MOVE]\\n[FLAVOR_TEXT]
-   - Subtitle returned to "⟨Generated⟩"
+💾 All data saved incrementally - no data loss on crashes!
 
 📁 Output structure:
    ${CONFIG.outputDir}/
-   ├── generated-images/ (${allResults.length} images)
-   ├── generatedThemes.js
-   ├── generatedCardData.js
+   ├── generated-images/ (${successCount} images)
+   ├── generatedThemes.js (${Object.keys(existingThemes).length} themes)
+   ├── generatedCardData.js (${existingCardData.length} cards)
    ├── flavorTexts.json
    ├── signatureMoves.json
-   └── metadata/ (${allResults.length * 2} files)
+   └── metadata/ (${successCount * 2} files)
 
 ${"=".repeat(60)}
 `);

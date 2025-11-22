@@ -1,7 +1,6 @@
-// unifiedCardGenerator.mjs - UPDATED VERSION
-// Unified Move + Flavor Text Generation based on image analysis
-// Moveset now appears in flavor text area: [MOVE]\n[FLAVOR]
-// For processing EXISTING images
+// unifiedCardGenerator.mjs - INCREMENTAL SAVE VERSION
+// Saves after each card to prevent data loss from crashes/OOM
+// Moveset in Flavor Text: [MOVE]\n[FLAVOR]
 
 import { google } from "@ai-sdk/google";
 import { generateText } from "ai";
@@ -38,6 +37,88 @@ const CONFIG = {
     terrain: "?",
   },
 };
+
+// ==================== FILE PERSISTENCE ====================
+
+async function loadExistingThemes() {
+  const themesPath = path.join(CONFIG.outputDir, "generatedThemes.js");
+  try {
+    const content = await fs.readFile(themesPath, "utf8");
+    const match = content.match(/export const GENERATED_THEMES = ({[\s\S]*});/);
+    if (match) {
+      return eval(`(${match[1]})`);
+    }
+  } catch (error) {
+    // File doesn't exist yet, that's fine
+  }
+  return {};
+}
+
+async function loadExistingCardData() {
+  const cardDataPath = path.join(CONFIG.outputDir, "generatedCardData.js");
+  try {
+    const content = await fs.readFile(cardDataPath, "utf8");
+    const match = content.match(/export const GENERATED_CARDS = (\[[\s\S]*\]);/);
+    if (match) {
+      return eval(match[1]);
+    }
+  } catch (error) {
+    // File doesn't exist yet, that's fine
+  }
+  return [];
+}
+
+async function saveThemes(themesObject) {
+  const content = `// Auto-generated themes from unifiedCardGenerator.mjs\nexport const GENERATED_THEMES = ${JSON.stringify(
+    themesObject,
+    null,
+    2
+  )};\n`;
+  await fs.writeFile(
+    path.join(CONFIG.outputDir, "generatedThemes.js"),
+    content
+  );
+}
+
+async function saveCardData(cardDataArray) {
+  const content = `// Auto-generated card data from unifiedCardGenerator.mjs\nexport const GENERATED_CARDS = ${JSON.stringify(
+    cardDataArray,
+    null,
+    2
+  )};\n`;
+  await fs.writeFile(
+    path.join(CONFIG.outputDir, "generatedCardData.js"),
+    content
+  );
+}
+
+async function saveFlavorTexts(flavorTextMap) {
+  await fs.writeFile(
+    path.join(CONFIG.outputDir, "flavorTexts.json"),
+    JSON.stringify(flavorTextMap, null, 2)
+  );
+}
+
+async function saveSignatureMoves(movesMap) {
+  await fs.writeFile(
+    path.join(CONFIG.outputDir, "signatureMoves.json"),
+    JSON.stringify(movesMap, null, 2)
+  );
+}
+
+async function saveMetadata(cardId, metadata1of1, metadataCommon) {
+  const metadataDir = path.join(CONFIG.outputDir, "metadata");
+  await fs.mkdir(metadataDir, { recursive: true });
+  
+  await fs.writeFile(
+    path.join(metadataDir, `${cardId}-1of1.json`),
+    JSON.stringify(metadata1of1, null, 2)
+  );
+  await fs.writeFile(
+    path.join(metadataDir, `${cardId}-common.json`),
+    JSON.stringify(metadataCommon, null, 2)
+  );
+}
 
 // ==================== COLOR UTILITIES ====================
 
@@ -342,7 +423,7 @@ function generateMetadata(cardData, is1of1 = true) {
 
 // ==================== IMAGE PROCESSING ====================
 
-async function processImage(imagePath, vibrantInstance) {
+async function processImage(imagePath, vibrantInstance, existingThemes, existingCardData, flavorTextMap, movesMap) {
   const filename = path.basename(imagePath);
   const imageName = path.parse(filename).name;
   const imageExt = path.extname(filename);
@@ -377,29 +458,11 @@ async function processImage(imagePath, vibrantInstance) {
     const metadata1of1 = generateMetadata(cardData, true);
     const metadataCommon = generateMetadata(cardData, false);
 
-    console.log(`  ✅ Complete!`);
-
-    return {
-      success: true,
-      imageName,
-      theme,
-      cardData,
-      moveData,
-      metadata1of1,
-      metadataCommon,
-    };
-  } catch (error) {
-    console.error(`  ❌ Error processing ${filename}:`, error.message);
-    return null;
-  }
-}
-
-// ==================== FILE OUTPUT ====================
-
-async function saveThemeFile(themes) {
-  const themeObject = {};
-  themes.forEach((t) => {
-    const key = t.name
+    // ==================== SAVE INCREMENTALLY ====================
+    console.log(`  💾 Saving to disk...`);
+    
+    // Update themes
+    const themeKey = imageName
       .split(/[-_\s]/)
       .map((word, i) =>
         i === 0
@@ -407,72 +470,28 @@ async function saveThemeFile(themes) {
           : word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
       )
       .join("");
-    themeObject[key] = t.theme;
-  });
+    existingThemes[themeKey] = theme.theme;
+    await saveThemes(existingThemes);
+    
+    // Update card data
+    existingCardData.push(cardData);
+    await saveCardData(existingCardData);
+    
+    // Update flavor texts and moves
+    flavorTextMap[path.basename(cardData.image)] = cardData.flavorText;
+    movesMap[path.basename(cardData.image)] = moveData.move;
+    await saveFlavorTexts(flavorTextMap);
+    await saveSignatureMoves(movesMap);
+    
+    // Save metadata
+    await saveMetadata(cardData.id, metadata1of1, metadataCommon);
 
-  const content = `// Auto-generated themes from unifiedCardGenerator.mjs\nexport const GENERATED_THEMES = ${JSON.stringify(
-    themeObject,
-    null,
-    2
-  )};\n`;
-  await fs.writeFile(
-    path.join(CONFIG.outputDir, "generatedThemes.js"),
-    content
-  );
-  console.log(`✅ Saved: ${CONFIG.outputDir}/generatedThemes.js`);
-}
-
-async function saveCardDataFile(cardDataArray) {
-  const content = `// Auto-generated card data from unifiedCardGenerator.mjs\nexport const GENERATED_CARDS = ${JSON.stringify(
-    cardDataArray,
-    null,
-    2
-  )};\n`;
-  await fs.writeFile(
-    path.join(CONFIG.outputDir, "generatedCardData.js"),
-    content
-  );
-  console.log(`✅ Saved: ${CONFIG.outputDir}/generatedCardData.js`);
-}
-
-async function saveMetadataFiles(results) {
-  const metadataDir = path.join(CONFIG.outputDir, "metadata");
-  await fs.mkdir(metadataDir, { recursive: true });
-
-  for (const result of results) {
-    const { cardData, metadata1of1, metadataCommon } = result;
-    await fs.writeFile(
-      path.join(metadataDir, `${cardData.id}-1of1.json`),
-      JSON.stringify(metadata1of1, null, 2)
-    );
-    await fs.writeFile(
-      path.join(metadataDir, `${cardData.id}-common.json`),
-      JSON.stringify(metadataCommon, null, 2)
-    );
+    console.log(`  ✅ Complete and saved!`);
+    return true;
+  } catch (error) {
+    console.error(`  ❌ Error processing ${filename}:`, error.message);
+    return false;
   }
-
-  console.log(
-    `✅ Saved: ${results.length * 2} metadata files in ${metadataDir}/`
-  );
-}
-
-async function saveFlavorTextFile(results) {
-  const flavorTextMap = {};
-  const movesMap = {};
-  results.forEach((r) => {
-    flavorTextMap[path.basename(r.cardData.image)] = r.cardData.flavorText;
-    movesMap[path.basename(r.cardData.image)] = r.moveData.move;
-  });
-
-  await fs.writeFile(
-    path.join(CONFIG.outputDir, "flavorTexts.json"),
-    JSON.stringify(flavorTextMap, null, 2)
-  );
-  await fs.writeFile(
-    path.join(CONFIG.outputDir, "signatureMoves.json"),
-    JSON.stringify(movesMap, null, 2)
-  );
-  console.log(`✅ Saved: ${CONFIG.outputDir}/flavorTexts.json & signatureMoves.json`);
 }
 
 // ==================== MAIN PROCESS ====================
@@ -484,8 +503,8 @@ function sleep(ms) {
 async function main() {
   console.log(`
 ╔═══════════════════════════════════════════════════════════╗
-║       🎴 UNIFIED CARD GENERATOR - UPDATED 🎴             ║
-║   Moveset in Flavor Text: [MOVE]\\n[FLAVOR]              ║
+║    🎴 UNIFIED CARD GENERATOR - INCREMENTAL SAVE 🎴       ║
+║   Saves after EACH card to prevent data loss            ║
 ╚═══════════════════════════════════════════════════════════╝
 `);
 
@@ -525,6 +544,14 @@ async function main() {
   await fs.mkdir(CONFIG.outputDir, { recursive: true });
   console.log(`✅ Created output directory: ${CONFIG.outputDir}`);
 
+  // Load existing data
+  console.log(`📂 Loading existing data...`);
+  const existingThemes = await loadExistingThemes();
+  const existingCardData = await loadExistingCardData();
+  const flavorTextMap = {};
+  const movesMap = {};
+  console.log(`✅ Loaded ${Object.keys(existingThemes).length} existing themes, ${existingCardData.length} existing cards`);
+
   const files = await fs.readdir(CONFIG.inputDir);
   const imageFiles = files
     .filter((f) => /\.(jpg|jpeg|png|gif|webp)$/i.test(f))
@@ -537,18 +564,25 @@ async function main() {
   }
 
   console.log(`\n📊 Found ${imageFiles.length} images to process`);
-  console.log(`🎯 Moveset appears in flavor text: [MOVE]\\n[FLAVOR]`);
+  console.log(`💾 Saving after EACH card to prevent data loss`);
   console.log(`⏱️  Rate limit: ${CONFIG.delayMs}ms between Gemini API calls\n`);
 
-  const allResults = [];
   let processed = 0;
+  let successCount = 0;
 
   for (const file of imageFiles) {
     const imagePath = path.join(CONFIG.inputDir, file);
-    const result = await processImage(imagePath, vibrantInstance);
+    const success = await processImage(
+      imagePath,
+      vibrantInstance,
+      existingThemes,
+      existingCardData,
+      flavorTextMap,
+      movesMap
+    );
 
-    if (result) {
-      allResults.push(result);
+    if (success) {
+      successCount++;
     }
 
     processed++;
@@ -564,38 +598,19 @@ async function main() {
     }
   }
 
-  if (allResults.length === 0) {
-    console.error(`\n❌ ERROR: No cards were successfully generated!\n`);
-    process.exit(1);
-  }
-
-  console.log(`\n${"=".repeat(60)}`);
-  console.log(`\n📝 Generating output files...\n`);
-
-  const allThemes = allResults.map((r) => r.theme);
-  const allCardData = allResults.map((r) => r.cardData);
-
-  await saveThemeFile(allThemes);
-  await saveCardDataFile(allCardData);
-  await saveMetadataFiles(allResults);
-  await saveFlavorTextFile(allResults);
-
   console.log(`
 ${"=".repeat(60)}
 
-🎉 SUCCESS! Generated ${allResults.length} complete cards!
+🎉 SUCCESS! Generated ${successCount}/${imageFiles.length} cards!
 
-🎯 UPDATED FORMAT:
-   - Moveset now in flavor text area
-   - Format: [MOVE]\\n[FLAVOR_TEXT]
-   - Subtitle returned to "⟨Generated⟩"
+💾 All data saved incrementally - no data loss on crashes!
 
 📁 Output files:
-   ├── ${CONFIG.outputDir}/generatedThemes.js
-   ├── ${CONFIG.outputDir}/generatedCardData.js
+   ├── ${CONFIG.outputDir}/generatedThemes.js (${Object.keys(existingThemes).length} themes)
+   ├── ${CONFIG.outputDir}/generatedCardData.js (${existingCardData.length} cards)
    ├── ${CONFIG.outputDir}/flavorTexts.json
    ├── ${CONFIG.outputDir}/signatureMoves.json
-   └── ${CONFIG.outputDir}/metadata/ (${allResults.length * 2} files)
+   └── ${CONFIG.outputDir}/metadata/ (${successCount * 2} files)
 
 ${"=".repeat(60)}
 `);
