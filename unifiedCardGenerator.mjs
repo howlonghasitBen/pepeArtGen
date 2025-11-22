@@ -1,5 +1,6 @@
 // unifiedCardGenerator.mjs - UPDATED VERSION
 // Unified Move + Flavor Text Generation based on image analysis
+// Moveset now appears in flavor text area: [MOVE]\n[FLAVOR]
 // For processing EXISTING images
 
 import { google } from "@ai-sdk/google";
@@ -259,7 +260,7 @@ function generateCardData(imageName, imageExt, theme, moveData) {
   return {
     id: imageName.toLowerCase().replace(/[^a-z0-9]/g, ""),
     name: displayName,
-    subtitle: `⟨${moveData.move}⟩`,
+    subtitle: "⟨Generated⟩",
     level: CONFIG.defaultStats.level,
     theme: themeKey,
     manaCost: [
@@ -288,7 +289,7 @@ function generateCardData(imageName, imageExt, theme, moveData) {
       attack: CONFIG.defaultStats.attack,
       defense: CONFIG.defaultStats.defense,
     },
-    flavorText: moveData.flavorText,
+    flavorText: `${moveData.move}\n${moveData.flavorText}`,
     artist: CONFIG.artist,
     rarity: "1/1",
   };
@@ -484,7 +485,7 @@ async function main() {
   console.log(`
 ╔═══════════════════════════════════════════════════════════╗
 ║       🎴 UNIFIED CARD GENERATOR - UPDATED 🎴             ║
-║   Move + Flavor Text Generated Together From Image!     ║
+║   Moveset in Flavor Text: [MOVE]\\n[FLAVOR]              ║
 ╚═══════════════════════════════════════════════════════════╝
 `);
 
@@ -536,7 +537,7 @@ async function main() {
   }
 
   console.log(`\n📊 Found ${imageFiles.length} images to process`);
-  console.log(`🎯 Each card gets a signature move + connected flavor text!`);
+  console.log(`🎯 Moveset appears in flavor text: [MOVE]\\n[FLAVOR]`);
   console.log(`⏱️  Rate limit: ${CONFIG.delayMs}ms between Gemini API calls\n`);
 
   const allResults = [];
@@ -584,17 +585,16 @@ ${"=".repeat(60)}
 
 🎉 SUCCESS! Generated ${allResults.length} complete cards!
 
-🎯 NEW SYSTEM Features:
-   - Each card analyzed by AI for visual details
-   - Signature move generated based on creature appearance
-   - Flavor text directly references the move
-   - Everything feels cohesive and connected!
+🎯 UPDATED FORMAT:
+   - Moveset now in flavor text area
+   - Format: [MOVE]\\n[FLAVOR_TEXT]
+   - Subtitle returned to "⟨Generated⟩"
 
 📁 Output files:
    ├── ${CONFIG.outputDir}/generatedThemes.js
    ├── ${CONFIG.outputDir}/generatedCardData.js
    ├── ${CONFIG.outputDir}/flavorTexts.json
-   ├── ${CONFIG.outputDir}/signatureMoves.json (NEW!)
+   ├── ${CONFIG.outputDir}/signatureMoves.json
    └── ${CONFIG.outputDir}/metadata/ (${allResults.length * 2} files)
 
 ${"=".repeat(60)}

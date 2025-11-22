@@ -1,5 +1,6 @@
 // completeCardPipeline.mjs - UPDATED VERSION
 // Unified Move + Flavor Text Generation based on image analysis
+// Moveset now appears in flavor text area: [MOVE]\n[FLAVOR]
 
 import { GoogleGenAI } from "@google/genai";
 import { google } from "@ai-sdk/google";
@@ -27,7 +28,7 @@ const CONFIG = {
   imageOutputDir: "./complete-cards/generated-images",
   imagenModel: "imagen-4.0-generate-001",
   geminiModel: "gemini-2.5-flash-lite",
-  numberOfCards: 10,
+  numberOfCards: 70,
   imageAspectRatio: "16:9",
   delayBetweenImages: 5000,
   delayBetweenFlavorText: 4000,
@@ -210,15 +211,21 @@ FLAVOR: [Your 1-2 sentence flavor text]`,
     });
 
     // Parse the response
-    const lines = text.trim().split('\n');
+    const lines = text.trim().split("\n");
     let moveName = null;
     let flavorText = null;
 
     for (const line of lines) {
-      if (line.startsWith('MOVE:')) {
-        moveName = line.replace('MOVE:', '').trim().replace(/^["']|["']$/g, '');
-      } else if (line.startsWith('FLAVOR:')) {
-        flavorText = line.replace('FLAVOR:', '').trim().replace(/^["']|["']$/g, '');
+      if (line.startsWith("MOVE:")) {
+        moveName = line
+          .replace("MOVE:", "")
+          .trim()
+          .replace(/^["']|["']$/g, "");
+      } else if (line.startsWith("FLAVOR:")) {
+        flavorText = line
+          .replace("FLAVOR:", "")
+          .trim()
+          .replace(/^["']|["']$/g, "");
       }
     }
 
@@ -226,16 +233,16 @@ FLAVOR: [Your 1-2 sentence flavor text]`,
       console.log(`  ⚠️  Failed to parse response, using defaults`);
       return {
         move: "Signature Move",
-        flavorText: "A legendary ability that echoes through time."
+        flavorText: "A legendary ability that echoes through time.",
       };
     }
 
     console.log(`  🎯 Move: "${moveName}"`);
     console.log(`  ✅ Flavor: "${flavorText.substring(0, 60)}..."`);
-    
+
     return {
       move: moveName,
-      flavorText: flavorText
+      flavorText: flavorText,
     };
   } catch (error) {
     console.error(`  ❌ Generation error:`, error.message);
@@ -338,7 +345,7 @@ function generateCardData(cardName, filename, theme, moveData) {
   return {
     id: cardId,
     name: displayName,
-    subtitle: `⟨${moveData.move}⟩`,
+    subtitle: "⟨Generated⟩",
     level: CONFIG.defaultStats.level,
     theme: themeKey,
     manaCost: [
@@ -367,7 +374,7 @@ function generateCardData(cardName, filename, theme, moveData) {
       attack: CONFIG.defaultStats.attack,
       defense: CONFIG.defaultStats.defense,
     },
-    flavorText: moveData.flavorText,
+    flavorText: `${moveData.move}\n${moveData.flavorText}`,
     artist: CONFIG.artist,
     rarity: "1/1",
   };
@@ -527,7 +534,7 @@ async function processOneCard(ai, vibrantInstance, cardName, index, total) {
       console.log(`  ⚠️  Using default move and flavor text`);
       moveData = {
         move: "Signature Move",
-        flavorText: "A legendary ability that echoes through time."
+        flavorText: "A legendary ability that echoes through time.",
       };
     }
 
@@ -564,7 +571,7 @@ async function main() {
   console.log(`
 ╔═══════════════════════════════════════════════════════════╗
 ║         🎴 COMPLETE CARD PIPELINE - UPDATED 🎴           ║
-║   Move + Flavor Text Generated Together From Image!     ║
+║   Moveset in Flavor Text: [MOVE]\\n[FLAVOR]              ║
 ╚═══════════════════════════════════════════════════════════╝
 `);
 
@@ -612,7 +619,7 @@ async function main() {
   }
 
   console.log(`\n📊 Generating ${cardNames.length} complete cards`);
-  console.log(`🎯 Each card gets a signature move + connected flavor text!`);
+  console.log(`🎯 Moveset appears in flavor text: [MOVE]\\n[FLAVOR]`);
   console.log(
     `⏱️  Estimated time: ~${Math.ceil((cardNames.length * 15) / 60)} minutes\n`
   );
@@ -655,11 +662,10 @@ ${"=".repeat(60)}
 
 🎉 SUCCESS! Generated ${allResults.length} complete cards!
 
-🎯 NEW SYSTEM Features:
-   - Each card analyzed by AI for visual details
-   - Signature move generated based on creature appearance
-   - Flavor text directly references the move
-   - Everything feels cohesive and connected!
+🎯 UPDATED FORMAT:
+   - Moveset now in flavor text area
+   - Format: [MOVE]\\n[FLAVOR_TEXT]
+   - Subtitle returned to "⟨Generated⟩"
 
 📁 Output structure:
    ${CONFIG.outputDir}/
@@ -667,7 +673,7 @@ ${"=".repeat(60)}
    ├── generatedThemes.js
    ├── generatedCardData.js
    ├── flavorTexts.json
-   ├── signatureMoves.json (NEW!)
+   ├── signatureMoves.json
    └── metadata/ (${allResults.length * 2} files)
 
 ${"=".repeat(60)}
