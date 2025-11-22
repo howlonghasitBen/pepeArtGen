@@ -28,7 +28,7 @@ const CONFIG = {
   imageOutputDir: "./complete-cards/generated-images",
   imagenModel: "imagen-4.0-generate-001",
   geminiModel: "gemini-2.5-flash-lite",
-  numberOfCards: 70,
+  numberOfCards: 10,
   imageAspectRatio: "16:9",
   delayBetweenImages: 5000,
   delayBetweenFlavorText: 4000,
