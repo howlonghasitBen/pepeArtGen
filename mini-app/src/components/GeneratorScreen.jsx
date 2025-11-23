@@ -54,7 +54,7 @@ function GeneratorScreen({ onCardsGenerated, limits }) {
 
       setProgress({ current: 0, total: monsterNames.length })
 
-      // Call API
+      // Call API to generate cards with Imagen
       const response = await fetch('http://localhost:3001/api/generate', {
         method: 'POST',
         headers: {

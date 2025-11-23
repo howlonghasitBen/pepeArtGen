@@ -9,10 +9,10 @@ import GeneratorScreen from './components/GeneratorScreen'
 import CurationScreen from './components/CurationScreen'
 import './App.css'
 
-// Get WalletConnect Project ID from env
-const projectId = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID || 'YOUR_PROJECT_ID'
+// Get WalletConnect Project ID from env (optional for now)
+const projectId = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID || 'demo-project-id'
 
-// Configure Wagmi with RainbowKit
+// Configure Wagmi with RainbowKit (wallet connection optional)
 const config = getDefaultConfig({
   appName: 'Pepe Card Generator',
   projectId,

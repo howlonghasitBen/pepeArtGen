@@ -2,6 +2,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import { google } from '@ai-sdk/google';
 import { generateText } from 'ai';
 import { promises as fs } from 'fs';
@@ -167,12 +168,45 @@ FLAVOR: [Your 1-2 sentence flavor text]`,
   }
 }
 
-// Generate card endpoint - expects image to be provided as base64
+// Generate card image using Google Imagen
+async function generateCardImage(monsterName) {
+  try {
+    console.log(`  🎨 Generating image with Imagen for: ${monsterName}`);
+
+    const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GENERATIVE_AI_API_KEY || process.env.API_KEY);
+    const model = genAI.getGenerativeModel({ model: 'imagen-3.0-generate-001' });
+
+    const prompt = `Epic fantasy trading card art of ${monsterName}, highly detailed, dramatic lighting, vibrant colors, professional game art style, TCG card illustration`;
+
+    const result = await model.generateImages({
+      prompt,
+      numberOfImages: 1,
+      aspectRatio: '3:4',
+    });
+
+    // Get the first generated image
+    const generatedImage = result.images[0];
+
+    // Convert to base64
+    const imageData = generatedImage.image.toString('base64');
+    const mimeType = 'image/png';
+
+    return {
+      imageData: `data:${mimeType};base64,${imageData}`,
+      mimeType,
+    };
+  } catch (error) {
+    console.error('  ❌ Imagen generation error:', error.message);
+    throw new Error(`Image generation failed: ${error.message}`);
+  }
+}
+
+// Generate card endpoint - generates images with Imagen
 app.post('/api/generate', async (req, res) => {
   try {
     checkAndResetDailyLimit();
 
-    const { monsterNames, images = [], batchMode = false } = req.body;
+    const { monsterNames, batchMode = false } = req.body;
 
     if (!monsterNames || monsterNames.length === 0) {
       return res.status(400).json({ error: 'No monster names provided' });
@@ -199,30 +233,23 @@ app.post('/api/generate', async (req, res) => {
 
     for (let i = 0; i < monsterNames.length; i++) {
       const monsterName = monsterNames[i];
-      const imageData = images[i]; // Base64 image data
-
-      if (!imageData) {
-        cards.push({
-          error: true,
-          name: monsterName,
-          message: 'No image provided for this monster',
-        });
-        continue;
-      }
 
       try {
-        console.log(`Processing card for: ${monsterName}`);
+        console.log(`\n🃏 Processing card ${i + 1}/${monsterNames.length}: ${monsterName}`);
 
-        // Extract colors from provided image
-        console.log('  Extracting colors from image...');
+        // Generate image with Imagen
+        const { imageData } = await generateCardImage(monsterName);
+
+        // Extract colors from generated image
+        console.log('  🎨 Extracting colors from image...');
         const colors = await extractColorsFromImage(imageData);
 
         // Generate theme based on extracted colors
-        console.log('  Generating theme from colors...');
+        console.log('  🎭 Generating theme from colors...');
         const theme = generateCardTheme(colors);
 
         // Generate move and flavor text
-        console.log('  Generating move and flavor text...');
+        console.log('  ✍️  Generating move and flavor text...');
         const { move, flavorText } = await generateMoveAndFlavorText(monsterName);
 
         const cardId = `${monsterName.toLowerCase().replace(/[^a-z0-9]/g, '')}-${Date.now()}`;
@@ -249,14 +276,15 @@ app.post('/api/generate', async (req, res) => {
         cards.push(card);
         dailyGenerationCount++;
 
-        console.log(`  ✅ Card generated successfully`);
+        console.log(`  ✅ Card generated successfully!`);
 
-        // Rate limiting delay
+        // Rate limiting delay between cards
         if (i < monsterNames.length - 1) {
-          await new Promise(resolve => setTimeout(resolve, 2000));
+          console.log(`  ⏳ Waiting 3 seconds before next card...`);
+          await new Promise(resolve => setTimeout(resolve, 3000));
         }
       } catch (error) {
-        console.error(`Error generating card for ${monsterName}:`, error);
+        console.error(`  ❌ Error generating card for ${monsterName}:`, error);
         cards.push({
           error: true,
           name: monsterName,
