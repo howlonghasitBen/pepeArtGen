@@ -189,10 +189,12 @@ contract PepeArtGenNFT is
     }
 
     function canMint(address wallet) external view returns (bool) {
+        if (lastMintTime[wallet] == 0) return true;
         return block.timestamp >= lastMintTime[wallet] + mintCooldown;
     }
 
     function timeUntilMint(address wallet) external view returns (uint256) {
+        if (lastMintTime[wallet] == 0) return 0;
         uint256 nextMintTime = lastMintTime[wallet] + mintCooldown;
         if (block.timestamp >= nextMintTime) return 0;
         return nextMintTime - block.timestamp;
