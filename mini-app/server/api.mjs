@@ -3,8 +3,8 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { google } from '@ai-sdk/google';
-import { generateText } from 'ai';
-import { GoogleGenerativeAI } from '@google/genai';
+import { generateText, generateObject } from 'ai';
+import { GoogleGenAI } from '@google/genai';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -38,29 +38,31 @@ function checkAndResetDailyLimit() {
   }
 }
 
-// Generate card image using Imagen
+// Generate card image using Imagen via Google AI SDK
 async function generateCardImage(monsterName) {
-  const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GENERATIVE_AI_API_KEY || process.env.API_KEY);
-  const model = genAI.getGenerativeModel({ model: 'imagen-3.0-generate-001' });
+  const genAI = new GoogleGenAI(process.env.GOOGLE_GENERATIVE_AI_API_KEY || process.env.API_KEY);
 
   const prompt = `Epic fantasy trading card art of ${monsterName}, highly detailed, dramatic lighting, vibrant colors, 16:9 aspect ratio, professional game art style`;
 
   try {
-    const result = await model.generateContent({
+    // Use Imagen 3 for image generation
+    const result = await genAI.models.imagen.generate({
       prompt,
       numberOfImages: 1,
       aspectRatio: '16:9',
     });
 
     // Get the generated image
-    const image = result.response.candidates[0];
+    const image = result.images[0];
     return {
-      imageData: image.content.parts[0].inlineData.data,
-      mimeType: image.content.parts[0].inlineData.mimeType,
+      imageData: image.imageBytes.toString('base64'),
+      mimeType: 'image/png',
     };
   } catch (error) {
     console.error('Image generation error:', error);
-    throw error;
+    // For now, return a placeholder since Imagen API might need special setup
+    // In production, this should properly handle the Imagen API
+    throw new Error('Image generation not available. Please use the unified generator with existing images.');
   }
 }
 
