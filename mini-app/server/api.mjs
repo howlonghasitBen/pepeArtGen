@@ -9,6 +9,7 @@ import { promises as fs } from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import { Buffer } from "buffer";
+import { PinataSDK } from "pinata-web3";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -408,9 +409,107 @@ app.get("/api/card/:id", (req, res) => {
   res.json(card);
 });
 
+// Upload card to IPFS endpoint
+app.post("/api/upload-to-ipfs", async (req, res) => {
+  try {
+    const { card } = req.body;
+
+    if (!card || !card.imageData) {
+      return res.status(400).json({ error: "Card data with image required" });
+    }
+
+    // Initialize Pinata SDK
+    const pinata = new PinataSDK({
+      pinataJwt: process.env.PINATA_JWT,
+    });
+
+    if (!process.env.PINATA_JWT) {
+      return res.status(500).json({
+        error: "PINATA_JWT not configured. Add it to your .env file"
+      });
+    }
+
+    console.log(`\n📤 Uploading card to IPFS: ${card.name}`);
+
+    // Step 1: Upload image to IPFS
+    console.log("  🎨 Uploading image...");
+
+    // Convert base64 to buffer
+    const base64Data = card.imageData.replace(/^data:image\/\w+;base64,/, "");
+    const imageBuffer = Buffer.from(base64Data, "base64");
+
+    // Create a File object from the buffer
+    const imageFile = new File([imageBuffer], `${card.id}.png`, {
+      type: "image/png",
+    });
+
+    const imageUpload = await pinata.upload.file(imageFile);
+    const imageCID = imageUpload.IpfsHash;
+
+    console.log(`  ✅ Image uploaded: ipfs://${imageCID}`);
+
+    // Step 2: Create and upload metadata
+    console.log("  📝 Creating metadata...");
+
+    const metadata = {
+      name: card.name,
+      description: card.flavorText || `${card.name} - A unique trading card`,
+      image: `ipfs://${imageCID}`,
+      attributes: [
+        { trait_type: "Type", value: card.type || "Creature" },
+        { trait_type: "Level", value: card.level || "1" },
+        { trait_type: "Attack", value: card.stats?.attack || 0 },
+        { trait_type: "Defense", value: card.stats?.defense || 0 },
+        { trait_type: "HP", value: card.manaCost?.[0]?.value || 0 },
+        { trait_type: "Mana", value: card.manaCost?.[1]?.value || 0 },
+        { trait_type: "Rarity", value: card.rarity || "Common" },
+        { trait_type: "Artist", value: card.artist || "Waves TCG" },
+      ],
+    };
+
+    const metadataFile = new File(
+      [JSON.stringify(metadata, null, 2)],
+      "metadata.json",
+      { type: "application/json" }
+    );
+
+    console.log("  📤 Uploading metadata...");
+    const metadataUpload = await pinata.upload.file(metadataFile);
+    const metadataCID = metadataUpload.IpfsHash;
+
+    console.log(`  ✅ Metadata uploaded: ipfs://${metadataCID}`);
+
+    // Return IPFS URIs
+    const result = {
+      success: true,
+      imageCID,
+      metadataCID,
+      imageURI: `ipfs://${imageCID}`,
+      metadataURI: `ipfs://${metadataCID}`,
+      imageGateway: `https://gateway.pinata.cloud/ipfs/${imageCID}`,
+      metadataGateway: `https://gateway.pinata.cloud/ipfs/${metadataCID}`,
+    };
+
+    console.log("  🎉 Upload complete!");
+    res.json(result);
+  } catch (error) {
+    console.error("❌ IPFS upload error:", error);
+
+    let errorMessage = error.message;
+    if (error.message.includes("401")) {
+      errorMessage = "Invalid Pinata JWT token. Check your .env configuration";
+    } else if (error.message.includes("insufficient funds")) {
+      errorMessage = "Pinata account limit reached. Upgrade your plan";
+    }
+
+    res.status(500).json({ error: errorMessage });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`🚀 Card Generator API running on http://localhost:${PORT}`);
   console.log(`📊 Free tier limit: ${FREE_DAILY_LIMIT} cards/day`);
   console.log(`📦 Batch limit: ${BATCH_LIMIT} cards`);
   console.log(`🎨 Using node-vibrant for color extraction`);
+  console.log(`📤 IPFS upload endpoint ready`);
 });
