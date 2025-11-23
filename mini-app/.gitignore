@@ -1,34 +1,29 @@
-# Dependencies
-node_modules/
+# Compiler files
+cache/
+out/
 
-# Build output
-dist/
-build/
+# Ignores development broadcast logs
+!/broadcast
+/broadcast/*/31337/
+/broadcast/**/dry-run/
 
-# Environment variables
+# Dotenv file
 .env
-.env.local
-.env.production
 
-# Logs
-*.log
-npm-debug.log*
+# Node modules
+node_modules/
 
 # IDE
 .vscode/
 .idea/
-*.swp
-*.swo
 
-# OS
-.DS_Store
-Thumbs.db
+# Lib (dependencies installed via forge)
+lib/
 
-# Hardhat
-cache/
-artifacts/
-typechain-types/
+# Flattened files
+flattened/
 
-# Misc
-*.tgz
-.cache/
+/complete-cards
+/generated-cards
+/input_dir
+/node_modules

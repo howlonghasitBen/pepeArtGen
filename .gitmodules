@@ -1,0 +1,6 @@
+[submodule "mini-app/lib/openzeppelin-contracts"]
+	path = mini-app/lib/openzeppelin-contracts
+	url = https://github.com/OpenZeppelin/openzeppelin-contracts
+[submodule "mini-app/lib/forge-std"]
+	path = mini-app/lib/forge-std
+	url = https://github.com/foundry-rs/forge-std

@@ -1,42 +1,36 @@
 {
-  "name": "pepe-card-mini-app",
+  "name": "pepeartgen-contracts",
   "version": "1.0.0",
-  "description": "Mobile-friendly card generator mini-app on Base",
+  "description": "Production NFT minting contracts for PepeArtGen AI trading cards on Base L2",
   "type": "module",
   "scripts": {
-    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
-    "dev:client": "vite",
-    "dev:server": "node server/api.mjs",
-    "build": "vite build",
-    "preview": "vite preview",
-    "deploy:contract": "hardhat run scripts/deploy.js --network base"
+    "test": "forge test -vv",
+    "test:gas": "forge test --gas-report",
+    "test:coverage": "forge coverage",
+    "deploy:testnet": "forge script script/Deploy.s.sol:DeployPepeArtGen --rpc-url base_sepolia --broadcast --verify",
+    "deploy:mainnet": "forge script script/Deploy.s.sol:DeployPepeArtGen --rpc-url base --broadcast --verify --slow",
+    "upload:ipfs": "node uploadToIPFS.js",
+    "install:foundry": "forge install OpenZeppelin/openzeppelin-contracts"
   },
+  "keywords": [
+    "nft",
+    "erc721",
+    "base",
+    "foundry",
+    "solidity",
+    "ipfs",
+    "ai-art"
+  ],
+  "author": "Ben (SURF Waves Collection)",
+  "license": "GPL-3.0",
   "dependencies": {
-    "@ai-sdk/google": "^1.0.0",
-    "@google/genai": "^0.8.0",
-    "@rainbow-me/rainbowkit": "^2.1.7",
-    "@tanstack/react-query": "^5.59.20",
-    "@use-gesture/react": "^10.3.1",
-    "ai": "^4.0.0",
-    "cors": "^2.8.5",
-    "dotenv": "^16.4.7",
-    "express": "^4.21.2",
-    "framer-motion": "^11.13.5",
-    "node-vibrant": "^4.0.3",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "react-spring": "^9.7.5",
-    "viem": "^2.21.45",
-    "wagmi": "^2.12.29"
+    "pinata-web3": "^0.5.0",
+    "dotenv": "^16.3.1"
   },
   "devDependencies": {
-    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
-    "@openzeppelin/contracts": "^5.1.0",
-    "@types/react": "^18.3.17",
-    "@types/react-dom": "^18.3.5",
-    "@vitejs/plugin-react": "^4.3.4",
-    "concurrently": "^9.1.0",
-    "hardhat": "^2.22.18",
-    "vite": "^5.4.11"
+    "@types/node": "^20.10.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
