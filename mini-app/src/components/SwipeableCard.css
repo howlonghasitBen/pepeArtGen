@@ -17,41 +17,27 @@
   cursor: grabbing;
 }
 
-/* Swipe Overlay Indicators */
-.swipe-overlay {
+/* Subtle Glow Indicators */
+.swipe-glow {
   position: absolute;
-  top: 0;
-  height: 100%;
-  width: 50%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  border-radius: min(1.8vw, 14px);
+  top: -10px;
+  bottom: -10px;
+  width: 100%;
   pointer-events: none;
-  z-index: 10;
-  font-family: 'Cinzel', serif;
-  font-weight: 700;
+  z-index: -1;
+  border-radius: min(2vw, 16px);
+  filter: blur(20px);
+  transition: opacity 0.2s;
 }
 
-.swipe-overlay.left {
-  left: 0;
+.swipe-glow.left {
+  left: -10px;
+  background: radial-gradient(ellipse at left, #ff3b30, transparent 70%);
 }
 
-.swipe-overlay.right {
-  right: 0;
-}
-
-.overlay-text {
-  font-size: 1.5rem;
-  letter-spacing: 0.2em;
-  text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.8);
-  margin: 0.5rem 0;
-}
-
-.overlay-icon {
-  font-size: 3rem;
-  text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.8);
+.swipe-glow.right {
+  right: -10px;
+  background: radial-gradient(ellipse at right, #4cd964, transparent 70%);
 }
 
 /* Card Content */

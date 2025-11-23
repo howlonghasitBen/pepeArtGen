@@ -1,3 +1,4 @@
+import React from 'react'
 import { useSpring, animated } from 'react-spring'
 import { useDrag } from '@use-gesture/react'
 import './SwipeableCard.css'
@@ -7,7 +8,27 @@ function SwipeableCard({ card, onSwipeLeft, onSwipeRight }) {
     x: 0,
     rotate: 0,
     scale: 1,
+    config: { tension: 200, friction: 20 },
   }))
+
+  // Initial tilt animation to hint at swipeability
+  const [hasShownHint, setHasShownHint] = React.useState(false)
+
+  React.useEffect(() => {
+    if (!hasShownHint) {
+      // Subtle tilt left, then right, then center
+      const showHint = async () => {
+        await new Promise(resolve => setTimeout(resolve, 300))
+        api.start({ rotate: -3, x: -20 })
+        await new Promise(resolve => setTimeout(resolve, 400))
+        api.start({ rotate: 3, x: 20 })
+        await new Promise(resolve => setTimeout(resolve, 400))
+        api.start({ rotate: 0, x: 0 })
+        setHasShownHint(true)
+      }
+      showHint()
+    }
+  }, [hasShownHint, api])
 
   const bind = useDrag(
     ({ active, movement: [mx], direction: [xDir], velocity: [vx] }) => {
@@ -37,14 +58,12 @@ function SwipeableCard({ card, onSwipeLeft, onSwipeRight }) {
     }
   )
 
-  // Color indicators during swipe
-  const leftColor = x.to(
-    [-300, 0],
-    ['rgba(255, 59, 48, 0.8)', 'rgba(255, 59, 48, 0)']
+  // Color indicators during swipe - subtle glow only
+  const leftGlow = x.to(
+    (val) => val < -50 ? Math.abs(val) / 300 : 0
   )
-  const rightColor = x.to(
-    [0, 300],
-    ['rgba(76, 217, 100, 0)', 'rgba(76, 217, 100, 0.8)']
+  const rightGlow = x.to(
+    (val) => val > 50 ? val / 300 : 0
   )
 
   const theme = card.theme || {}
@@ -70,15 +89,19 @@ function SwipeableCard({ card, onSwipeLeft, onSwipeRight }) {
         touchAction: 'none',
       }}
     >
-      <animated.div className="swipe-overlay left" style={{ backgroundColor: leftColor }}>
-        <span className="overlay-icon">✗</span>
-        <span className="overlay-text">DISCARD</span>
-      </animated.div>
-
-      <animated.div className="swipe-overlay right" style={{ backgroundColor: rightColor }}>
-        <span className="overlay-text">MINT</span>
-        <span className="overlay-icon">✓</span>
-      </animated.div>
+      {/* Subtle glow indicators */}
+      <animated.div
+        className="swipe-glow left"
+        style={{
+          opacity: leftGlow,
+        }}
+      />
+      <animated.div
+        className="swipe-glow right"
+        style={{
+          opacity: rightGlow,
+        }}
+      />
 
       <div
         className="card-content"
