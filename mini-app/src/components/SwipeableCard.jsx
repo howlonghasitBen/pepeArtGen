@@ -68,32 +68,77 @@ function SwipeableCard({ card, onSwipeLeft, onSwipeRight }) {
         <span className="overlay-icon">✓</span>
       </animated.div>
 
-      <div className="card-content">
-        <div className="card-image-container">
+      <div
+        className="card-content"
+        style={{
+          background: card.theme?.background || 'linear-gradient(145deg, #2a2a2a, #1a1a1a)',
+        }}
+      >
+        <div
+          className="card-image-container"
+          style={{
+            background: card.theme?.imageArea?.background,
+            border: card.theme?.imageArea?.border,
+            boxShadow: card.theme?.imageArea?.boxShadow,
+          }}
+        >
           <img src={card.imageData} alt={card.name} className="card-image" />
         </div>
 
         <div className="card-details">
-          <h2 className="card-name">{card.name}</h2>
+          <h2
+            className="card-name"
+            style={{
+              background: card.theme?.header?.background,
+              color: card.theme?.header?.color,
+              textShadow: card.theme?.header?.textShadow,
+              boxShadow: card.theme?.header?.boxShadow,
+            }}
+          >{card.name}</h2>
 
           <div className="card-stats">
-            <div className="stat">
+            <div className="stat" style={{
+              background: card.theme?.stat?.background,
+              border: card.theme?.stat?.border,
+              color: card.theme?.stat?.color,
+              boxShadow: card.theme?.stat?.boxShadow,
+            }}>
               <span className="stat-label">LVL</span>
               <span className="stat-value">{card.stats.level}</span>
             </div>
-            <div className="stat">
+            <div className="stat" style={{
+              background: card.theme?.stat?.background,
+              border: card.theme?.stat?.border,
+              color: card.theme?.stat?.color,
+              boxShadow: card.theme?.stat?.boxShadow,
+            }}>
               <span className="stat-label">ATK</span>
               <span className="stat-value">{card.stats.attack}</span>
             </div>
-            <div className="stat">
+            <div className="stat" style={{
+              background: card.theme?.stat?.background,
+              border: card.theme?.stat?.border,
+              color: card.theme?.stat?.color,
+              boxShadow: card.theme?.stat?.boxShadow,
+            }}>
               <span className="stat-label">DEF</span>
               <span className="stat-value">{card.stats.defense}</span>
             </div>
-            <div className="stat">
+            <div className="stat" style={{
+              background: card.theme?.stat?.background,
+              border: card.theme?.stat?.border,
+              color: card.theme?.stat?.color,
+              boxShadow: card.theme?.stat?.boxShadow,
+            }}>
               <span className="stat-label">HP</span>
               <span className="stat-value">{card.stats.hp}</span>
             </div>
-            <div className="stat">
+            <div className="stat" style={{
+              background: card.theme?.stat?.background,
+              border: card.theme?.stat?.border,
+              color: card.theme?.stat?.color,
+              boxShadow: card.theme?.stat?.boxShadow,
+            }}>
               <span className="stat-label">MANA</span>
               <span className="stat-value">{card.stats.manaCost}</span>
             </div>
