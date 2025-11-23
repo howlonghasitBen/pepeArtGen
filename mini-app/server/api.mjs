@@ -106,11 +106,32 @@ function generateCardTheme(colors) {
       border: `2px solid ${colors.vibrant}`,
       boxShadow: `inset 0 4px 8px rgba(0, 0, 0, 0.6), 0 0 15px ${hexToRgba(colors.vibrant, 0.3)}`,
     },
+    typeSection: {
+      background: `linear-gradient(135deg, ${colors.darkVibrant}, ${colors.darkMuted})`,
+      color: colors.lightVibrant,
+      textShadow: `1px 1px 2px rgba(0, 0, 0, 0.8)`,
+      boxShadow: `0 4px 15px ${hexToRgba(colors.vibrant, 0.4)}, inset 0 2px 0 ${hexToRgba(colors.lightVibrant, 0.3)}`,
+    },
+    flavorText: {
+      background: `radial-gradient(circle at 40% 30%, ${vibrantRgba} 0%, transparent 50%), radial-gradient(circle at 60% 70%, ${mutedRgba} 0%, transparent 50%), linear-gradient(145deg, ${colors.darkMuted}, ${colors.darkVibrant})`,
+      color: colors.lightMuted,
+      accentColor: colors.vibrant,
+      border: `min(0.25vw, 2px) solid ${colors.vibrant}`,
+    },
+    bottomSection: {
+      background: `linear-gradient(135deg, ${colors.darkVibrant}, ${colors.darkMuted})`,
+    },
     stat: {
       background: hexToRgba(colors.darkVibrant, 0.8),
-      border: `2px solid ${colors.vibrant}`,
+      border: `min(0.25vw, 2px) solid ${colors.vibrant}`,
       color: colors.lightVibrant,
-      boxShadow: `0 0 8px ${hexToRgba(colors.vibrant, 0.5)}`,
+      boxShadow: `0 0 min(1vw, 8px) ${hexToRgba(colors.vibrant, 0.5)}`,
+    },
+    rarity: {
+      background: `linear-gradient(135deg, ${colors.vibrant}, ${colors.muted})`,
+      color: getBestTextColor(colors.vibrant),
+      border: `min(0.25vw, 2px) solid ${colors.darkVibrant}`,
+      boxShadow: `0 0 min(1.2vw, 10px) ${hexToRgba(colors.vibrant, 0.6)}`,
     },
   };
 }
@@ -259,21 +280,48 @@ app.post('/api/generate', async (req, res) => {
 
         const cardId = `${monsterName.toLowerCase().replace(/[^a-z0-9]/g, '')}-${Date.now()}`;
 
+        // Generate random stats for surf-works format
+        const hp = Math.floor(Math.random() * 5) + 5;
+        const mana = Math.floor(Math.random() * 4) + 2;
+        const attack = Math.floor(Math.random() * 5) + 3;
+        const defense = Math.floor(Math.random() * 5) + 3;
+
         const card = {
           id: cardId,
           name: monsterName,
-          move,
-          flavorText,
+          subtitle: '⟨Generated⟩',
+          level: '1',
+          type: 'Creature — Generated',
+          manaCost: [
+            {
+              type: 'hp',
+              value: hp,
+              color: 'radial-gradient(circle, #dc143c, #8b0000)',
+              textColor: '#ffffff',
+            },
+            {
+              type: 'mana',
+              value: mana,
+              color: 'radial-gradient(circle, #4169e1, #0000cd)',
+              textColor: '#ffffff',
+            },
+            {
+              type: 'terrain',
+              value: '?',
+              color: 'radial-gradient(circle, #32cd32, #228b22)',
+              textColor: '#ffffff',
+            },
+          ],
+          stats: {
+            attack,
+            defense,
+          },
+          flavorText: `${move}\n${flavorText}`,
+          artist: 'AI GENERATED',
+          rarity: '1/1',
           imageData,
           colors,
           theme,
-          stats: {
-            level: '1',
-            attack: Math.floor(Math.random() * 5) + 3,
-            defense: Math.floor(Math.random() * 5) + 3,
-            hp: Math.floor(Math.random() * 5) + 5,
-            manaCost: Math.floor(Math.random() * 4) + 2,
-          },
           timestamp: Date.now(),
         };
 

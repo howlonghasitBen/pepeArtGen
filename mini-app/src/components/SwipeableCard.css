@@ -1,18 +1,13 @@
-/* Cards.css - Adapted from surf-works for swipeable mini-app */
+/* SwipeableCard.css - Surf-works styling with swipe functionality */
 
 @import url("https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap");
 
 /* Swipeable Card Container */
 .swipeable-card {
-  letter-spacing: 0.1px;
+  position: relative;
   width: 100%;
   max-width: 400px;
-  height: auto;
   aspect-ratio: 3 / 4;
-  perspective: 1000px;
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
   cursor: grab;
   user-select: none;
   will-change: transform;
@@ -22,51 +17,46 @@
   cursor: grabbing;
 }
 
-/* Swipe Overlays */
+/* Swipe Overlay Indicators */
 .swipe-overlay {
   position: absolute;
   top: 0;
-  bottom: 0;
+  height: 100%;
   width: 50%;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  flex-direction: column;
-  gap: 10px;
-  z-index: 1;
-  pointer-events: none;
   border-radius: min(1.8vw, 14px);
+  pointer-events: none;
+  z-index: 10;
+  font-family: 'Cinzel', serif;
+  font-weight: 700;
 }
 
 .swipe-overlay.left {
   left: 0;
-  border-radius: min(1.8vw, 14px) 0 0 min(1.8vw, 14px);
 }
 
 .swipe-overlay.right {
   right: 0;
-  border-radius: 0 min(1.8vw, 14px) min(1.8vw, 14px) 0;
-}
-
-.overlay-icon {
-  font-size: 4rem;
-  color: white;
-  font-weight: bold;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .overlay-text {
   font-size: 1.5rem;
-  color: white;
-  font-weight: 900;
-  letter-spacing: 2px;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-  font-family: "Cinzel", serif;
+  letter-spacing: 0.2em;
+  text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.8);
+  margin: 0.5rem 0;
+}
+
+.overlay-icon {
+  font-size: 3rem;
+  text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.8);
 }
 
 /* Card Content */
 .card-content {
-  position: relative;
+  letter-spacing: 0.1px;
   width: 100%;
   height: 100%;
   border: min(0.8vw, 6px) solid #1a1a1a;
@@ -74,7 +64,6 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  background: white;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
 }
 
@@ -90,17 +79,82 @@
   position: relative;
 }
 
-.card-name {
-  font-size: 1.2rem;
+.card-title {
+  font-size: 0.7rem;
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  flex: 1;
-  text-align: center;
 }
 
-/* Card Image Container */
-.card-image-container {
+.card-level {
+  padding: min(0.5vw, 4px) min(1vw, 8px);
+  border-radius: min(1.5vw, 12px);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-wrap: nowrap;
+}
+
+/* Mana Cost Orbs */
+.mana-cost {
+  display: flex;
+  gap: min(0.5vw, 4px);
+  margin-bottom: min(0.5vw, 4px);
+}
+
+.mana-orb {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  border: min(0.25vw, 2px) solid #1a1a1a;
+  box-shadow: 0 min(0.25vw, 2px) min(0.5vw, 4px) rgba(0, 0, 0, 0.3);
+  position: relative;
+  cursor: help;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.mana-orb:hover {
+  transform: scale(1.1);
+  box-shadow: 0 min(0.4vw, 3px) min(0.8vw, 6px) rgba(0, 0, 0, 0.4);
+}
+
+.orb-value {
+  font-size: 0.6rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* Tooltip on hover */
+.mana-orb::after {
+  content: attr(title);
+  position: absolute;
+  bottom: calc(100% + 0.5rem);
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.9);
+  color: white;
+  padding: 0.3rem 0.6rem;
+  border-radius: 0.3rem;
+  font-size: 0.45rem;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  z-index: 10;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.mana-orb:hover::after {
+  opacity: 1;
+}
+
+/* Image Area */
+.image-area {
   height: 40%;
   margin: min(0.8vw, 8px);
   border-radius: min(1vw, 8px);
@@ -113,89 +167,45 @@
 }
 
 .card-image {
-  width: 100%;
+  width: auto;
   height: 100%;
+  transform: scale(1.1);
   object-fit: cover;
 }
 
-/* Card Details Section */
-.card-details {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  padding: min(1vw, 8px);
-}
-
-/* Card Stats */
-.card-stats {
-  display: flex;
-  gap: min(0.5vw, 4px);
-  justify-content: center;
-  margin-bottom: min(1vw, 8px);
-  flex-wrap: wrap;
-}
-
-.stat {
-  padding: min(0.8vw, 6px) min(1.2vw, 10px);
-  border-radius: min(0.8vw, 6px);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  min-width: 60px;
-  border: min(0.25vw, 2px) solid #1a1a1a;
-  box-shadow: 0 min(0.25vw, 2px) min(0.5vw, 4px) rgba(0, 0, 0, 0.3);
-}
-
-.stat-label {
-  font-size: 0.5rem;
+/* Type and Power Section */
+.type-power-section {
+  padding: min(1.2vw, 10px) min(2vw, 16px);
+  font-family: "Cinzel", serif;
+  font-size: 0.525rem;
   font-weight: 600;
-  letter-spacing: 0.05em;
-  opacity: 0.9;
-  line-height: 1;
-  margin-bottom: 0.2rem;
-  font-family: "Cinzel", serif;
-}
-
-.stat-value {
-  font-size: 1rem;
-  font-weight: 700;
-  line-height: 1;
-  font-family: "Cinzel", serif;
-}
-
-/* Card Move Section */
-.card-move {
-  padding: min(1.2vw, 10px) min(1.5vw, 12px);
-  font-family: "Cinzel", serif;
   border-top: min(0.25vw, 2px) solid #1a1a2e;
   border-bottom: min(0.25vw, 2px) solid #1a1a2e;
   flex-shrink: 0;
-  text-align: center;
-  margin: min(0.8vw, 6px) 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-.move-label {
-  font-size: 0.6rem;
-  font-weight: 700;
-  letter-spacing: 1px;
-  margin-bottom: min(0.5vw, 4px);
-  opacity: 0.8;
-  text-transform: uppercase;
+.power-stats {
+  font-size: 0.45rem;
+  display: flex;
+  gap: min(1vw, 8px);
+  text-wrap: nowrap;
 }
 
-.move-name {
-  font-size: 1.1rem;
-  font-weight: 800;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+.stat {
+  padding: min(0.5vw, 4px) min(1vw, 8px);
+  border-radius: min(0.5vw, 4px);
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
 }
 
 /* Flavor Text */
-.card-flavor {
-  padding: min(1.5vw, 12px) min(2vw, 16px);
-  font-size: 0.75rem;
-  line-height: 1.4;
+.flavor-text {
+  padding: 0 min(2vw, 16px);
+  font-family: "Crimson Text", serif;
+  font-size: 0.6rem;
+  line-height: 1.1;
   text-align: center;
   font-style: italic;
   flex-grow: 1;
@@ -203,79 +213,114 @@
   align-items: center;
   justify-content: center;
   position: relative;
-  border-radius: min(1vw, 8px);
-  margin: 0 min(1vw, 8px);
-  font-family: "Crimson Text", serif;
 }
 
-.card-flavor::before {
+.flavor-text::before {
   content: '"';
-  font-size: 2.5rem;
+  font-size: 1.8rem;
   position: absolute;
-  top: -0.5rem;
-  left: 0.25rem;
-  opacity: 0.3;
-  font-family: "Cinzel", serif;
+  top: 0;
+  left: 0;
+  opacity: 0.4;
 }
 
-.card-flavor::after {
+.flavor-text::after {
   content: '"';
-  font-size: 2.5rem;
+  font-size: 1.8rem;
   position: absolute;
-  bottom: -1.5rem;
-  right: 0.25rem;
-  opacity: 0.3;
-  font-family: "Cinzel", serif;
+  bottom: -1.25vh;
+  right: 0.35vw;
+  opacity: 0.4;
 }
 
-.card-flavor p {
+.flavor-text-content {
   white-space: pre-line;
-  margin: 0;
-  z-index: 1;
+}
+
+/* Bottom Section */
+.bottom-section {
+  padding: min(1.2vw, 10px) min(2vw, 16px);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.artist-info {
+  font-size: 0.6rem;
+  font-family: "Cinzel", serif;
+  opacity: 0.8;
+}
+
+.rarity-indicator {
+  padding: min(0.5vw, 4px) min(1vw, 8px);
+  border-radius: min(1vw, 8px);
+  font-size: 0.625rem;
+  font-weight: 700;
+  border: min(0.25vw, 2px) solid #1a1a1a;
+  font-family: "Cinzel", serif;
+  letter-spacing: 0.1em;
 }
 
 /* Mobile Responsive */
-@media (max-width: 768px) {
+@media (max-width: 1079px) {
   .swipeable-card {
     max-width: 350px;
   }
 
-  .card-name {
-    font-size: 1rem;
+  .card-header {
+    padding: 8px 10px;
   }
 
-  .card-stats {
-    gap: 4px;
+  .card-title {
+    font-size: 0.7rem;
   }
 
-  .stat {
-    min-width: 50px;
-    padding: 6px 8px;
+  .card-level {
+    font-size: 0.7rem;
+    padding: 3px 6px;
   }
 
-  .stat-label {
+  .mana-orb {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+
+  .orb-value {
+    font-size: 0.6rem;
+  }
+
+  .mana-orb::after {
+    font-size: 0.45rem;
+    padding: 0.25rem 0.5rem;
+  }
+
+  .image-area {
+    margin: 6px;
+    height: 35%;
+  }
+
+  .type-power-section {
+    padding: 8px 12px;
+    font-size: 0.6rem;
+  }
+
+  .power-stats {
     font-size: 0.45rem;
   }
 
-  .stat-value {
-    font-size: 0.85rem;
+  .flavor-text {
+    font-size: 0.65rem;
+    padding: 0 12px;
   }
 
-  .move-name {
-    font-size: 0.95rem;
+  .bottom-section {
+    padding: 8px 12px;
   }
 
-  .card-flavor {
-    font-size: 0.7rem;
-    padding: 10px 12px;
-  }
-
-  .overlay-icon {
-    font-size: 3rem;
-  }
-
-  .overlay-text {
-    font-size: 1.2rem;
+  .artist-info,
+  .rarity-indicator {
+    font-size: 0.65rem;
   }
 }
 
@@ -285,15 +330,31 @@
     max-width: 300px;
   }
 
-  .card-name {
-    font-size: 0.9rem;
-  }
-
-  .move-name {
-    font-size: 0.85rem;
-  }
-
-  .card-flavor {
+  .card-title {
     font-size: 0.65rem;
+  }
+
+  .type-power-section {
+    padding: 8px 12px;
+    font-size: 0.5rem;
+    letter-spacing: 0.1px;
+  }
+
+  .mana-orb {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+
+  .orb-value {
+    font-size: 0.55rem;
+  }
+
+  .flavor-text {
+    font-size: 0.6rem;
+  }
+
+  .artist-info,
+  .rarity-indicator {
+    font-size: 0.4rem;
   }
 }
