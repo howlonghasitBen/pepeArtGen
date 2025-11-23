@@ -1,0 +1,330 @@
+.curation-screen {
+  animation: fadeIn 0.3s ease-in;
+  min-height: 80vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.curation-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  color: white;
+}
+
+.back-btn-small {
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  color: white;
+  border-radius: 20px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.back-btn-small:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.progress {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.stats-mini {
+  display: flex;
+  gap: 12px;
+  font-weight: 500;
+}
+
+.stat-mint {
+  color: #4cd964;
+}
+
+.stat-discard {
+  color: #ff3b30;
+}
+
+.swipe-instructions {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  gap: 10px;
+}
+
+.instruction {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  color: white;
+  font-size: 0.85rem;
+}
+
+.instruction.left {
+  justify-content: flex-start;
+}
+
+.instruction.right {
+  justify-content: flex-end;
+}
+
+.instruction .icon {
+  font-size: 1.2rem;
+}
+
+.card-stack {
+  flex: 1;
+  position: relative;
+  margin-bottom: 20px;
+  min-height: 400px;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: auto;
+}
+
+.action-btn {
+  flex: 1;
+  max-width: 120px;
+  padding: 16px;
+  border-radius: 14px;
+  font-weight: 600;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.2s;
+}
+
+.action-btn .btn-icon {
+  font-size: 1.5rem;
+}
+
+.action-btn.discard {
+  background: rgba(255, 59, 48, 0.9);
+  color: white;
+}
+
+.action-btn.mint {
+  background: rgba(76, 217, 100, 0.9);
+  color: white;
+}
+
+.action-btn.undo {
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  color: white;
+}
+
+.action-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+}
+
+.action-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Mint Modal */
+.mint-modal {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 20px;
+  padding: 30px;
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.mint-modal h2 {
+  text-align: center;
+  margin-bottom: 25px;
+  color: #333;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  margin-bottom: 25px;
+}
+
+.stat-box {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 20px;
+  border-radius: 12px;
+  text-align: center;
+  color: white;
+}
+
+.stat-number {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 5px;
+}
+
+.stat-label {
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+
+.mint-preview {
+  margin-bottom: 20px;
+}
+
+.mint-preview h3 {
+  color: #333;
+  margin-bottom: 15px;
+  font-size: 1rem;
+}
+
+.card-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 12px;
+}
+
+.card-preview-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.card-preview-item img {
+  width: 100%;
+  aspect-ratio: 16/9;
+  object-fit: cover;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.card-preview-item span {
+  font-size: 0.85rem;
+  color: #333;
+  font-weight: 500;
+  text-align: center;
+}
+
+.mint-info {
+  background: #f8f8f8;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.cost-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cost-row {
+  display: flex;
+  justify-content: space-between;
+  color: #666;
+  font-size: 0.95rem;
+}
+
+.cost-row.total {
+  padding-top: 10px;
+  border-top: 2px solid #ddd;
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #333;
+}
+
+.connect-wallet-section {
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+.connect-wallet-section p {
+  color: #666;
+  margin-bottom: 15px;
+}
+
+.mint-btn {
+  width: 100%;
+  padding: 18px;
+  background: linear-gradient(135deg, #4cd964 0%, #34c759 100%);
+  color: white;
+  border-radius: 14px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  transition: all 0.2s;
+  margin-bottom: 15px;
+  box-shadow: 0 4px 15px rgba(76, 217, 100, 0.3);
+}
+
+.mint-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(76, 217, 100, 0.4);
+}
+
+.secondary-btn {
+  width: 100%;
+  padding: 14px;
+  background: rgba(102, 126, 234, 0.1);
+  color: #667eea;
+  border-radius: 12px;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.secondary-btn:hover {
+  background: rgba(102, 126, 234, 0.2);
+}
+
+.empty-state {
+  text-align: center;
+  color: white;
+  font-size: 1.2rem;
+  margin: 60px 0;
+}
+
+.back-btn {
+  width: 100%;
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  color: white;
+  border-radius: 12px;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.back-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+@media (max-width: 768px) {
+  .mint-modal {
+    padding: 20px;
+  }
+
+  .card-list {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  }
+
+  .action-btn {
+    max-width: none;
+  }
+}
