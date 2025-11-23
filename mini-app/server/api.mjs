@@ -2,6 +2,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import { google } from '@ai-sdk/google';
 import { generateText } from 'ai';
 import { promises as fs } from 'fs';
