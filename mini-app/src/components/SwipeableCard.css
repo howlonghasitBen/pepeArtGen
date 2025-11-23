@@ -1,7 +1,16 @@
+/* Cards.css - Adapted from surf-works for swipeable mini-app */
+
+@import url("https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap");
+
+/* Swipeable Card Container */
 .swipeable-card {
-  position: absolute;
+  letter-spacing: 0.1px;
   width: 100%;
   max-width: 400px;
+  height: auto;
+  aspect-ratio: 3 / 4;
+  perspective: 1000px;
+  position: absolute;
   left: 50%;
   transform: translateX(-50%);
   cursor: grab;
@@ -13,6 +22,7 @@
   cursor: grabbing;
 }
 
+/* Swipe Overlays */
 .swipe-overlay {
   position: absolute;
   top: 0;
@@ -25,17 +35,17 @@
   gap: 10px;
   z-index: 1;
   pointer-events: none;
-  border-radius: 20px;
+  border-radius: min(1.8vw, 14px);
 }
 
 .swipe-overlay.left {
   left: 0;
-  border-radius: 20px 0 0 20px;
+  border-radius: min(1.8vw, 14px) 0 0 min(1.8vw, 14px);
 }
 
 .swipe-overlay.right {
   right: 0;
-  border-radius: 0 20px 20px 0;
+  border-radius: 0 min(1.8vw, 14px) min(1.8vw, 14px) 0;
 }
 
 .overlay-icon {
@@ -51,137 +61,213 @@
   font-weight: 900;
   letter-spacing: 2px;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  font-family: "Cinzel", serif;
 }
 
+/* Card Content */
 .card-content {
-  background: white;
-  border-radius: 20px;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border: min(0.8vw, 6px) solid #1a1a1a;
+  border-radius: min(1.8vw, 14px);
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: white;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+/* Card Header */
+.card-header {
+  border-bottom: min(0.4vw, 3px) solid #1a1a2e;
+  padding: min(1vw, 8px) min(1.5vw, 12px);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: "Cinzel", serif;
+  flex-shrink: 0;
   position: relative;
 }
 
+.card-name {
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  flex: 1;
+  text-align: center;
+}
+
+/* Card Image Container */
 .card-image-container {
-  width: 100%;
-  aspect-ratio: 16/9;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  height: 40%;
+  margin: min(0.8vw, 8px);
+  border-radius: min(1vw, 8px);
+  position: relative;
   overflow: hidden;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .card-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  display: block;
 }
 
+/* Card Details Section */
 .card-details {
-  padding: 20px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: min(1vw, 8px);
 }
 
-.card-name {
-  font-size: 1.8rem;
-  font-weight: 800;
-  color: #333;
-  margin-bottom: 15px;
-  text-align: center;
-}
-
+/* Card Stats */
 .card-stats {
   display: flex;
-  gap: 8px;
+  gap: min(0.5vw, 4px);
   justify-content: center;
-  margin-bottom: 20px;
+  margin-bottom: min(1vw, 8px);
   flex-wrap: wrap;
 }
 
 .stat {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 8px 12px;
-  border-radius: 10px;
+  padding: min(0.8vw, 6px) min(1.2vw, 10px);
+  border-radius: min(0.8vw, 6px);
   display: flex;
   flex-direction: column;
   align-items: center;
   min-width: 60px;
+  border: min(0.25vw, 2px) solid #1a1a1a;
+  box-shadow: 0 min(0.25vw, 2px) min(0.5vw, 4px) rgba(0, 0, 0, 0.3);
 }
 
 .stat-label {
-  font-size: 0.7rem;
-  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.5rem;
   font-weight: 600;
-  margin-bottom: 2px;
+  letter-spacing: 0.05em;
+  opacity: 0.9;
+  line-height: 1;
+  margin-bottom: 0.2rem;
+  font-family: "Cinzel", serif;
 }
 
 .stat-value {
-  font-size: 1.2rem;
-  color: white;
+  font-size: 1rem;
   font-weight: 700;
+  line-height: 1;
+  font-family: "Cinzel", serif;
 }
 
+/* Card Move Section */
 .card-move {
-  background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
-  padding: 15px;
-  border-radius: 12px;
-  margin-bottom: 15px;
+  padding: min(1.2vw, 10px) min(1.5vw, 12px);
+  font-family: "Cinzel", serif;
+  border-top: min(0.25vw, 2px) solid #1a1a2e;
+  border-bottom: min(0.25vw, 2px) solid #1a1a2e;
+  flex-shrink: 0;
   text-align: center;
+  margin: min(0.8vw, 6px) 0;
 }
 
 .move-label {
-  font-size: 0.75rem;
+  font-size: 0.6rem;
   font-weight: 700;
-  color: #666;
   letter-spacing: 1px;
-  margin-bottom: 5px;
+  margin-bottom: min(0.5vw, 4px);
+  opacity: 0.8;
+  text-transform: uppercase;
 }
 
 .move-name {
-  font-size: 1.3rem;
+  font-size: 1.1rem;
   font-weight: 800;
-  color: #333;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
 }
 
+/* Flavor Text */
 .card-flavor {
-  background: #f8f8f8;
-  padding: 15px;
-  border-radius: 12px;
-  border-left: 4px solid #667eea;
+  padding: min(1.5vw, 12px) min(2vw, 16px);
+  font-size: 0.75rem;
+  line-height: 1.4;
+  text-align: center;
+  font-style: italic;
+  flex-grow: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  border-radius: min(1vw, 8px);
+  margin: 0 min(1vw, 8px);
+  font-family: "Crimson Text", serif;
+}
+
+.card-flavor::before {
+  content: '"';
+  font-size: 2.5rem;
+  position: absolute;
+  top: -0.5rem;
+  left: 0.25rem;
+  opacity: 0.3;
+  font-family: "Cinzel", serif;
+}
+
+.card-flavor::after {
+  content: '"';
+  font-size: 2.5rem;
+  position: absolute;
+  bottom: -1.5rem;
+  right: 0.25rem;
+  opacity: 0.3;
+  font-family: "Cinzel", serif;
 }
 
 .card-flavor p {
-  font-size: 0.95rem;
-  line-height: 1.6;
-  color: #555;
-  font-style: italic;
+  white-space: pre-line;
   margin: 0;
+  z-index: 1;
 }
 
-/* Mobile optimizations */
+/* Mobile Responsive */
 @media (max-width: 768px) {
+  .swipeable-card {
+    max-width: 350px;
+  }
+
   .card-name {
-    font-size: 1.5rem;
+    font-size: 1rem;
   }
 
   .card-stats {
-    gap: 6px;
+    gap: 4px;
   }
 
   .stat {
     min-width: 50px;
-    padding: 6px 10px;
+    padding: 6px 8px;
   }
 
   .stat-label {
-    font-size: 0.65rem;
+    font-size: 0.45rem;
   }
 
   .stat-value {
-    font-size: 1rem;
+    font-size: 0.85rem;
   }
 
   .move-name {
-    font-size: 1.1rem;
+    font-size: 0.95rem;
+  }
+
+  .card-flavor {
+    font-size: 0.7rem;
+    padding: 10px 12px;
   }
 
   .overlay-icon {
@@ -190,5 +276,24 @@
 
   .overlay-text {
     font-size: 1.2rem;
+  }
+}
+
+/* Extra small screens */
+@media (max-width: 480px) {
+  .swipeable-card {
+    max-width: 300px;
+  }
+
+  .card-name {
+    font-size: 0.9rem;
+  }
+
+  .move-name {
+    font-size: 0.85rem;
+  }
+
+  .card-flavor {
+    font-size: 0.65rem;
   }
 }
