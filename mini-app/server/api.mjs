@@ -4,7 +4,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { google } from '@ai-sdk/google';
 import { generateText, generateObject } from 'ai';
-import { GoogleGenAI } from '@google/genai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -38,32 +38,41 @@ function checkAndResetDailyLimit() {
   }
 }
 
-// Generate card image using Imagen via Google AI SDK
+// Generate card image using placeholder SVG
+// Note: Full Imagen API integration requires special setup
 async function generateCardImage(monsterName) {
-  const genAI = new GoogleGenAI(process.env.GOOGLE_GENERATIVE_AI_API_KEY || process.env.API_KEY);
+  console.log(`🎨 Generating placeholder image for: ${monsterName}`);
 
-  const prompt = `Epic fantasy trading card art of ${monsterName}, highly detailed, dramatic lighting, vibrant colors, 16:9 aspect ratio, professional game art style`;
+  // Create a colorful gradient SVG placeholder
+  const colors = [
+    { bg: '#667eea', fg: '#764ba2' },
+    { bg: '#f093fb', fg: '#f5576c' },
+    { bg: '#4facfe', fg: '#00f2fe' },
+    { bg: '#43e97b', fg: '#38f9d7' },
+    { bg: '#fa709a', fg: '#fee140' },
+  ];
 
-  try {
-    // Use Imagen 3 for image generation
-    const result = await genAI.models.imagen.generate({
-      prompt,
-      numberOfImages: 1,
-      aspectRatio: '16:9',
-    });
+  const colorScheme = colors[Math.floor(Math.random() * colors.length)];
 
-    // Get the generated image
-    const image = result.images[0];
-    return {
-      imageData: image.imageBytes.toString('base64'),
-      mimeType: 'image/png',
-    };
-  } catch (error) {
-    console.error('Image generation error:', error);
-    // For now, return a placeholder since Imagen API might need special setup
-    // In production, this should properly handle the Imagen API
-    throw new Error('Image generation not available. Please use the unified generator with existing images.');
-  }
+  const placeholderSVG = `<svg width="800" height="450" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" style="stop-color:${colorScheme.bg};stop-opacity:1" />
+        <stop offset="100%" style="stop-color:${colorScheme.fg};stop-opacity:1" />
+      </linearGradient>
+    </defs>
+    <rect width="800" height="450" fill="url(#grad)"/>
+    <text x="400" y="200" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="white" text-anchor="middle">${monsterName}</text>
+    <text x="400" y="260" font-family="Arial, sans-serif" font-size="20" fill="rgba(255,255,255,0.9)" text-anchor="middle">🎴 Trading Card</text>
+    <text x="400" y="300" font-family="Arial, sans-serif" font-size="14" fill="rgba(255,255,255,0.7)" text-anchor="middle">For actual images, use unifiedCardGenerator.mjs</text>
+  </svg>`;
+
+  const base64SVG = Buffer.from(placeholderSVG).toString('base64');
+
+  return {
+    imageData: base64SVG,
+    mimeType: 'image/svg+xml',
+  };
 }
 
 // Generate move and flavor text
