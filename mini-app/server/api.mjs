@@ -179,7 +179,7 @@ async function generateCardImage(monsterName) {
     const prompt = `Epic fantasy trading card art of ${monsterName}, highly detailed, dramatic lighting, vibrant colors, professional game art style, TCG card illustration`;
 
     const response = await genAI.models.generateImages({
-      model: 'imagen-3.0-generate-001',
+      model: 'imagen-4.0-generate-001',
       prompt: prompt,
       config: {
         numberOfImages: 1,
