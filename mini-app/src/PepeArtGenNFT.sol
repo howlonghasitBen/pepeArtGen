@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.20;
 
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
-import "@openzeppelin/contracts/token/common/ERC2981.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/security/Pausable.sol";
-import "@openzeppelin/contracts/utils/Counters.sol";
+import "openzeppelin/token/ERC721/ERC721.sol";
+import "openzeppelin/token/ERC721/extensions/ERC721URIStorage.sol";
+import "openzeppelin/token/common/ERC2981.sol";
+import "openzeppelin/access/Ownable.sol";
+import "openzeppelin/security/ReentrancyGuard.sol";
+import "openzeppelin/security/Pausable.sol";
+import "openzeppelin/utils/Counters.sol";
 
 contract PepeArtGenNFT is 
     ERC721, 
