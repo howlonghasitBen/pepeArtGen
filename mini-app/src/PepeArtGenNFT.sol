@@ -83,7 +83,7 @@ contract PepeArtGenNFT is
         uint256 quantity = metadataURIs.length;
         if (quantity > MAX_PER_TX) revert ExceedsMaxPerTransaction();
         if (msg.value < mintPrice * quantity) revert InsufficientPayment();
-        if (block.timestamp < lastMintTime[msg.sender] + mintCooldown) revert CooldownActive();
+        if (lastMintTime[msg.sender] != 0 && block.timestamp < lastMintTime[msg.sender] + mintCooldown) revert CooldownActive();
 
         uint256[] memory tokenIds = new uint256[](quantity);
         for (uint256 i = 0; i < quantity; i++) {
@@ -108,7 +108,7 @@ contract PepeArtGenNFT is
 
     function _mintInternal(address to, string memory metadataURI) internal returns (uint256) {
         if (msg.value < mintPrice) revert InsufficientPayment();
-        if (block.timestamp < lastMintTime[to] + mintCooldown) revert CooldownActive();
+        if (lastMintTime[to] != 0 && block.timestamp < lastMintTime[to] + mintCooldown) revert CooldownActive();
 
         uint256 tokenId = _mintSingle(to, metadataURI);
         lastMintTime[to] = block.timestamp;
