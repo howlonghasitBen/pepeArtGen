@@ -1,5 +1,5 @@
 import { useSpring, animated } from 'react-spring'
-import { useDrag } from 'react-use-gesture'
+import { useDrag } from '@use-gesture/react'
 import './SwipeableCard.css'
 
 function SwipeableCard({ card, onSwipeLeft, onSwipeRight }) {

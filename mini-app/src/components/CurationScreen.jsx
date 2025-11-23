@@ -1,6 +1,4 @@
 import { useState } from 'react'
-import { useSpring, animated } from 'react-spring'
-import { useDrag } from 'react-use-gesture'
 import { useAccount } from 'wagmi'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
 import SwipeableCard from './SwipeableCard'

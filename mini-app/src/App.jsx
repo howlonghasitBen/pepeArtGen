@@ -1,37 +1,23 @@
 import { useState, useEffect } from 'react'
-import { WagmiConfig, createConfig, configureChains } from 'wagmi'
-import { base } from 'wagmi/chains'
-import { publicProvider } from 'wagmi/providers/public'
-import { RainbowKitProvider, getDefaultWallets, connectorsForWallets } from '@rainbow-me/rainbowkit'
+import { WagmiProvider, createConfig, http } from 'wagmi'
+import { base, baseSepolia } from 'wagmi/chains'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { RainbowKitProvider, getDefaultConfig } from '@rainbow-me/rainbowkit'
 import '@rainbow-me/rainbowkit/styles.css'
 
 import GeneratorScreen from './components/GeneratorScreen'
 import CurationScreen from './components/CurationScreen'
 import './App.css'
 
-// Configure chains & providers
-const { chains, publicClient, webSocketPublicClient } = configureChains(
-  [base],
-  [publicProvider()]
-)
+// Get WalletConnect Project ID from env
+const projectId = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID || 'YOUR_PROJECT_ID'
 
-// Configure wallet connectors (Coinbase Wallet priority)
-const { wallets } = getDefaultWallets({
+// Configure Wagmi with RainbowKit
+const config = getDefaultConfig({
   appName: 'Pepe Card Generator',
-  projectId: 'YOUR_WALLETCONNECT_PROJECT_ID', // Get from WalletConnect Cloud
-  chains,
-})
-
-const connectors = connectorsForWallets([
-  ...wallets,
-])
-
-const wagmiConfig = createConfig({
-  autoConnect: true,
-  connectors,
-  publicClient,
-  webSocketPublicClient,
+  projectId,
+  chains: [base, baseSepolia],
+  ssr: false,
 })
 
 const queryClient = new QueryClient()
@@ -62,9 +48,9 @@ function App() {
   }
 
   return (
-    <WagmiConfig config={wagmiConfig}>
+    <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
-        <RainbowKitProvider chains={chains}>
+        <RainbowKitProvider>
           <div className="app">
             <header className="app-header">
               <h1>🃏 Pepe Card Generator</h1>
@@ -90,7 +76,7 @@ function App() {
           </div>
         </RainbowKitProvider>
       </QueryClientProvider>
-    </WagmiConfig>
+    </WagmiProvider>
   )
 }
 
