@@ -2,12 +2,13 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenAI } from '@google/genai';
 import { google } from '@ai-sdk/google';
 import { generateText } from 'ai';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { Buffer } from 'buffer';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -173,28 +174,32 @@ async function generateCardImage(monsterName) {
   try {
     console.log(`  🎨 Generating image with Imagen for: ${monsterName}`);
 
-    const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GENERATIVE_AI_API_KEY || process.env.API_KEY);
-    const model = genAI.getGenerativeModel({ model: 'imagen-3.0-generate-001' });
+    const genAI = new GoogleGenAI(process.env.GOOGLE_GENERATIVE_AI_API_KEY || process.env.API_KEY);
 
     const prompt = `Epic fantasy trading card art of ${monsterName}, highly detailed, dramatic lighting, vibrant colors, professional game art style, TCG card illustration`;
 
-    const result = await model.generateImages({
-      prompt,
-      numberOfImages: 1,
-      aspectRatio: '3:4',
+    const response = await genAI.models.generateImages({
+      model: 'imagen-3.0-generate-001',
+      prompt: prompt,
+      config: {
+        numberOfImages: 1,
+        outputMimeType: 'image/png',
+        aspectRatio: '3:4',
+      },
     });
 
-    // Get the first generated image
-    const generatedImage = result.images[0];
+    if (response.generatedImages?.[0]?.image?.imageBytes) {
+      const base64Data = response.generatedImages[0].image.imageBytes;
+      const mimeType = 'image/png';
 
-    // Convert to base64
-    const imageData = generatedImage.image.toString('base64');
-    const mimeType = 'image/png';
-
-    return {
-      imageData: `data:${mimeType};base64,${imageData}`,
-      mimeType,
-    };
+      return {
+        imageData: `data:${mimeType};base64,${base64Data}`,
+        mimeType,
+      };
+    } else {
+      console.warn(`  ⚠️  Image generation returned no data (may be policy violation)`);
+      throw new Error('Image generation returned no data');
+    }
   } catch (error) {
     console.error('  ❌ Imagen generation error:', error.message);
     throw new Error(`Image generation failed: ${error.message}`);
