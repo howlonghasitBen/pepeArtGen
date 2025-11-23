@@ -54,7 +54,12 @@ function GeneratorScreen({ onCardsGenerated, limits }) {
 
       setProgress({ current: 0, total: monsterNames.length })
 
-      // Call API
+      // For now, show a message that image upload is needed
+      setError('⚠️ Card generation requires images. Please use the unifiedCardGenerator.mjs to generate cards with images first, or upload images.')
+      setLoading(false)
+
+      // Uncomment this when you have images to upload:
+      /*
       const response = await fetch('http://localhost:3001/api/generate', {
         method: 'POST',
         headers: {
@@ -62,6 +67,7 @@ function GeneratorScreen({ onCardsGenerated, limits }) {
         },
         body: JSON.stringify({
           monsterNames,
+          images: [], // TODO: Add base64 images here from file upload
           batchMode: mode === 'batch',
         }),
       })
@@ -80,6 +86,7 @@ function GeneratorScreen({ onCardsGenerated, limits }) {
       } else {
         setError('Generation failed')
       }
+      */
     } catch (err) {
       setError(err.message)
     } finally {
