@@ -3,8 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { google } from '@ai-sdk/google';
-import { generateText, generateObject } from 'ai';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { generateText } from 'ai';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -18,16 +17,24 @@ const app = express();
 const PORT = 3001;
 
 // Free tier limits
-const FREE_DAILY_LIMIT = 100; // Imagen free tier
-const BATCH_LIMIT = 10; // Max batch size for free tier
+const FREE_DAILY_LIMIT = 100;
+const BATCH_LIMIT = 10;
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '50mb' })); // Increased for base64 images
 
 // In-memory storage for demo (use Redis/DB in production)
 const generatedCards = new Map();
 let dailyGenerationCount = 0;
 let lastResetDate = new Date().toDateString();
+
+// Import node-vibrant dynamically
+let Vibrant;
+async function initVibrant() {
+  const vibrantModule = await import('node-vibrant/node');
+  Vibrant = vibrantModule.default || vibrantModule.Vibrant || vibrantModule;
+  return Vibrant;
+}
 
 // Reset daily counter
 function checkAndResetDailyLimit() {
@@ -38,49 +45,83 @@ function checkAndResetDailyLimit() {
   }
 }
 
-// Generate card image using placeholder SVG
-// Note: Full Imagen API integration requires special setup
-async function generateCardImage(monsterName) {
-  console.log(`🎨 Generating placeholder image for: ${monsterName}`);
+// Color utilities from original script
+function hexToRgba(hex, alpha = 1) {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  if (!result) return `rgba(128, 128, 128, ${alpha})`;
+  return `rgba(${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}, ${alpha})`;
+}
 
-  // Create a colorful gradient SVG placeholder
-  const colors = [
-    { bg: '#667eea', fg: '#764ba2' },
-    { bg: '#f093fb', fg: '#f5576c' },
-    { bg: '#4facfe', fg: '#00f2fe' },
-    { bg: '#43e97b', fg: '#38f9d7' },
-    { bg: '#fa709a', fg: '#fee140' },
-  ];
+function getBestTextColor(hexColor) {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hexColor);
+  if (!result) return '#ffffff';
+  const r = parseInt(result[1], 16);
+  const g = parseInt(result[2], 16);
+  const b = parseInt(result[3], 16);
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return luminance > 0.5 ? '#1a1a1a' : '#ffffff';
+}
 
-  const colorScheme = colors[Math.floor(Math.random() * colors.length)];
+// Extract colors from base64 image using node-vibrant
+async function extractColorsFromImage(base64Image) {
+  if (!Vibrant) {
+    await initVibrant();
+  }
 
-  const placeholderSVG = `<svg width="800" height="450" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" style="stop-color:${colorScheme.bg};stop-opacity:1" />
-        <stop offset="100%" style="stop-color:${colorScheme.fg};stop-opacity:1" />
-      </linearGradient>
-    </defs>
-    <rect width="800" height="450" fill="url(#grad)"/>
-    <text x="400" y="200" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="white" text-anchor="middle">${monsterName}</text>
-    <text x="400" y="260" font-family="Arial, sans-serif" font-size="20" fill="rgba(255,255,255,0.9)" text-anchor="middle">🎴 Trading Card</text>
-    <text x="400" y="300" font-family="Arial, sans-serif" font-size="14" fill="rgba(255,255,255,0.7)" text-anchor="middle">For actual images, use unifiedCardGenerator.mjs</text>
-  </svg>`;
+  // Remove data URI prefix if present
+  const base64Data = base64Image.replace(/^data:image\/\w+;base64,/, '');
+  const buffer = Buffer.from(base64Data, 'base64');
 
-  const base64SVG = Buffer.from(placeholderSVG).toString('base64');
+  const palette = await Vibrant.from(buffer).getPalette();
 
   return {
-    imageData: base64SVG,
-    mimeType: 'image/svg+xml',
+    vibrant: palette.Vibrant?.hex || '#808080',
+    darkVibrant: palette.DarkVibrant?.hex || '#404040',
+    lightVibrant: palette.LightVibrant?.hex || '#c0c0c0',
+    muted: palette.Muted?.hex || '#808080',
+    darkMuted: palette.DarkMuted?.hex || '#404040',
+    lightMuted: palette.LightMuted?.hex || '#c0c0c0',
   };
 }
 
-// Generate move and flavor text
-async function generateMoveAndFlavorText(monsterName, imageData = null) {
-  const content = [
-    {
-      type: 'text',
-      text: `You are creating content for a fantasy trading card game for: ${monsterName}
+// Generate card theme from extracted colors (from original script)
+function generateCardTheme(colors) {
+  const vibrantRgba = hexToRgba(colors.vibrant, 0.4);
+  const darkVibrantRgba = hexToRgba(colors.darkVibrant, 0.5);
+  const lightVibrantRgba = hexToRgba(colors.lightVibrant, 0.3);
+  const mutedRgba = hexToRgba(colors.muted, 0.4);
+
+  return {
+    background: `radial-gradient(circle at 20% 30%, ${vibrantRgba} 0%, transparent 50%), radial-gradient(circle at 80% 70%, ${darkVibrantRgba} 0%, transparent 40%), radial-gradient(circle at 60% 10%, ${lightVibrantRgba} 0%, transparent 45%), linear-gradient(145deg, ${colors.darkMuted}, ${colors.darkVibrant}, ${colors.muted})`,
+    header: {
+      background: `radial-gradient(circle at 25% 50%, ${vibrantRgba} 0%, transparent 60%), radial-gradient(circle at 75% 50%, ${mutedRgba} 0%, transparent 60%), linear-gradient(135deg, ${colors.vibrant}, ${colors.muted}, ${colors.lightVibrant}, ${colors.vibrant}, ${colors.darkVibrant})`,
+      color: getBestTextColor(colors.vibrant),
+      textShadow: `2px 2px 4px rgba(0, 0, 0, 0.8), 0 0 10px ${hexToRgba(colors.vibrant, 0.6)}`,
+      boxShadow: `0 4px 15px ${hexToRgba(colors.vibrant, 0.4)}, inset 0 2px 0 ${hexToRgba(colors.lightVibrant, 0.3)}`,
+    },
+    imageArea: {
+      background: `radial-gradient(circle at 30% 20%, ${vibrantRgba} 0%, transparent 45%), radial-gradient(circle at 70% 80%, ${darkVibrantRgba} 0%, transparent 50%), linear-gradient(145deg, ${colors.darkMuted}, ${colors.darkVibrant}, ${colors.muted})`,
+      border: `2px solid ${colors.vibrant}`,
+      boxShadow: `inset 0 4px 8px rgba(0, 0, 0, 0.6), 0 0 15px ${hexToRgba(colors.vibrant, 0.3)}`,
+    },
+    stat: {
+      background: hexToRgba(colors.darkVibrant, 0.8),
+      border: `2px solid ${colors.vibrant}`,
+      color: colors.lightVibrant,
+      boxShadow: `0 0 8px ${hexToRgba(colors.vibrant, 0.5)}`,
+    },
+  };
+}
+
+// Generate move and flavor text (from original script)
+async function generateMoveAndFlavorText(monsterName) {
+  try {
+    const { text } = await generateText({
+      model: google('gemini-2.0-flash-exp'),
+      messages: [
+        {
+          role: 'user',
+          content: `You are creating content for a fantasy trading card game for: ${monsterName}
 
 Your task is to create TWO things:
 
@@ -99,45 +140,39 @@ Your task is to create TWO things:
 Respond in this EXACT format:
 MOVE: [Your 2-5 word signature move]
 FLAVOR: [Your 1-2 sentence flavor text]`,
-    },
-  ];
-
-  // If we have image data, include it
-  if (imageData) {
-    content.unshift({
-      type: 'image',
-      image: imageData,
-      mimeType: 'image/png',
+        },
+      ],
     });
-  }
 
-  const { text } = await generateText({
-    model: google('gemini-2.0-flash-exp'),
-    messages: [{ role: 'user', content }],
-  });
+    // Parse response
+    const lines = text.trim().split('\n');
+    let moveName = 'Signature Move';
+    let flavorText = 'A legendary ability that echoes through time.';
 
-  // Parse response
-  const lines = text.trim().split('\n');
-  let moveName = 'Signature Move';
-  let flavorText = 'A legendary ability that echoes through time.';
-
-  for (const line of lines) {
-    if (line.startsWith('MOVE:')) {
-      moveName = line.replace('MOVE:', '').trim().replace(/^["']|["']$/g, '');
-    } else if (line.startsWith('FLAVOR:')) {
-      flavorText = line.replace('FLAVOR:', '').trim().replace(/^["']|["']$/g, '');
+    for (const line of lines) {
+      if (line.startsWith('MOVE:')) {
+        moveName = line.replace('MOVE:', '').trim().replace(/^["']|["']$/g, '');
+      } else if (line.startsWith('FLAVOR:')) {
+        flavorText = line.replace('FLAVOR:', '').trim().replace(/^["']|["']$/g, '');
+      }
     }
-  }
 
-  return { move: moveName, flavorText };
+    return { move: moveName, flavorText };
+  } catch (error) {
+    console.error('Error generating move and flavor text:', error);
+    return {
+      move: 'Signature Move',
+      flavorText: 'A legendary ability that echoes through time.',
+    };
+  }
 }
 
-// Generate card endpoint
+// Generate card endpoint - expects image to be provided as base64
 app.post('/api/generate', async (req, res) => {
   try {
     checkAndResetDailyLimit();
 
-    const { monsterNames, batchMode = false } = req.body;
+    const { monsterNames, images = [], batchMode = false } = req.body;
 
     if (!monsterNames || monsterNames.length === 0) {
       return res.status(400).json({ error: 'No monster names provided' });
@@ -162,15 +197,33 @@ app.post('/api/generate', async (req, res) => {
 
     const cards = [];
 
-    for (const monsterName of monsterNames) {
-      try {
-        console.log(`Generating card for: ${monsterName}`);
+    for (let i = 0; i < monsterNames.length; i++) {
+      const monsterName = monsterNames[i];
+      const imageData = images[i]; // Base64 image data
 
-        // Generate image
-        const { imageData, mimeType } = await generateCardImage(monsterName);
+      if (!imageData) {
+        cards.push({
+          error: true,
+          name: monsterName,
+          message: 'No image provided for this monster',
+        });
+        continue;
+      }
+
+      try {
+        console.log(`Processing card for: ${monsterName}`);
+
+        // Extract colors from provided image
+        console.log('  Extracting colors from image...');
+        const colors = await extractColorsFromImage(imageData);
+
+        // Generate theme based on extracted colors
+        console.log('  Generating theme from colors...');
+        const theme = generateCardTheme(colors);
 
         // Generate move and flavor text
-        const { move, flavorText } = await generateMoveAndFlavorText(monsterName, imageData);
+        console.log('  Generating move and flavor text...');
+        const { move, flavorText } = await generateMoveAndFlavorText(monsterName);
 
         const cardId = `${monsterName.toLowerCase().replace(/[^a-z0-9]/g, '')}-${Date.now()}`;
 
@@ -179,7 +232,9 @@ app.post('/api/generate', async (req, res) => {
           name: monsterName,
           move,
           flavorText,
-          imageData: `data:${mimeType};base64,${imageData}`,
+          imageData,
+          colors,
+          theme,
           stats: {
             level: '1',
             attack: Math.floor(Math.random() * 5) + 3,
@@ -194,9 +249,11 @@ app.post('/api/generate', async (req, res) => {
         cards.push(card);
         dailyGenerationCount++;
 
+        console.log(`  ✅ Card generated successfully`);
+
         // Rate limiting delay
-        if (monsterNames.indexOf(monsterName) < monsterNames.length - 1) {
-          await new Promise(resolve => setTimeout(resolve, 4000));
+        if (i < monsterNames.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 2000));
         }
       } catch (error) {
         console.error(`Error generating card for ${monsterName}:`, error);
@@ -243,4 +300,5 @@ app.listen(PORT, () => {
   console.log(`🚀 Card Generator API running on http://localhost:${PORT}`);
   console.log(`📊 Free tier limit: ${FREE_DAILY_LIMIT} cards/day`);
   console.log(`📦 Batch limit: ${BATCH_LIMIT} cards`);
+  console.log(`🎨 Using node-vibrant for color extraction`);
 });
