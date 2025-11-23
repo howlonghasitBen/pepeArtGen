@@ -174,7 +174,7 @@ async function generateCardImage(monsterName) {
   try {
     console.log(`  🎨 Generating image with Imagen for: ${monsterName}`);
 
-    const genAI = new GoogleGenAI(process.env.GOOGLE_GENERATIVE_AI_API_KEY || process.env.API_KEY);
+    const genAI = new GoogleGenAI({ apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY || process.env.API_KEY });
 
     const prompt = `Epic fantasy trading card art of ${monsterName}, highly detailed, dramatic lighting, vibrant colors, professional game art style, TCG card illustration`;
 
