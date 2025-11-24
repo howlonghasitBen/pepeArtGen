@@ -10,6 +10,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { Buffer } from "buffer";
 import { PinataSDK } from "pinata-web3";
+import { generateCardHTML } from "./cardHTMLGenerator.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -448,13 +449,30 @@ app.post("/api/upload-to-ipfs", async (req, res) => {
 
     console.log(`  ✅ Image uploaded: ipfs://${imageCID}`);
 
-    // Step 2: Create and upload metadata
+    // Step 2: Generate and upload HTML card
+    console.log("  🎴 Generating HTML card...");
+
+    const imageGatewayUrl = `https://gateway.pinata.cloud/ipfs/${imageCID}`;
+    const cardHTML = generateCardHTML(card, imageGatewayUrl);
+
+    const htmlFile = new File([cardHTML], `${card.id}.html`, {
+      type: "text/html",
+    });
+
+    console.log("  📤 Uploading HTML card...");
+    const htmlUpload = await pinata.upload.file(htmlFile);
+    const htmlCID = htmlUpload.IpfsHash;
+
+    console.log(`  ✅ HTML card uploaded: ipfs://${htmlCID}`);
+
+    // Step 3: Create and upload metadata
     console.log("  📝 Creating metadata...");
 
     const metadata = {
       name: card.name,
       description: card.flavorText || `${card.name} - A unique trading card`,
       image: `ipfs://${imageCID}`,
+      animation_url: `ipfs://${htmlCID}`,
       attributes: [
         { trait_type: "Type", value: card.type || "Creature" },
         { trait_type: "Level", value: card.level || "1" },
@@ -483,10 +501,13 @@ app.post("/api/upload-to-ipfs", async (req, res) => {
     const result = {
       success: true,
       imageCID,
+      htmlCID,
       metadataCID,
       imageURI: `ipfs://${imageCID}`,
+      animationURI: `ipfs://${htmlCID}`,
       metadataURI: `ipfs://${metadataCID}`,
       imageGateway: `https://gateway.pinata.cloud/ipfs/${imageCID}`,
+      htmlGateway: `https://gateway.pinata.cloud/ipfs/${htmlCID}`,
       metadataGateway: `https://gateway.pinata.cloud/ipfs/${metadataCID}`,
     };
 
