@@ -11,6 +11,7 @@ import { fileURLToPath } from "url";
 import { Buffer } from "buffer";
 import { PinataSDK } from "pinata-web3";
 import { generateCardHTML } from "./cardHTMLGenerator.mjs";
+import { renderCardToPNG } from "./cardRenderer.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -432,47 +433,63 @@ app.post("/api/upload-to-ipfs", async (req, res) => {
 
     console.log(`\n📤 Uploading card to IPFS: ${card.name}`);
 
-    // Step 1: Upload image to IPFS
-    console.log("  🎨 Uploading image...");
+    // Step 1: Upload raw AI image to IPFS (needed for HTML card rendering)
+    console.log("  🎨 Uploading raw AI image...");
 
-    // Convert base64 to buffer
     const base64Data = card.imageData.replace(/^data:image\/\w+;base64,/, "");
-    const imageBuffer = Buffer.from(base64Data, "base64");
+    const rawImageBuffer = Buffer.from(base64Data, "base64");
 
-    // Create a File object from the buffer
-    const imageFile = new File([imageBuffer], `${card.id}.png`, {
+    const rawImageFile = new File([rawImageBuffer], `${card.id}_raw.png`, {
       type: "image/png",
     });
 
-    const imageUpload = await pinata.upload.file(imageFile);
-    const imageCID = imageUpload.IpfsHash;
+    const rawImageUpload = await pinata.upload.file(rawImageFile);
+    const rawImageCID = rawImageUpload.IpfsHash;
 
-    console.log(`  ✅ Image uploaded: ipfs://${imageCID}`);
+    console.log(`  ✅ Raw image uploaded: ipfs://${rawImageCID}`);
 
-    // Step 2: Generate and upload HTML card
+    // Step 2: Generate HTML card (using raw image)
     console.log("  🎴 Generating HTML card...");
 
-    const imageGatewayUrl = `https://gateway.pinata.cloud/ipfs/${imageCID}`;
+    const imageGatewayUrl = `https://gateway.pinata.cloud/ipfs/${rawImageCID}`;
     const cardHTML = generateCardHTML(card, imageGatewayUrl);
+
+    // Step 3: Render HTML card to PNG (this becomes the preview image)
+    console.log("  🖼️  Rendering card to PNG...");
+
+    const cardImageBuffer = await renderCardToPNG(cardHTML);
+
+    console.log("  📤 Uploading rendered card image...");
+
+    const cardImageFile = new File([cardImageBuffer], `${card.id}.png`, {
+      type: "image/png",
+    });
+
+    const cardImageUpload = await pinata.upload.file(cardImageFile);
+    const cardImageCID = cardImageUpload.IpfsHash;
+
+    console.log(`  ✅ Card image uploaded: ipfs://${cardImageCID}`);
+
+    // Step 4: Upload HTML card (for animation_url)
+    console.log("  📤 Uploading HTML card...");
 
     const htmlFile = new File([cardHTML], `${card.id}.html`, {
       type: "text/html",
     });
 
-    console.log("  📤 Uploading HTML card...");
     const htmlUpload = await pinata.upload.file(htmlFile);
     const htmlCID = htmlUpload.IpfsHash;
 
     console.log(`  ✅ HTML card uploaded: ipfs://${htmlCID}`);
 
-    // Step 3: Create and upload metadata
+    // Step 5: Create and upload metadata
     console.log("  📝 Creating metadata...");
 
     const metadata = {
       name: card.name,
       description: card.flavorText || `${card.name} - A unique trading card`,
-      image: `ipfs://${imageCID}`,
-      animation_url: `ipfs://${htmlCID}`,
+      image: `ipfs://${cardImageCID}`,  // Rendered card as preview!
+      animation_url: `ipfs://${htmlCID}`,  // Interactive HTML
       attributes: [
         { trait_type: "Type", value: card.type || "Creature" },
         { trait_type: "Level", value: card.level || "1" },
@@ -500,13 +517,15 @@ app.post("/api/upload-to-ipfs", async (req, res) => {
     // Return IPFS URIs
     const result = {
       success: true,
-      imageCID,
+      rawImageCID,
+      cardImageCID,
       htmlCID,
       metadataCID,
-      imageURI: `ipfs://${imageCID}`,
+      imageURI: `ipfs://${cardImageCID}`,  // Rendered card
       animationURI: `ipfs://${htmlCID}`,
       metadataURI: `ipfs://${metadataCID}`,
-      imageGateway: `https://gateway.pinata.cloud/ipfs/${imageCID}`,
+      rawImageGateway: `https://gateway.pinata.cloud/ipfs/${rawImageCID}`,
+      cardImageGateway: `https://gateway.pinata.cloud/ipfs/${cardImageCID}`,
       htmlGateway: `https://gateway.pinata.cloud/ipfs/${htmlCID}`,
       metadataGateway: `https://gateway.pinata.cloud/ipfs/${metadataCID}`,
     };

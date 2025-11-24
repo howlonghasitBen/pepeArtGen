@@ -10,7 +10,11 @@
     "deploy:testnet": "forge script script/Deploy.s.sol:DeployPepeArtGen --rpc-url base_sepolia --broadcast --verify",
     "deploy:mainnet": "forge script script/Deploy.s.sol:DeployPepeArtGen --rpc-url base --broadcast --verify --slow",
     "upload:ipfs": "node uploadToIPFS.js",
-    "install:foundry": "forge install OpenZeppelin/openzeppelin-contracts"
+    "install:foundry": "forge install OpenZeppelin/openzeppelin-contracts",
+    "server": "node server/api.mjs",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
   },
   "keywords": [
     "nft",
@@ -25,7 +29,14 @@
   "license": "GPL-3.0",
   "dependencies": {
     "pinata-web3": "^0.5.0",
-    "dotenv": "^16.3.1"
+    "dotenv": "^16.3.1",
+    "puppeteer": "^21.6.0",
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "@google/genai": "^0.1.0",
+    "@ai-sdk/google": "^0.0.27",
+    "ai": "^3.0.0",
+    "node-vibrant": "^3.2.1-alpha.1"
   },
   "devDependencies": {
     "@types/node": "^20.10.0"
