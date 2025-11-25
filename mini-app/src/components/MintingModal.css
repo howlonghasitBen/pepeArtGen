@@ -4,13 +4,15 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: var(--blur-light);
+  -webkit-backdrop-filter: var(--blur-light);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
   padding: 20px;
-  animation: fadeIn 0.2s;
+  animation: fadeIn 0.3s ease-out;
 }
 
 @keyframes fadeIn {
@@ -23,22 +25,26 @@
 }
 
 .modal-content {
-  background: white;
-  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: var(--blur-strong);
+  -webkit-backdrop-filter: var(--blur-strong);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 24px;
   padding: 30px;
   max-width: 450px;
   width: 100%;
   position: relative;
-  animation: slideUp 0.3s ease-out;
+  animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
 }
 
 @keyframes slideUp {
   from {
-    transform: translateY(20px);
+    transform: translateY(30px) scale(0.95);
     opacity: 0;
   }
   to {
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
     opacity: 1;
   }
 }
@@ -47,32 +53,38 @@
   position: absolute;
   top: 15px;
   right: 15px;
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-  background: #f0f0f0;
+  background: rgba(0, 0, 0, 0.05);
+  backdrop-filter: var(--blur-light);
+  -webkit-backdrop-filter: var(--blur-light);
   color: #666;
   font-size: 1.2rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .modal-close:hover {
-  background: #e0e0e0;
+  background: rgba(0, 0, 0, 0.1);
   color: #333;
+  transform: rotate(90deg);
 }
 
 .modal-content h2 {
   margin-bottom: 25px;
-  color: #333;
+  color: var(--text-primary);
   text-align: center;
+  font-weight: 800;
 }
 
 .mint-summary {
-  background: #f8f8f8;
-  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.03);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  border-radius: 16px;
   padding: 20px;
   margin-bottom: 20px;
 }
@@ -81,21 +93,22 @@
   display: flex;
   justify-content: space-between;
   margin-bottom: 12px;
-  color: #666;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
 }
 
 .summary-row.total {
   padding-top: 12px;
-  border-top: 2px solid #ddd;
+  border-top: 2px solid rgba(0, 0, 0, 0.08);
   font-weight: 700;
-  font-size: 1.1rem;
-  color: #333;
+  font-size: 1.15rem;
+  color: var(--text-primary);
   margin-bottom: 0;
 }
 
 .summary-row .value {
   font-weight: 600;
-  color: #333;
+  color: var(--text-primary);
 }
 
 .status-message {
@@ -164,36 +177,73 @@
 .success-btn {
   width: 100%;
   padding: 16px;
-  border-radius: 12px;
+  border-radius: 14px;
   font-size: 1.1rem;
   font-weight: 700;
-  transition: all 0.2s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   margin-bottom: 10px;
+  border: none;
+  position: relative;
+  overflow: hidden;
 }
 
 .mint-btn {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.mint-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 100%);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.mint-btn:hover:not(:disabled)::before {
+  opacity: 1;
 }
 
 .mint-btn:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
 }
 
 .mint-btn:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
 .success-btn {
   background: linear-gradient(135deg, #4cd964 0%, #34c759 100%);
   color: white;
+  box-shadow: 0 4px 15px rgba(76, 217, 100, 0.3);
+}
+
+.success-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 100%);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.success-btn:hover::before {
+  opacity: 1;
 }
 
 .success-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(76, 217, 100, 0.4);
+  box-shadow: 0 8px 25px rgba(76, 217, 100, 0.4);
 }
 
 @media (max-width: 768px) {
