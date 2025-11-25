@@ -1,3 +1,29 @@
+:root {
+  /* Glassmorphism Design System */
+  --glass-bg: rgba(255, 255, 255, 0.15);
+  --glass-bg-strong: rgba(255, 255, 255, 0.25);
+  --glass-border: rgba(255, 255, 255, 0.25);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  --glass-shadow-strong: 0 12px 48px rgba(0, 0, 0, 0.15);
+
+  /* Color Palette */
+  --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --success-gradient: linear-gradient(135deg, #4cd964 0%, #34c759 100%);
+  --accent-gradient: linear-gradient(135deg, #00d4ff 0%, #0099ff 100%);
+  --warm-gradient: linear-gradient(135deg, #ff9a56 0%, #ff6a88 100%);
+
+  /* Text Colors */
+  --text-primary: #1a1a1a;
+  --text-secondary: #666;
+  --text-light: rgba(255, 255, 255, 0.95);
+  --text-muted: rgba(255, 255, 255, 0.7);
+
+  /* Blur Effects */
+  --blur-light: blur(10px);
+  --blur-medium: blur(20px);
+  --blur-strong: blur(30px);
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -11,8 +37,36 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
-  background: #f8f9fa;
+  background: linear-gradient(135deg,
+    #667eea 0%,
+    #764ba2 25%,
+    #f093fb 50%,
+    #4facfe 75%,
+    #00f2fe 100%);
+  background-size: 400% 400%;
+  animation: gradientShift 15s ease infinite;
   min-height: 100vh;
+  position: relative;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at 20% 50%, rgba(102, 126, 234, 0.2) 0%, transparent 50%),
+              radial-gradient(circle at 80% 80%, rgba(118, 75, 162, 0.2) 0%, transparent 50%),
+              radial-gradient(circle at 40% 20%, rgba(74, 172, 254, 0.2) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 
 button {
@@ -38,17 +92,25 @@ body {
   overscroll-behavior-y: contain;
 }
 
-/* Card styles */
+/* Card styles with glassmorphism */
 .card-container {
   perspective: 1000px;
 }
 
 .card {
-  background: white;
-  border-radius: 20px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  background: var(--glass-bg-strong);
+  backdrop-filter: var(--blur-medium);
+  -webkit-backdrop-filter: var(--blur-medium);
+  border: 1px solid var(--glass-border);
+  border-radius: 24px;
+  box-shadow: var(--glass-shadow-strong);
   overflow: hidden;
-  transition: transform 0.2s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 64px rgba(0, 0, 0, 0.2);
 }
 
 .card:active {
