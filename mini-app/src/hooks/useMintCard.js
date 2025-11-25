@@ -1,8 +1,6 @@
 import { useState } from 'react'
-import { useAccount, useWriteContract, useReadContract } from 'wagmi'
-import { parseUnits } from 'viem'
+import { useAccount, useWriteContract } from 'wagmi'
 import PEPE_CARD_NFT_ABI from '../contracts/PepeCardNFT.json'
-import USDC_ABI from '../contracts/USDC.json'
 
 const API_BASE_URL = 'http://localhost:3001'
 
@@ -14,16 +12,6 @@ export function useMintCard() {
   const { writeContractAsync } = useWriteContract()
 
   const NFT_CONTRACT_ADDRESS = import.meta.env.VITE_NFT_CONTRACT_ADDRESS
-  const USDC_CONTRACT_ADDRESS = import.meta.env.VITE_USDC_CONTRACT_ADDRESS
-  const MINT_FEE_USDC = '2.50' // 2.50 USDC
-
-  // Read USDC allowance
-  const { data: usdcAllowance } = useReadContract({
-    address: USDC_CONTRACT_ADDRESS,
-    abi: USDC_ABI.abi,
-    functionName: 'allowance',
-    args: [address, NFT_CONTRACT_ADDRESS],
-  })
 
   /**
    * Upload card to IPFS via backend
@@ -57,42 +45,7 @@ export function useMintCard() {
   }
 
   /**
-   * Approve USDC spending for NFT contract
-   */
-  const approveUSDC = async (amount) => {
-    try {
-      if (!USDC_CONTRACT_ADDRESS || !NFT_CONTRACT_ADDRESS) {
-        throw new Error('Contract addresses not configured')
-      }
-
-      setStatus('approving')
-      console.log('💰 Approving USDC spending...')
-
-      const hash = await writeContractAsync({
-        address: USDC_CONTRACT_ADDRESS,
-        abi: USDC_ABI.abi,
-        functionName: 'approve',
-        args: [NFT_CONTRACT_ADDRESS, amount],
-      })
-
-      console.log('⏳ USDC approval transaction submitted:', hash)
-      return hash
-    } catch (err) {
-      console.error('USDC approval failed:', err)
-      throw new Error(`Failed to approve USDC: ${err.message}`)
-    }
-  }
-
-  /**
-   * Check if USDC approval is needed
-   */
-  const needsApproval = (requiredAmount) => {
-    if (!usdcAllowance) return true
-    return BigInt(usdcAllowance) < BigInt(requiredAmount)
-  }
-
-  /**
-   * Mint a single card (USDC-based)
+   * Mint a single card (FREE - only gas)
    */
   const mintSingleCard = async (card) => {
     try {
@@ -100,34 +53,17 @@ export function useMintCard() {
         throw new Error('NFT contract not deployed. Set VITE_NFT_CONTRACT_ADDRESS in .env')
       }
 
-      if (!USDC_CONTRACT_ADDRESS) {
-        throw new Error('USDC contract not configured. Set VITE_USDC_CONTRACT_ADDRESS in .env')
-      }
-
       if (!address) {
         throw new Error('Wallet not connected')
       }
 
-      // Calculate USDC amount (6 decimals)
-      const usdcAmount = parseUnits(MINT_FEE_USDC, 6) // 2.50 USDC = 2500000
-
-      // Step 1: Check and approve USDC if needed
-      if (needsApproval(usdcAmount)) {
-        console.log('💰 USDC approval required')
-        await approveUSDC(usdcAmount)
-        setStatus('waiting_approval')
-
-        // Wait a bit for approval to be mined
-        await new Promise(resolve => setTimeout(resolve, 2000))
-      }
-
-      // Step 2: Upload to IPFS
+      // Step 1: Upload to IPFS
       const metadataURI = await uploadToIPFS(card)
 
-      // Step 3: Mint NFT (pays USDC fee automatically via contract)
+      // Step 2: Mint NFT (FREE - only gas fees)
       setStatus('minting')
       console.log('🎨 Minting NFT with metadata:', metadataURI)
-      console.log('💰 Paying 2.50 USDC fee via contract')
+      console.log('💰 Minting is FREE - only gas fees (~$0.01 on Base)')
 
       const hash = await writeContractAsync({
         address: NFT_CONTRACT_ADDRESS,
@@ -150,7 +86,7 @@ export function useMintCard() {
   }
 
   /**
-   * Mint batch of cards (USDC-based)
+   * Mint batch of cards (FREE - only gas)
    */
   const mintBatchCards = async (cards) => {
     try {
@@ -158,29 +94,11 @@ export function useMintCard() {
         throw new Error('NFT contract not deployed. Set VITE_NFT_CONTRACT_ADDRESS in .env')
       }
 
-      if (!USDC_CONTRACT_ADDRESS) {
-        throw new Error('USDC contract not configured. Set VITE_USDC_CONTRACT_ADDRESS in .env')
-      }
-
       if (!address) {
         throw new Error('Wallet not connected')
       }
 
-      // Calculate total USDC amount (6 decimals)
-      const usdcPerCard = parseUnits(MINT_FEE_USDC, 6)
-      const totalUsdcAmount = BigInt(usdcPerCard) * BigInt(cards.length)
-
-      // Step 1: Check and approve USDC if needed
-      if (needsApproval(totalUsdcAmount)) {
-        console.log(`💰 USDC approval required for ${cards.length} cards`)
-        await approveUSDC(totalUsdcAmount)
-        setStatus('waiting_approval')
-
-        // Wait a bit for approval to be mined
-        await new Promise(resolve => setTimeout(resolve, 2000))
-      }
-
-      // Step 2: Upload all cards to IPFS
+      // Step 1: Upload all cards to IPFS
       setStatus('uploading')
       console.log(`📤 Uploading ${cards.length} cards to IPFS...`)
 
@@ -193,10 +111,10 @@ export function useMintCard() {
 
       console.log('✅ All cards uploaded to IPFS')
 
-      // Step 3: Batch mint NFTs (pays USDC fees automatically via contract)
+      // Step 2: Batch mint NFTs (FREE - only gas fees)
       setStatus('minting')
       console.log(`🎨 Batch minting ${cards.length} NFTs...`)
-      console.log(`💰 Paying ${parseFloat(MINT_FEE_USDC) * cards.length} USDC total fee via contract`)
+      console.log('💰 Minting is FREE - only gas fees (~$0.01 on Base)')
 
       const hash = await writeContractAsync({
         address: NFT_CONTRACT_ADDRESS,
@@ -236,13 +154,9 @@ export function useMintCard() {
 
   return {
     mint,
-    approveUSDC,
-    needsApproval: (count = 1) => needsApproval(BigInt(parseUnits(MINT_FEE_USDC, 6)) * BigInt(count)),
-    usdcAllowance,
     status,
     error,
     transactionHash,
     isLoading: status !== 'idle' && status !== 'error' && status !== 'success',
-    mintFeeUsdc: MINT_FEE_USDC,
   }
 }

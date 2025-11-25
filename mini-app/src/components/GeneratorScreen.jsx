@@ -245,7 +245,7 @@ function GeneratorScreen({ onCardsGenerated }) {
           <li>🎨 Enter monster name and generate</li>
           <li>🔄 Re-roll up to 2 times to curate</li>
           <li>➡️ Swipe right to mint your favorite</li>
-          <li>🪙 Minting costs 2.50 USDC per card</li>
+          <li>🆓 Minting is FREE (only ~$0.01 gas)</li>
         </ol>
       </div>
     </div>

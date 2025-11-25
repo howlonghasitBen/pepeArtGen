@@ -2,21 +2,21 @@
 
 ## Overview
 
-This migration implements a complete payment-first flow with USDC on Base L2, replacing the previous free-tier generation with ETH minting system. Users now pay $2.50 USDC upfront for generation credits (1 initial + 2 re-rolls), then mint their favorite cards to NFTs.
+This migration implements a complete payment-first flow with USDC on Base L2, replacing the previous free-tier generation with ETH minting system. Users pay $2.50 USDC upfront for generation credits (1 initial + 2 re-rolls), then mint their favorite cards to NFTs **for FREE** (only gas fees ~$0.01).
 
 ## Key Changes Summary
 
 ### 💰 Payment Flow (NEW)
 - **Before:** Free generation (100/day limit) → Mint with 0.001 ETH
-- **After:** Pay $2.50 USDC → Generate card → Re-roll up to 2x → Mint with 2.50 USDC
+- **After:** Pay $2.50 USDC → Generate card → Re-roll up to 2x → Mint for FREE (only gas)
 
 ### 🗄️ Database Integration (NEW)
 - **Before:** In-memory storage (lost on restart)
 - **After:** Persistent Supabase database with full IPFS indexing
 
 ### 🪙 Smart Contract Changes
-- **Before:** `PepeArtGenNFT.sol` (ETH-based, 0.001 ETH)
-- **After:** `PepeCardNFT.sol` (USDC-based, 2.50 USDC)
+- **Before:** `PepeArtGenNFT.sol` (ETH-based, 0.001 ETH per mint)
+- **After:** `PepeCardNFT.sol` (FREE minting - only gas fees ~$0.01)
 
 ## Implementation Details
 
@@ -44,19 +44,20 @@ Run the SQL migration:
 psql $SUPABASE_URL < mini-app/supabase/migrations/001_initial_schema.sql
 ```
 
-### 2. USDC Smart Contract
+### 2. Smart Contract (FREE Minting)
 
 #### New Contract: `PepeCardNFT.sol`
 
 **Features:**
-- Accepts USDC instead of ETH
-- Mint fee: 2.50 USDC (2,500,000 with 6 decimals)
-- ERC-20 approval flow required
+- **FREE minting** - no USDC or ETH required
+- Users only pay gas fees (~$0.01 on Base)
+- Simplified ERC721 implementation
 - Batch minting support
 
-**USDC Addresses:**
-- Base Mainnet: `0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913`
-- Base Sepolia Testnet: `0x036CbD53842c5426634e7929541eC2318f3dCF7e`
+**Payment Model:**
+- Users pay $2.50 USDC to **backend/treasury** for AI generation service
+- Minting to blockchain is **FREE** (only gas costs)
+- This prevents spam while keeping minting accessible
 
 #### Deployment:
 ```bash
@@ -77,7 +78,7 @@ forge script script/DeployPepeCardNFT.s.sol:DeployPepeCardNFT \
 Update `.env` with deployed address:
 ```env
 VITE_NFT_CONTRACT_ADDRESS=0x_your_deployed_contract_address
-VITE_USDC_CONTRACT_ADDRESS=0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913
+# Note: Minting is FREE - only gas fees apply
 ```
 
 ### 3. Backend API Changes
@@ -184,10 +185,8 @@ Returns error if no valid session or generations exhausted.
 │                                                          │
 │  6. MINTING PHASE                                       │
 │     ├─ User selects cards to mint (swipe right)         │
-│     ├─ System checks USDC allowance                     │
-│     ├─ If needed: Request USDC approval                 │
 │     ├─ Upload card to IPFS (metadata + images)          │
-│     ├─ Call mintCard() with 2.50 USDC per card          │
+│     ├─ Call mintCard() - FREE (only gas ~$0.01)         │
 │     └─ NFT minted on Base L2!                           │
 └─────────────────────────────────────────────────────────┘
 ```
@@ -301,14 +300,16 @@ forge test -vv
 ## Cost Analysis
 
 ### Per User Session:
-- **Generation Payment:** $2.50 USDC
-- **Minting (per card):** $2.50 USDC
-- **Gas Fees (Base L2):** ~$0.01-0.02 per transaction
+- **Generation Payment:** $2.50 USDC (paid to backend/treasury)
+- **Minting (per card):** FREE (user only pays gas ~$0.01)
+- **Gas Fees (Base L2):** ~$0.01 per mint transaction
 
 ### Revenue Potential:
 - 100 users/day × $2.50 = **$250/day** in generation fees
-- 100 cards minted/day × $2.50 = **$250/day** in minting fees
-- **Total:** $500/day potential revenue
+- Minting is FREE - no additional revenue from minting
+- **Total:** $250/day potential revenue
+
+**Note:** Revenue comes from generation service, not from minting. This keeps the UX simple and accessible.
 
 ### Costs:
 - Supabase Free Tier: Up to 500MB database, 50k rows
