@@ -11,13 +11,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
-  background: linear-gradient(180deg,
-    #ffd700 0%,
-    #ffb366 15%,
-    #ff8c42 30%,
-    #1a6ba8 60%,
-    #0d4a73 100%
-  );
+  background: #f8f9fa;
   min-height: 100vh;
 }
 
