@@ -23,7 +23,7 @@ function MintingModal({ cards, onClose, onSuccess }) {
     }
   }
 
-  const totalCost = cards.length
+  const totalCost = (cards.length * 2.50).toFixed(2)
 
   const getStatusMessage = () => {
     switch (status) {
@@ -60,7 +60,7 @@ function MintingModal({ cards, onClose, onSuccess }) {
           </div>
           <div className="summary-row">
             <span>Price per card:</span>
-            <span className="value">1 USDC</span>
+            <span className="value">2.50 USDC</span>
           </div>
           <div className="summary-row total">
             <span>Total cost:</span>

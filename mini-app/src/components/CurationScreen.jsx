@@ -108,11 +108,11 @@ function CurationScreen({ cards, onBack }) {
                   </div>
                   <div className="cost-row">
                     <span>Price per card:</span>
-                    <span>1 USDC</span>
+                    <span>2.50 USDC</span>
                   </div>
                   <div className="cost-row total">
                     <span>Total:</span>
-                    <span>{toMint.length} USDC</span>
+                    <span>{(toMint.length * 2.50).toFixed(2)} USDC</span>
                   </div>
                 </div>
               </div>
@@ -124,7 +124,7 @@ function CurationScreen({ cards, onBack }) {
                 </div>
               ) : (
                 <button className="mint-btn" onClick={handleMintAll}>
-                  🪙 Mint {toMint.length} Card{toMint.length > 1 ? 's' : ''} for {toMint.length} USDC
+                  🪙 Mint {toMint.length} Card{toMint.length > 1 ? 's' : ''} for {(toMint.length * 2.50).toFixed(2)} USDC
                 </button>
               )}
             </>

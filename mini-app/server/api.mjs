@@ -12,6 +12,14 @@ import { Buffer } from "buffer";
 import { PinataSDK } from "pinata-web3";
 import { generateCardHTML } from "./cardHTMLGenerator.mjs";
 import { renderCardToPNG } from "./cardRenderer.mjs";
+import {
+  paymentSessionService,
+  cardService,
+  ipfsService,
+  analyticsService,
+  isSupabaseConfigured
+} from './supabaseClient.mjs';
+import paymentRoutes from './paymentRoutes.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -27,6 +35,9 @@ const BATCH_LIMIT = 10;
 
 app.use(cors());
 app.use(express.json({ limit: "50mb" })); // Increased for base64 images
+
+// Mount payment routes
+app.use('/api/payment', paymentRoutes);
 
 // In-memory storage for demo (use Redis/DB in production)
 const generatedCards = new Map();
@@ -256,30 +267,88 @@ async function generateCardImage(monsterName) {
 }
 
 // Generate card endpoint - generates images with Imagen
+// NOW REQUIRES PAYMENT SESSION
 app.post("/api/generate", async (req, res) => {
   try {
-    checkAndResetDailyLimit();
-
-    const { monsterNames, batchMode = false } = req.body;
+    const { monsterNames, batchMode = false, sessionId, walletAddress } = req.body;
 
     if (!monsterNames || monsterNames.length === 0) {
       return res.status(400).json({ error: "No monster names provided" });
     }
 
-    // Check limits
-    const requestCount = monsterNames.length;
-    if (dailyGenerationCount + requestCount > FREE_DAILY_LIMIT) {
-      return res.status(429).json({
-        error: "Daily generation limit reached",
-        limit: FREE_DAILY_LIMIT,
-        used: dailyGenerationCount,
-        remaining: FREE_DAILY_LIMIT - dailyGenerationCount,
+    // Require payment session if Supabase is configured
+    if (isSupabaseConfigured()) {
+      if (!sessionId && !walletAddress) {
+        return res.status(400).json({
+          error: "Payment required",
+          message: "Please complete payment before generating cards"
+        });
+      }
+
+      // Get active session
+      let session;
+      if (sessionId) {
+        session = await paymentSessionService.getSession(sessionId);
+      } else {
+        session = await paymentSessionService.getActiveSession(walletAddress);
+      }
+
+      if (!session) {
+        return res.status(403).json({
+          error: "No active payment session",
+          message: "Please make a $2.50 USDC payment to generate cards"
+        });
+      }
+
+      if (session.status !== 'confirmed') {
+        return res.status(403).json({
+          error: "Payment not confirmed",
+          message: "Please wait for your payment to be confirmed on the blockchain"
+        });
+      }
+
+      if (session.generations_remaining <= 0) {
+        return res.status(403).json({
+          error: "No generations remaining",
+          message: "You have used all 3 generations (1 initial + 2 re-rolls). Please make a new payment."
+        });
+      }
+
+      if (new Date(session.expires_at) < new Date()) {
+        return res.status(403).json({
+          error: "Session expired",
+          message: "Your payment session has expired. Please make a new payment."
+        });
+      }
+
+      // Use one generation
+      await paymentSessionService.useGeneration(session.id);
+
+      // Track analytics
+      await analyticsService.trackEvent('card_generation_started', session.wallet_address, {
+        sessionId: session.id,
+        monsterName: monsterNames[0],
+        generationsRemaining: session.generations_remaining - 1
       });
+    } else {
+      // Fallback to old free tier system if Supabase not configured
+      checkAndResetDailyLimit();
+
+      const requestCount = monsterNames.length;
+      if (dailyGenerationCount + requestCount > FREE_DAILY_LIMIT) {
+        return res.status(429).json({
+          error: "Daily generation limit reached",
+          limit: FREE_DAILY_LIMIT,
+          used: dailyGenerationCount,
+          remaining: FREE_DAILY_LIMIT - dailyGenerationCount,
+        });
+      }
     }
 
-    if (batchMode && requestCount > BATCH_LIMIT) {
+    // Limit to single card per generation (user can re-roll up to 2 times)
+    if (monsterNames.length > 1) {
       return res.status(400).json({
-        error: `Batch size exceeds limit of ${BATCH_LIMIT}`,
+        error: "Only one card can be generated per request"
       });
     }
 
@@ -359,9 +428,39 @@ app.post("/api/generate", async (req, res) => {
           timestamp: Date.now(),
         };
 
-        generatedCards.set(cardId, card);
+        // Store in Supabase if configured
+        if (isSupabaseConfigured() && sessionId) {
+          console.log("  💾 Storing card in database...");
+          const dbCard = await cardService.createCard(sessionId, {
+            name: monsterName,
+            stats: {
+              hp,
+              attack,
+              defense,
+              speed: mana, // Using mana as speed for now
+              rarity: "1/1"
+            },
+            move: {
+              name: move,
+              description: flavorText
+            },
+            flavorText: `${move}\n${flavorText}`,
+            themeColors: colors,
+            imageData
+          });
+
+          // Use database ID as card ID
+          card.id = dbCard.id;
+          card.databaseId = dbCard.id;
+        }
+
+        generatedCards.set(card.id, card);
         cards.push(card);
-        dailyGenerationCount++;
+
+        // Only increment daily count if not using paid system
+        if (!isSupabaseConfigured()) {
+          dailyGenerationCount++;
+        }
 
         console.log(`  ✅ Card generated successfully!`);
 
@@ -513,6 +612,49 @@ app.post("/api/upload-to-ipfs", async (req, res) => {
     const metadataCID = metadataUpload.IpfsHash;
 
     console.log(`  ✅ Metadata uploaded: ipfs://${metadataCID}`);
+
+    // Store IPFS links in Supabase if configured
+    if (isSupabaseConfigured() && card.databaseId) {
+      console.log("  💾 Storing IPFS links in database...");
+
+      try {
+        await Promise.all([
+          ipfsService.addLink(
+            card.databaseId,
+            rawImageCID,
+            'raw_image',
+            `https://gateway.pinata.cloud/ipfs/${rawImageCID}`,
+            rawImageBuffer.length
+          ),
+          ipfsService.addLink(
+            card.databaseId,
+            cardImageCID,
+            'styled_card',
+            `https://gateway.pinata.cloud/ipfs/${cardImageCID}`,
+            cardImageBuffer.length
+          ),
+          ipfsService.addLink(
+            card.databaseId,
+            htmlCID,
+            'html',
+            `https://gateway.pinata.cloud/ipfs/${htmlCID}`,
+            Buffer.from(cardHTML).length
+          ),
+          ipfsService.addLink(
+            card.databaseId,
+            metadataCID,
+            'metadata',
+            `https://gateway.pinata.cloud/ipfs/${metadataCID}`,
+            Buffer.from(JSON.stringify(metadata)).length
+          )
+        ]);
+
+        console.log("  ✅ IPFS links stored in database");
+      } catch (dbError) {
+        console.warn("  ⚠️  Failed to store IPFS links in database:", dbError.message);
+        // Don't fail the request if database storage fails
+      }
+    }
 
     // Return IPFS URIs
     const result = {

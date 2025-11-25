@@ -10,7 +10,7 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 /**
  * @title PepeCardNFT
  * @dev NFT contract for minting Pepe trading cards on BASE
- * Minting fee: 1 USDC per card
+ * Minting fee: 2.50 USDC per card
  */
 contract PepeCardNFT is ERC721, ERC721URIStorage, Ownable {
     using SafeERC20 for IERC20;
@@ -19,7 +19,7 @@ contract PepeCardNFT is ERC721, ERC721URIStorage, Ownable {
     IERC20 public immutable USDC;
 
     // Minting fee in USDC (6 decimals)
-    uint256 public constant MINT_FEE = 1_000000; // 1 USDC
+    uint256 public constant MINT_FEE = 2_500000; // 2.50 USDC
 
     // Counter for token IDs
     uint256 private _nextTokenId;
