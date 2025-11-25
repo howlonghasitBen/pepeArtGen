@@ -237,17 +237,6 @@ function GeneratorScreen({ onCardsGenerated }) {
           </button>
         </div>
       )}
-
-      <div className="info-box">
-        <h3>How it works:</h3>
-        <ol>
-          <li>💰 Pay $2.50 USDC for generation credits</li>
-          <li>🎨 Enter monster name and generate</li>
-          <li>🔄 Re-roll up to 2 times to curate</li>
-          <li>➡️ Swipe right to mint your favorite</li>
-          <li>🆓 Minting is FREE (only ~$0.01 gas)</li>
-        </ol>
-      </div>
     </div>
   )
 }

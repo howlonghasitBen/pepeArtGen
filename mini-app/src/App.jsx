@@ -2,11 +2,13 @@ import { useState, useEffect } from 'react'
 import { WagmiProvider, createConfig, http } from 'wagmi'
 import { base, baseSepolia } from 'wagmi/chains'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { RainbowKitProvider, getDefaultConfig } from '@rainbow-me/rainbowkit'
+import { RainbowKitProvider, getDefaultConfig, ConnectButton } from '@rainbow-me/rainbowkit'
+import { useAccount } from 'wagmi'
 import '@rainbow-me/rainbowkit/styles.css'
 
 import GeneratorScreen from './components/GeneratorScreen'
 import CurationScreen from './components/CurationScreen'
+import InfoModal from './components/InfoModal'
 import './App.css'
 
 // Get WalletConnect Project ID from env (optional for now)
@@ -22,58 +24,54 @@ const config = getDefaultConfig({
 
 const queryClient = new QueryClient()
 
-function App() {
+function AppContent() {
   const [screen, setScreen] = useState('generate') // 'generate' or 'curate'
   const [generatedCards, setGeneratedCards] = useState([])
-  const [limits, setLimits] = useState(null)
-
-  useEffect(() => {
-    fetchLimits()
-  }, [])
-
-  const fetchLimits = async () => {
-    try {
-      const response = await fetch('http://localhost:3001/api/limits')
-      const data = await response.json()
-      setLimits(data)
-    } catch (error) {
-      console.error('Error fetching limits:', error)
-    }
-  }
+  const [showInfoModal, setShowInfoModal] = useState(false)
 
   const handleCardsGenerated = (cards) => {
     setGeneratedCards(cards.filter(card => !card.error))
     setScreen('curate')
-    fetchLimits()
   }
 
+  return (
+    <div className="app">
+      <header className="app-header">
+        <h1>🃏 Pepe Card Generator</h1>
+        <p className="subtitle">AI-generated trading cards on Base L2</p>
+        
+        <div className="header-actions">
+          <button className="info-button" onClick={() => setShowInfoModal(true)}>
+            ℹ️ How It Works
+          </button>
+          <div className="wallet-connect-wrapper">
+            <ConnectButton />
+          </div>
+        </div>
+      </header>
+
+      {screen === 'generate' ? (
+        <GeneratorScreen onCardsGenerated={handleCardsGenerated} />
+      ) : (
+        <CurationScreen
+          cards={generatedCards}
+          onBack={() => setScreen('generate')}
+        />
+      )}
+
+      {showInfoModal && (
+        <InfoModal onClose={() => setShowInfoModal(false)} />
+      )}
+    </div>
+  )
+}
+
+function App() {
   return (
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
         <RainbowKitProvider>
-          <div className="app">
-            <header className="app-header">
-              <h1>🃏 Pepe Card Generator</h1>
-              <p className="subtitle">Swipe to curate, mint on BASE</p>
-              {limits && (
-                <div className="limits-badge">
-                  {limits.remaining}/{limits.dailyLimit} free gens remaining
-                </div>
-              )}
-            </header>
-
-            {screen === 'generate' ? (
-              <GeneratorScreen
-                onCardsGenerated={handleCardsGenerated}
-                limits={limits}
-              />
-            ) : (
-              <CurationScreen
-                cards={generatedCards}
-                onBack={() => setScreen('generate')}
-              />
-            )}
-          </div>
+          <AppContent />
         </RainbowKitProvider>
       </QueryClientProvider>
     </WagmiProvider>
