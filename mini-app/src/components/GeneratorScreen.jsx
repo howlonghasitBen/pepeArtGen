@@ -1,60 +1,66 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useAccount } from 'wagmi'
+import PaymentModal from './PaymentModal'
+import { useGenerationPayment } from '../hooks/useGenerationPayment'
 import './GeneratorScreen.css'
 
-function GeneratorScreen({ onCardsGenerated, limits }) {
-  const [mode, setMode] = useState('single') // 'single' or 'batch'
+function GeneratorScreen({ onCardsGenerated }) {
   const [monsterName, setMonsterName] = useState('')
-  const [batchNames, setBatchNames] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [progress, setProgress] = useState({ current: 0, total: 0 })
+  const [showPaymentModal, setShowPaymentModal] = useState(false)
+  const [paymentSession, setPaymentSession] = useState(null)
+  const [rerollsUsed, setRerollsUsed] = useState(0)
 
-  const handleGenerate = async () => {
+  const { isConnected, address } = useAccount()
+  const { checkActiveSession } = useGenerationPayment()
+
+  // Check for active session on mount and when wallet connects
+  useEffect(() => {
+    if (isConnected && address) {
+      loadActiveSession()
+    } else {
+      setPaymentSession(null)
+    }
+  }, [isConnected, address])
+
+  const loadActiveSession = async () => {
+    const session = await checkActiveSession()
+    if (session && session.generationsRemaining > 0) {
+      setPaymentSession(session)
+      // Calculate re-rolls used (3 - remaining)
+      const used = 3 - session.generationsRemaining
+      setRerollsUsed(used)
+    }
+  }
+
+  const handlePaymentSuccess = (session) => {
+    setPaymentSession(session)
+    setRerollsUsed(0)
+    setShowPaymentModal(false)
+  }
+
+  const handleGenerate = async (isReroll = false) => {
     setError('')
     setLoading(true)
-    setProgress({ current: 0, total: 0 })
 
     try {
-      let monsterNames = []
-
-      if (mode === 'single') {
-        if (!monsterName.trim()) {
-          setError('Please enter a monster name')
-          setLoading(false)
-          return
-        }
-        monsterNames = [monsterName.trim()]
-      } else {
-        // Parse batch input (comma or newline separated)
-        const names = batchNames
-          .split(/[,\n]/)
-          .map(name => name.trim())
-          .filter(name => name.length > 0)
-
-        if (names.length === 0) {
-          setError('Please enter at least one monster name')
-          setLoading(false)
-          return
-        }
-
-        if (limits && names.length > limits.batchLimit) {
-          setError(`Batch limit is ${limits.batchLimit} cards`)
-          setLoading(false)
-          return
-        }
-
-        if (limits && names.length > limits.remaining) {
-          setError(`Not enough generations remaining (${limits.remaining} left)`)
-          setLoading(false)
-          return
-        }
-
-        monsterNames = names
+      if (!monsterName.trim()) {
+        setError('Please enter a monster name')
+        setLoading(false)
+        return
       }
 
-      setProgress({ current: 0, total: monsterNames.length })
+      // Check if user needs to pay first
+      if (!paymentSession || paymentSession.generationsRemaining <= 0) {
+        setShowPaymentModal(true)
+        setLoading(false)
+        return
+      }
 
-      // Call API to generate cards with Imagen
+      const monsterNames = [monsterName.trim()]
+
+      // Call API to generate card with Imagen
       const response = await fetch('http://localhost:3001/api/generate', {
         method: 'POST',
         headers: {
@@ -62,21 +68,40 @@ function GeneratorScreen({ onCardsGenerated, limits }) {
         },
         body: JSON.stringify({
           monsterNames,
-          batchMode: mode === 'batch',
+          sessionId: paymentSession.id,
+          walletAddress: address,
         }),
       })
 
       if (!response.ok) {
         const data = await response.json()
+
+        // Handle specific errors
+        if (data.error === 'No generations remaining') {
+          setError('No generations remaining. Please make a new payment.')
+          setPaymentSession(null)
+          setLoading(false)
+          return
+        }
+
         throw new Error(data.error || 'Generation failed')
       }
 
       const data = await response.json()
 
-      if (data.success) {
+      if (data.success && data.cards.length > 0) {
+        // Increment re-rolls used if this is a re-roll
+        if (isReroll) {
+          setRerollsUsed(prev => prev + 1)
+        }
+
+        // Update session generations remaining
+        setPaymentSession(prev => ({
+          ...prev,
+          generationsRemaining: prev.generationsRemaining - 1
+        }))
+
         onCardsGenerated(data.cards)
-        setMonsterName('')
-        setBatchNames('')
       } else {
         setError('Generation failed')
       }
@@ -85,6 +110,10 @@ function GeneratorScreen({ onCardsGenerated, limits }) {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleReroll = () => {
+    handleGenerate(true)
   }
 
   const exampleMonsters = [
@@ -97,78 +126,66 @@ function GeneratorScreen({ onCardsGenerated, limits }) {
 
   const handleExampleClick = (name) => {
     setMonsterName(name)
-    setMode('single')
   }
 
-  const batchLimit = limits?.batchLimit || 10
-  const remaining = limits?.remaining || 0
+  const rerollsRemaining = paymentSession ? paymentSession.generationsRemaining - 1 : 0
+  const canReroll = rerollsRemaining > 0
+  const hasActiveSession = paymentSession && paymentSession.generationsRemaining > 0
 
   return (
     <div className="generator-screen">
-      <div className="mode-selector">
-        <button
-          className={`mode-btn ${mode === 'single' ? 'active' : ''}`}
-          onClick={() => setMode('single')}
-        >
-          Single Card
-        </button>
-        <button
-          className={`mode-btn ${mode === 'batch' ? 'active' : ''}`}
-          onClick={() => setMode('batch')}
-        >
-          Batch ({batchLimit} max)
-        </button>
+      {showPaymentModal && (
+        <PaymentModal
+          onClose={() => setShowPaymentModal(false)}
+          onPaymentSuccess={handlePaymentSuccess}
+        />
+      )}
+
+      <div className="session-status">
+        {hasActiveSession ? (
+          <div className="active-session">
+            <span className="session-badge">✓ Active Session</span>
+            <span className="generations-info">
+              {paymentSession.generationsRemaining} generation{paymentSession.generationsRemaining !== 1 ? 's' : ''} remaining
+            </span>
+          </div>
+        ) : (
+          <div className="no-session">
+            <span className="session-badge warning">⚠️ No Active Session</span>
+            <span className="generations-info">Pay $2.50 USDC to start</span>
+          </div>
+        )}
       </div>
 
-      {mode === 'single' ? (
-        <div className="input-section">
-          <label htmlFor="monsterName">Monster Name</label>
-          <input
-            id="monsterName"
-            type="text"
-            placeholder="Enter monster name..."
-            value={monsterName}
-            onChange={(e) => setMonsterName(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && !loading && handleGenerate()}
-            disabled={loading}
-            className="monster-input"
-          />
+      <div className="input-section">
+        <label htmlFor="monsterName">Monster Name</label>
+        <input
+          id="monsterName"
+          type="text"
+          placeholder="Enter monster name..."
+          value={monsterName}
+          onChange={(e) => setMonsterName(e.target.value)}
+          onKeyPress={(e) => e.key === 'Enter' && !loading && handleGenerate(false)}
+          disabled={loading}
+          className="monster-input"
+        />
 
-          <div className="examples">
-            <p className="examples-label">Try these:</p>
-            <div className="example-chips">
-              {exampleMonsters.map((name) => (
-                <button
-                  key={name}
-                  className="example-chip"
-                  onClick={() => handleExampleClick(name)}
-                  disabled={loading}
-                >
-                  {name}
-                </button>
-              ))}
-            </div>
+        <div className="examples">
+          <p className="examples-label">Try these:</p>
+          <div className="example-chips">
+            {exampleMonsters.map((name) => (
+              <button
+                key={name}
+                className="example-chip"
+                onClick={() => handleExampleClick(name)}
+                disabled={loading}
+              >
+                {name}
+              </button>
+            ))}
           </div>
         </div>
-      ) : (
-        <div className="input-section">
-          <label htmlFor="batchNames">
-            Monster Names (one per line or comma-separated)
-          </label>
-          <textarea
-            id="batchNames"
-            placeholder={`Fire Dragon\nIce Wizard\nShadow Assassin\n\nOr: Fire Dragon, Ice Wizard, Shadow Assassin`}
-            value={batchNames}
-            onChange={(e) => setBatchNames(e.target.value)}
-            disabled={loading}
-            className="batch-input"
-            rows={8}
-          />
-          <div className="batch-count">
-            {batchNames.split(/[,\n]/).filter(n => n.trim()).length} / {batchLimit} cards
-          </div>
-        </div>
-      )}
+      </div>
 
       {error && (
         <div className="error-message">
@@ -179,37 +196,56 @@ function GeneratorScreen({ onCardsGenerated, limits }) {
       {loading && (
         <div className="loading-container">
           <div className="spinner" />
-          <p className="loading-text">
-            {progress.total > 0
-              ? `Generating cards... (${progress.current}/${progress.total})`
-              : 'Generating cards...'}
-          </p>
-          <p className="loading-subtext">This may take a minute...</p>
+          <p className="loading-text">Generating card...</p>
+          <p className="loading-subtext">AI is creating your unique Pepe card...</p>
         </div>
       )}
 
       <button
         className="generate-btn"
-        onClick={handleGenerate}
-        disabled={loading || remaining === 0}
+        onClick={() => handleGenerate(false)}
+        disabled={loading || !isConnected}
       >
-        {loading ? 'Generating...' : `🎨 Generate Card${mode === 'batch' ? 's' : ''}`}
+        {loading ? 'Generating...' : !isConnected ? 'Connect Wallet to Generate' : '🎨 Generate Card'}
       </button>
 
-      {remaining === 0 && (
-        <div className="limit-warning">
-          Daily limit reached. Resets in 24 hours.
+      {hasActiveSession && rerollsRemaining > 0 && (
+        <div className="reroll-info">
+          <p>Not happy with your card?</p>
+          <button
+            className="reroll-btn"
+            onClick={handleReroll}
+            disabled={loading || !canReroll}
+          >
+            🔄 Re-roll ({rerollsRemaining} remaining)
+          </button>
+        </div>
+      )}
+
+      {!hasActiveSession && isConnected && (
+        <div className="payment-prompt">
+          <p>Pay $2.50 USDC to unlock:</p>
+          <ul>
+            <li>✨ 1 initial generation</li>
+            <li>🔄 2 re-rolls for curation</li>
+          </ul>
+          <button
+            className="pay-btn"
+            onClick={() => setShowPaymentModal(true)}
+          >
+            💰 Pay $2.50 USDC
+          </button>
         </div>
       )}
 
       <div className="info-box">
         <h3>How it works:</h3>
         <ol>
-          <li>Enter monster name(s)</li>
-          <li>AI generates unique card art</li>
-          <li>Swipe left to discard ⬅️</li>
-          <li>Swipe right to mint on BASE ➡️</li>
-          <li>Minting costs 1 USDC</li>
+          <li>💰 Pay $2.50 USDC for generation credits</li>
+          <li>🎨 Enter monster name and generate</li>
+          <li>🔄 Re-roll up to 2 times to curate</li>
+          <li>➡️ Swipe right to mint your favorite</li>
+          <li>🆓 Minting is FREE (only ~$0.01 gas)</li>
         </ol>
       </div>
     </div>

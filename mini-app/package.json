@@ -36,7 +36,8 @@
     "@google/genai": "^0.1.0",
     "@ai-sdk/google": "^0.0.27",
     "ai": "^3.0.0",
-    "node-vibrant": "^3.2.1-alpha.1"
+    "node-vibrant": "^3.2.1-alpha.1",
+    "@supabase/supabase-js": "^2.39.0"
   },
   "devDependencies": {
     "@types/node": "^20.10.0"

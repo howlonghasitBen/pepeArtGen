@@ -103,18 +103,19 @@ function CurationScreen({ cards, onBack }) {
               <div className="mint-info">
                 <div className="cost-breakdown">
                   <div className="cost-row">
-                    <span>Cards:</span>
+                    <span>Cards to mint:</span>
                     <span>{toMint.length}</span>
                   </div>
                   <div className="cost-row">
-                    <span>Price per card:</span>
-                    <span>1 USDC</span>
+                    <span>Minting cost:</span>
+                    <span>FREE</span>
                   </div>
                   <div className="cost-row total">
-                    <span>Total:</span>
-                    <span>{toMint.length} USDC</span>
+                    <span>Gas fees (estimated):</span>
+                    <span>~$0.01</span>
                   </div>
                 </div>
+                <p className="payment-note">✅ You already paid $2.50 USDC for generation</p>
               </div>
 
               {!isConnected ? (
@@ -124,7 +125,7 @@ function CurationScreen({ cards, onBack }) {
                 </div>
               ) : (
                 <button className="mint-btn" onClick={handleMintAll}>
-                  🪙 Mint {toMint.length} Card{toMint.length > 1 ? 's' : ''} for {toMint.length} USDC
+                  🪙 Mint {toMint.length} Card{toMint.length > 1 ? 's' : ''} (FREE)
                 </button>
               )}
             </>

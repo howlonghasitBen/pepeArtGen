@@ -1,7 +1,6 @@
 import { useState } from 'react'
-import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
-import { parseEther } from 'viem'
-import NFT_ABI from '../contracts/abi.json'
+import { useAccount, useWriteContract } from 'wagmi'
+import PEPE_CARD_NFT_ABI from '../contracts/PepeCardNFT.json'
 
 const API_BASE_URL = 'http://localhost:3001'
 
@@ -13,7 +12,6 @@ export function useMintCard() {
   const { writeContractAsync } = useWriteContract()
 
   const NFT_CONTRACT_ADDRESS = import.meta.env.VITE_NFT_CONTRACT_ADDRESS
-  const MINT_PRICE = import.meta.env.VITE_MINT_PRICE || '0.001' // Default 0.001 ETH
 
   /**
    * Upload card to IPFS via backend
@@ -47,7 +45,7 @@ export function useMintCard() {
   }
 
   /**
-   * Mint a single card
+   * Mint a single card (FREE - only gas)
    */
   const mintSingleCard = async (card) => {
     try {
@@ -62,16 +60,16 @@ export function useMintCard() {
       // Step 1: Upload to IPFS
       const metadataURI = await uploadToIPFS(card)
 
-      // Step 2: Mint NFT
+      // Step 2: Mint NFT (FREE - only gas fees)
       setStatus('minting')
       console.log('🎨 Minting NFT with metadata:', metadataURI)
+      console.log('💰 Minting is FREE - only gas fees (~$0.01 on Base)')
 
       const hash = await writeContractAsync({
         address: NFT_CONTRACT_ADDRESS,
-        abi: NFT_ABI,
-        functionName: 'mint',
-        args: [metadataURI],
-        value: parseEther(MINT_PRICE),
+        abi: PEPE_CARD_NFT_ABI.abi,
+        functionName: 'mintCard',
+        args: [address, metadataURI],
       })
 
       setTransactionHash(hash)
@@ -88,7 +86,7 @@ export function useMintCard() {
   }
 
   /**
-   * Mint batch of cards
+   * Mint batch of cards (FREE - only gas)
    */
   const mintBatchCards = async (cards) => {
     try {
@@ -113,18 +111,16 @@ export function useMintCard() {
 
       console.log('✅ All cards uploaded to IPFS')
 
-      // Step 2: Batch mint NFTs
+      // Step 2: Batch mint NFTs (FREE - only gas fees)
       setStatus('minting')
       console.log(`🎨 Batch minting ${cards.length} NFTs...`)
-
-      const totalPrice = parseEther((parseFloat(MINT_PRICE) * cards.length).toString())
+      console.log('💰 Minting is FREE - only gas fees (~$0.01 on Base)')
 
       const hash = await writeContractAsync({
         address: NFT_CONTRACT_ADDRESS,
-        abi: NFT_ABI,
-        functionName: 'mintBatch',
-        args: [metadataURIs],
-        value: totalPrice,
+        abi: PEPE_CARD_NFT_ABI.abi,
+        functionName: 'batchMintCards',
+        args: [address, metadataURIs],
       })
 
       setTransactionHash(hash)

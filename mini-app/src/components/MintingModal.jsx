@@ -23,16 +23,14 @@ function MintingModal({ cards, onClose, onSuccess }) {
     }
   }
 
-  const totalCost = cards.length
+  const gasCost = '~$0.01' // Approximate gas cost on Base L2
 
   const getStatusMessage = () => {
     switch (status) {
       case 'uploading':
-        return '📤 Uploading metadata...'
-      case 'approving':
-        return '✅ Approve USDC spending...'
+        return '📤 Uploading to IPFS...'
       case 'minting':
-        return '⚡ Minting on BASE...'
+        return '⚡ Minting NFT on BASE...'
       case 'confirming':
         return '⏳ Confirming transaction...'
       case 'success':
@@ -59,13 +57,18 @@ function MintingModal({ cards, onClose, onSuccess }) {
             <span className="value">{cards.length}</span>
           </div>
           <div className="summary-row">
-            <span>Price per card:</span>
-            <span className="value">1 USDC</span>
+            <span>Minting cost:</span>
+            <span className="value">FREE</span>
           </div>
           <div className="summary-row total">
-            <span>Total cost:</span>
-            <span className="value">{totalCost} USDC</span>
+            <span>Gas fees (estimated):</span>
+            <span className="value">{gasCost}</span>
           </div>
+        </div>
+
+        <div className="info-note">
+          <p>✅ You already paid $2.50 USDC for generation</p>
+          <p>🆓 Minting is FREE - only gas fees apply</p>
         </div>
 
         {getStatusMessage() && (
@@ -99,7 +102,7 @@ function MintingModal({ cards, onClose, onSuccess }) {
           </div>
         ) : status === 'idle' || status === 'error' ? (
           <button className="mint-btn" onClick={handleMint}>
-            🪙 Mint for {totalCost} USDC
+            🪙 Mint {cards.length} Card{cards.length > 1 ? 's' : ''} (FREE)
           </button>
         ) : status === 'success' ? (
           <button className="success-btn" onClick={onClose}>
