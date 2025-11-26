@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useAccount } from 'wagmi'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
+import { LiquidGlass } from 'liquid-glass-react'
 import { useMintCard } from '../hooks/useMintCard'
 import './MintingModal.css'
 
@@ -44,10 +45,16 @@ function MintingModal({ cards, onClose, onSuccess }) {
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-        <button className="modal-close" onClick={onClose}>
-          ✕
-        </button>
+      <LiquidGlass
+        blurAmount={0.1}
+        saturation={150}
+        cornerRadius={24}
+        displacementScale={40}
+      >
+        <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+          <button className="modal-close" onClick={onClose}>
+            ✕
+          </button>
 
         <h2>🪙 Mint NFTs on BASE</h2>
 
@@ -113,7 +120,8 @@ function MintingModal({ cards, onClose, onSuccess }) {
             Processing...
           </button>
         )}
-      </div>
+        </div>
+      </LiquidGlass>
     </div>
   )
 }
