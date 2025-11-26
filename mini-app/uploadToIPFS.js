@@ -1,4 +1,4 @@
-import { PinataSDK } from "pinata-web3";
+import { PinataSDK } from "pinata";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
