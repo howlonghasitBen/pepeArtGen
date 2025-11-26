@@ -1,9 +1,16 @@
+import { LiquidGlass } from 'liquid-glass-react'
 import './InfoModal.css'
 
 function InfoModal({ onClose }) {
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="info-modal-content" onClick={(e) => e.stopPropagation()}>
+      <LiquidGlass
+        blurAmount={0.1}
+        saturation={150}
+        cornerRadius={24}
+        displacementScale={40}
+      >
+        <div className="info-modal-content" onClick={(e) => e.stopPropagation()}>
         <button className="modal-close" onClick={onClose}>
           ✕
         </button>
@@ -64,7 +71,8 @@ function InfoModal({ onClose }) {
         <button className="close-button" onClick={onClose}>
           Got it!
         </button>
-      </div>
+        </div>
+      </LiquidGlass>
     </div>
   )
 }
