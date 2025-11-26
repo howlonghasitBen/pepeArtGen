@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useAccount } from 'wagmi'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
-import { LiquidGlass } from 'liquid-glass-react'
 import { useGenerationPayment } from '../hooks/useGenerationPayment'
 import './PaymentModal.css'
 
@@ -86,13 +85,7 @@ function PaymentModal({ onClose, onPaymentSuccess }) {
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <LiquidGlass
-        blurAmount={0.1}
-        saturation={150}
-        cornerRadius={24}
-        displacementScale={40}
-      >
-        <div className="modal-content payment-modal" onClick={(e) => e.stopPropagation()}>
+      <div className="modal-content payment-modal" onClick={(e) => e.stopPropagation()}>
           <button className="modal-close" onClick={onClose}>
             ✕
           </button>
@@ -208,8 +201,7 @@ function PaymentModal({ onClose, onPaymentSuccess }) {
             </div>
           </>
         )}
-        </div>
-      </LiquidGlass>
+      </div>
     </div>
   )
 }
