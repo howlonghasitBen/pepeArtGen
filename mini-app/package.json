@@ -30,18 +30,28 @@
   "dependencies": {
     "@ai-sdk/google": "^0.0.27",
     "@google/generative-ai": "^0.24.1",
+    "@rainbow-me/rainbowkit": "^2.2.9",
     "@supabase/supabase-js": "^2.39.0",
+    "@tanstack/react-query": "^5.62.13",
+    "@use-gesture/react": "^10.3.1",
     "ai": "^3.0.0",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
     "liquid-glass-react": "^1.1.1",
     "node-vibrant": "^3.2.1-alpha.1",
-    "pinata-web3": "^0.5.0",
-    "puppeteer": "^21.6.0"
+    "pinata": "^2.5.1",
+    "puppeteer": "^24.31.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-spring": "^9.7.5",
+    "viem": "^2.21.54",
+    "wagmi": "^2.14.11"
   },
   "devDependencies": {
-    "@types/node": "^20.10.0"
+    "@types/node": "^20.10.0",
+    "@vitejs/plugin-react": "^4.3.4",
+    "vite": "^6.0.7"
   },
   "engines": {
     "node": ">=18.0.0"
