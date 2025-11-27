@@ -15,6 +15,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { Buffer } from "buffer";
 import { generateCardHTML } from "./cardHTMLGenerator.mjs";
+// Import cardRenderer but handle failures gracefully
 import { renderCardToPNG } from "./cardRenderer.mjs";
 import {
   paymentSessionService,
@@ -42,6 +43,16 @@ const BATCH_LIMIT = 10;
 
 app.use(cors());
 app.use(express.json({ limit: "50mb" })); // Increased for base64 images
+
+// Health check endpoint
+app.get("/", (req, res) => {
+  res.json({
+    status: "ok",
+    message: "SURF Waves TCG API Server",
+    version: "1.0.0",
+    endpoints: ["/api/generate", "/api/payment", "/api/mint"],
+  });
+});
 
 // Mount payment routes
 app.use("/api/payment", paymentRoutes);
@@ -726,17 +737,6 @@ app.post("/api/upload-to-ipfs", async (req, res) => {
 
     res.status(500).json({ error: errorMessage });
   }
-});
-
-// ... existing API routes ...
-
-// Serve static files from the React build
-// Note: We go up one level from 'server/' to get to 'dist/'
-app.use(express.static(path.join(__dirname, "../dist")));
-
-// Handle React routing, return all requests to React app
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "../dist", "index.html"));
 });
 
 app.listen(PORT, "0.0.0.0", () => {
