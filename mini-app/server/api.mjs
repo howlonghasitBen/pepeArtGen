@@ -37,6 +37,11 @@ dotenv.config({ path: path.join(__dirname, "../.env") });
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+const server = app.listen(PORT, "0.0.0.0", () => {
+  const address = server.address();
+  console.log(`🚀 Server listening on ${address.address}:${address.port}`);
+});
+
 // Free tier limits
 const FREE_DAILY_LIMIT = 100;
 const BATCH_LIMIT = 10;

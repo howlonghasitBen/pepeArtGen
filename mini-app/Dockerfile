@@ -23,8 +23,6 @@ COPY . .
 RUN npm run build
 
 # Expose the port Railway gives us
-ENV PORT=3001
-EXPOSE $PORT
 
 # Start the server
 CMD ["node", "server/api.mjs"]
