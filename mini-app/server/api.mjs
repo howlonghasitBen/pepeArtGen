@@ -37,11 +37,6 @@ dotenv.config({ path: path.join(__dirname, "../.env") });
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-const server = app.listen(PORT, "0.0.0.0", () => {
-  const address = server.address();
-  console.log(`🚀 Server listening on ${address.address}:${address.port}`);
-});
-
 // Free tier limits
 const FREE_DAILY_LIMIT = 100;
 const BATCH_LIMIT = 10;
@@ -744,7 +739,9 @@ app.post("/api/upload-to-ipfs", async (req, res) => {
   }
 });
 
-app.listen(PORT, "0.0.0.0", () => {
+const server = app.listen(PORT, "0.0.0.0", () => {
+  const address = server.address();
+  console.log(`🚀 Server listening on ${address.address}:${address.port}`);
   console.log(`🚀 Card Generator API running on port ${PORT}`);
   console.log(`📊 Free tier limit: ${FREE_DAILY_LIMIT} cards/day`);
   console.log(`📦 Batch limit: ${BATCH_LIMIT} cards`);
