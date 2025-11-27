@@ -441,4 +441,113 @@ router.get('/status/:transactionHash', requireSupabase, async (req, res) => {
   }
 });
 
+/**
+ * POST /api/payment/retry-verify
+ * Manually retry verification for a pending session
+ * Useful if initial verification timed out but tx did confirm
+ */
+router.post('/retry-verify', requireTreasury, async (req, res) => {
+  try {
+    const { transactionHash, walletAddress } = req.body;
+
+    if (!transactionHash || !walletAddress) {
+      return res.status(400).json({
+        error: 'Missing required fields: transactionHash, walletAddress'
+      });
+    }
+
+    console.log(`\n🔄 Retrying verification for: ${transactionHash}`);
+    console.log(`   Network: ${NETWORK}`);
+    console.log(`   Treasury: ${TREASURY_ADDRESS}`);
+
+    // Verify payment on-chain (no waiting, tx should be mined by now)
+    const verification = await verifyPayment(
+      transactionHash,
+      walletAddress,
+      TREASURY_ADDRESS,
+      NETWORK
+    );
+
+    if (!verification.valid) {
+      console.log(`   ❌ Verification failed: ${verification.error}`);
+      return res.status(400).json({
+        error: 'Payment verification failed',
+        message: verification.error
+      });
+    }
+
+    console.log(`   ✅ Payment verified on-chain!`);
+
+    // Check if session exists in Supabase
+    if (isSupabaseConfigured()) {
+      const { data: existingSession } = await supabase
+        .from('payment_sessions')
+        .select('*')
+        .eq('transaction_hash', transactionHash)
+        .single();
+
+      if (existingSession) {
+        // Update existing session to confirmed
+        if (existingSession.status !== 'confirmed') {
+          await supabase
+            .from('payment_sessions')
+            .update({
+              status: 'confirmed',
+              confirmed_at: new Date().toISOString()
+            })
+            .eq('transaction_hash', transactionHash);
+        }
+
+        return res.json({
+          success: true,
+          sessionId: existingSession.id,
+          status: 'confirmed',
+          generationsRemaining: existingSession.generations_remaining,
+          verification: verification.details,
+          message: 'Existing session confirmed'
+        });
+      }
+
+      // Create new confirmed session
+      const { data: newSession, error } = await supabase
+        .from('payment_sessions')
+        .insert({
+          wallet_address: walletAddress,
+          amount_usdc: verification.details.amount,
+          transaction_hash: transactionHash,
+          status: 'confirmed',
+          confirmed_at: new Date().toISOString(),
+          generations_remaining: 3
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      return res.json({
+        success: true,
+        sessionId: newSession.id,
+        status: 'confirmed',
+        generationsRemaining: 3,
+        verification: verification.details,
+        message: 'New session created and confirmed'
+      });
+    }
+
+    res.json({
+      success: true,
+      status: 'verified',
+      verification: verification.details,
+      message: 'Payment verified (no database configured)'
+    });
+
+  } catch (error) {
+    console.error('Error retrying verification:', error);
+    res.status(500).json({
+      error: 'Failed to retry verification',
+      message: error.message
+    });
+  }
+});
+
 export default router;

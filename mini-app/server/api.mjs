@@ -1,4 +1,9 @@
 // API Server for Card Generation
+import {
+  uploadBase64ImageToIPFS,
+  uploadBufferToIPFS,
+  uploadJSONToIPFS,
+} from "./ipfsUpload.mjs";
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -9,7 +14,6 @@ import { promises as fs } from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import { Buffer } from "buffer";
-import { PinataSDK } from "pinata";
 import { generateCardHTML } from "./cardHTMLGenerator.mjs";
 import { renderCardToPNG } from "./cardRenderer.mjs";
 import {
@@ -17,9 +21,9 @@ import {
   cardService,
   ipfsService,
   analyticsService,
-  isSupabaseConfigured
-} from './supabaseClient.mjs';
-import paymentRoutes from './paymentRoutes.mjs';
+  isSupabaseConfigured,
+} from "./supabaseClient.mjs";
+import paymentRoutes from "./paymentRoutes.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -37,7 +41,7 @@ app.use(cors());
 app.use(express.json({ limit: "50mb" })); // Increased for base64 images
 
 // Mount payment routes
-app.use('/api/payment', paymentRoutes);
+app.use("/api/payment", paymentRoutes);
 
 // In-memory storage for demo (use Redis/DB in production)
 const generatedCards = new Map();
@@ -270,7 +274,12 @@ async function generateCardImage(monsterName) {
 // NOW REQUIRES PAYMENT SESSION
 app.post("/api/generate", async (req, res) => {
   try {
-    const { monsterNames, batchMode = false, sessionId, walletAddress } = req.body;
+    const {
+      monsterNames,
+      batchMode = false,
+      sessionId,
+      walletAddress,
+    } = req.body;
 
     if (!monsterNames || monsterNames.length === 0) {
       return res.status(400).json({ error: "No monster names provided" });
@@ -281,7 +290,7 @@ app.post("/api/generate", async (req, res) => {
       if (!sessionId && !walletAddress) {
         return res.status(400).json({
           error: "Payment required",
-          message: "Please complete payment before generating cards"
+          message: "Please complete payment before generating cards",
         });
       }
 
@@ -296,28 +305,31 @@ app.post("/api/generate", async (req, res) => {
       if (!session) {
         return res.status(403).json({
           error: "No active payment session",
-          message: "Please make a $2.50 USDC payment to generate cards"
+          message: "Please make a $2.50 USDC payment to generate cards",
         });
       }
 
-      if (session.status !== 'confirmed') {
+      if (session.status !== "confirmed") {
         return res.status(403).json({
           error: "Payment not confirmed",
-          message: "Please wait for your payment to be confirmed on the blockchain"
+          message:
+            "Please wait for your payment to be confirmed on the blockchain",
         });
       }
 
       if (session.generations_remaining <= 0) {
         return res.status(403).json({
           error: "No generations remaining",
-          message: "You have used all 3 generations (1 initial + 2 re-rolls). Please make a new payment."
+          message:
+            "You have used all 3 generations (1 initial + 2 re-rolls). Please make a new payment.",
         });
       }
 
       if (new Date(session.expires_at) < new Date()) {
         return res.status(403).json({
           error: "Session expired",
-          message: "Your payment session has expired. Please make a new payment."
+          message:
+            "Your payment session has expired. Please make a new payment.",
         });
       }
 
@@ -325,11 +337,15 @@ app.post("/api/generate", async (req, res) => {
       await paymentSessionService.useGeneration(session.id);
 
       // Track analytics
-      await analyticsService.trackEvent('card_generation_started', session.wallet_address, {
-        sessionId: session.id,
-        monsterName: monsterNames[0],
-        generationsRemaining: session.generations_remaining - 1
-      });
+      await analyticsService.trackEvent(
+        "card_generation_started",
+        session.wallet_address,
+        {
+          sessionId: session.id,
+          monsterName: monsterNames[0],
+          generationsRemaining: session.generations_remaining - 1,
+        }
+      );
     } else {
       // Fallback to old free tier system if Supabase not configured
       checkAndResetDailyLimit();
@@ -348,7 +364,7 @@ app.post("/api/generate", async (req, res) => {
     // Limit to single card per generation (user can re-roll up to 2 times)
     if (monsterNames.length > 1) {
       return res.status(400).json({
-        error: "Only one card can be generated per request"
+        error: "Only one card can be generated per request",
       });
     }
 
@@ -438,15 +454,15 @@ app.post("/api/generate", async (req, res) => {
               attack,
               defense,
               speed: mana, // Using mana as speed for now
-              rarity: "1/1"
+              rarity: "1/1",
             },
             move: {
               name: move,
-              description: flavorText
+              description: flavorText,
             },
             flavorText: `${move}\n${flavorText}`,
             themeColors: colors,
-            imageData
+            imageData,
           });
 
           // Use database ID as card ID
@@ -510,7 +526,14 @@ app.get("/api/card/:id", (req, res) => {
   res.json(card);
 });
 
-// Upload card to IPFS endpoint
+// ============================================
+// REPLACE the /api/upload-to-ipfs endpoint in api.mjs with this:
+// ============================================
+
+// Add this import at the top of api.mjs:
+// import { uploadBase64ImageToIPFS, uploadBufferToIPFS, uploadJSONToIPFS } from './ipfsUpload.mjs';
+
+// Upload card to IPFS endpoint (FIXED for Pinata SDK v2)
 app.post("/api/upload-to-ipfs", async (req, res) => {
   try {
     const { card } = req.body;
@@ -519,76 +542,60 @@ app.post("/api/upload-to-ipfs", async (req, res) => {
       return res.status(400).json({ error: "Card data with image required" });
     }
 
-    // Initialize Pinata SDK
-    const pinata = new PinataSDK({
-      pinataJwt: process.env.PINATA_JWT,
-    });
-
     if (!process.env.PINATA_JWT) {
       return res.status(500).json({
-        error: "PINATA_JWT not configured. Add it to your .env file"
+        error: "PINATA_JWT not configured. Add it to your .env file",
       });
     }
 
     console.log(`\n📤 Uploading card to IPFS: ${card.name}`);
 
-    // Step 1: Upload raw AI image to IPFS (needed for HTML card rendering)
+    // Step 1: Upload raw AI image to IPFS
     console.log("  🎨 Uploading raw AI image...");
 
-    const base64Data = card.imageData.replace(/^data:image\/\w+;base64,/, "");
-    const rawImageBuffer = Buffer.from(base64Data, "base64");
-
-    const rawImageFile = new File([rawImageBuffer], `${card.id}_raw.png`, {
-      type: "image/png",
-    });
-
-    const rawImageUpload = await pinata.upload.file(rawImageFile);
+    const rawImageUpload = await uploadBase64ImageToIPFS(
+      card.imageData,
+      `${card.id}_raw.png`
+    );
     const rawImageCID = rawImageUpload.IpfsHash;
-
     console.log(`  ✅ Raw image uploaded: ipfs://${rawImageCID}`);
 
-    // Step 2: Generate HTML card (using raw image)
+    // Step 2: Generate HTML card
     console.log("  🎴 Generating HTML card...");
-
     const imageGatewayUrl = `https://gateway.pinata.cloud/ipfs/${rawImageCID}`;
     const cardHTML = generateCardHTML(card, imageGatewayUrl);
 
-    // Step 3: Render HTML card to PNG (this becomes the preview image)
+    // Step 3: Render HTML card to PNG
     console.log("  🖼️  Rendering card to PNG...");
-
     const cardImageBuffer = await renderCardToPNG(cardHTML);
 
     console.log("  📤 Uploading rendered card image...");
-
-    const cardImageFile = new File([cardImageBuffer], `${card.id}.png`, {
-      type: "image/png",
-    });
-
-    const cardImageUpload = await pinata.upload.file(cardImageFile);
+    const cardImageUpload = await uploadBufferToIPFS(
+      cardImageBuffer,
+      `${card.id}.png`,
+      "image/png"
+    );
     const cardImageCID = cardImageUpload.IpfsHash;
-
     console.log(`  ✅ Card image uploaded: ipfs://${cardImageCID}`);
 
-    // Step 4: Upload HTML card (for animation_url)
+    // Step 4: Upload HTML card
     console.log("  📤 Uploading HTML card...");
-
-    const htmlFile = new File([cardHTML], `${card.id}.html`, {
-      type: "text/html",
-    });
-
-    const htmlUpload = await pinata.upload.file(htmlFile);
+    const htmlBuffer = Buffer.from(cardHTML, "utf-8");
+    const htmlUpload = await uploadBufferToIPFS(
+      htmlBuffer,
+      `${card.id}.html`,
+      "text/html"
+    );
     const htmlCID = htmlUpload.IpfsHash;
-
     console.log(`  ✅ HTML card uploaded: ipfs://${htmlCID}`);
 
     // Step 5: Create and upload metadata
     console.log("  📝 Creating metadata...");
-
     const metadata = {
       name: card.name,
       description: card.flavorText || `${card.name} - A unique trading card`,
-      image: `ipfs://${cardImageCID}`,  // Rendered card as preview!
-      animation_url: `ipfs://${htmlCID}`,  // Interactive HTML
+      image: `ipfs://${cardImageCID}`,
+      animation_url: `ipfs://${htmlCID}`,
       attributes: [
         { trait_type: "Type", value: card.type || "Creature" },
         { trait_type: "Level", value: card.level || "1" },
@@ -601,69 +608,58 @@ app.post("/api/upload-to-ipfs", async (req, res) => {
       ],
     };
 
-    const metadataFile = new File(
-      [JSON.stringify(metadata, null, 2)],
-      "metadata.json",
-      { type: "application/json" }
-    );
-
     console.log("  📤 Uploading metadata...");
-    const metadataUpload = await pinata.upload.file(metadataFile);
+    const metadataUpload = await uploadJSONToIPFS(metadata);
     const metadataCID = metadataUpload.IpfsHash;
-
     console.log(`  ✅ Metadata uploaded: ipfs://${metadataCID}`);
 
     // Store IPFS links in Supabase if configured
     if (isSupabaseConfigured() && card.databaseId) {
       console.log("  💾 Storing IPFS links in database...");
-
       try {
         await Promise.all([
           ipfsService.addLink(
             card.databaseId,
             rawImageCID,
-            'raw_image',
+            "raw_image",
             `https://gateway.pinata.cloud/ipfs/${rawImageCID}`,
-            rawImageBuffer.length
+            null
           ),
           ipfsService.addLink(
             card.databaseId,
             cardImageCID,
-            'styled_card',
+            "styled_card",
             `https://gateway.pinata.cloud/ipfs/${cardImageCID}`,
-            cardImageBuffer.length
+            null
           ),
           ipfsService.addLink(
             card.databaseId,
             htmlCID,
-            'html',
+            "html",
             `https://gateway.pinata.cloud/ipfs/${htmlCID}`,
-            Buffer.from(cardHTML).length
+            null
           ),
           ipfsService.addLink(
             card.databaseId,
             metadataCID,
-            'metadata',
+            "metadata",
             `https://gateway.pinata.cloud/ipfs/${metadataCID}`,
-            Buffer.from(JSON.stringify(metadata)).length
-          )
+            null
+          ),
         ]);
-
         console.log("  ✅ IPFS links stored in database");
       } catch (dbError) {
-        console.warn("  ⚠️  Failed to store IPFS links in database:", dbError.message);
-        // Don't fail the request if database storage fails
+        console.warn("  ⚠️  Failed to store IPFS links:", dbError.message);
       }
     }
 
-    // Return IPFS URIs
     const result = {
       success: true,
       rawImageCID,
       cardImageCID,
       htmlCID,
       metadataCID,
-      imageURI: `ipfs://${cardImageCID}`,  // Rendered card
+      imageURI: `ipfs://${cardImageCID}`,
       animationURI: `ipfs://${htmlCID}`,
       metadataURI: `ipfs://${metadataCID}`,
       rawImageGateway: `https://gateway.pinata.cloud/ipfs/${rawImageCID}`,
@@ -678,9 +674,15 @@ app.post("/api/upload-to-ipfs", async (req, res) => {
     console.error("❌ IPFS upload error:", error);
 
     let errorMessage = error.message;
-    if (error.message.includes("401")) {
+    if (
+      error.message.includes("401") ||
+      error.message.includes("Unauthorized")
+    ) {
       errorMessage = "Invalid Pinata JWT token. Check your .env configuration";
-    } else if (error.message.includes("insufficient funds")) {
+    } else if (
+      error.message.includes("insufficient") ||
+      error.message.includes("limit")
+    ) {
       errorMessage = "Pinata account limit reached. Upgrade your plan";
     }
 

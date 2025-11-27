@@ -23,6 +23,10 @@ function getClient(network = 'base') {
     ? process.env.BASE_RPC_URL || 'https://mainnet.base.org'
     : process.env.BASE_SEPOLIA_RPC_URL || 'https://sepolia.base.org'
 
+  console.log(`   📡 Using network: ${network}`)
+  console.log(`   📡 RPC URL: ${rpcUrl}`)
+  console.log(`   📡 USDC contract: ${USDC_ADDRESSES[network]}`)
+
   return createPublicClient({
     chain,
     transport: http(rpcUrl),
@@ -175,6 +179,8 @@ export async function isTransactionUsed(transactionHash, supabase) {
 export async function waitForConfirmation(transactionHash, network = 'base', maxAttempts = 30) {
   const client = getClient(network)
   
+  console.log(`   ⏳ Waiting for tx confirmation (max ${maxAttempts * 2}s)...`)
+  
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     try {
       const receipt = await client.getTransactionReceipt({
@@ -182,16 +188,21 @@ export async function waitForConfirmation(transactionHash, network = 'base', max
       })
       
       if (receipt) {
+        console.log(`   ✅ Tx confirmed in block ${receipt.blockNumber} (attempt ${attempt + 1})`)
         return { confirmed: true, receipt }
       }
     } catch (error) {
-      // Transaction not yet mined
+      // Transaction not yet mined - this is expected
+      if (attempt % 5 === 0) {
+        console.log(`   ⏳ Still waiting... (attempt ${attempt + 1}/${maxAttempts}) - ${error.message?.slice(0, 50)}`)
+      }
     }
     
     // Wait 2 seconds between attempts
     await new Promise(resolve => setTimeout(resolve, 2000))
   }
   
+  console.log(`   ❌ Tx confirmation timeout after ${maxAttempts} attempts`)
   return { confirmed: false, error: 'Transaction confirmation timeout' }
 }
 
