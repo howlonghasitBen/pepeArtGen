@@ -17,7 +17,7 @@ contract WavesTCGNFTTest is Test {
     string constant SYMBOL = "SURF";
     string constant BASE_URI = "ipfs://QmTestHash/";
     uint96 constant ROYALTY_BPS = 500; // 5%
-    uint256 constant MINT_PRICE = 0.001 ether;
+    uint256 constant MINT_PRICE = 0; // Free minting
     
     event CardMinted(address indexed minter, uint256 indexed tokenId, string tokenURI);
     
@@ -42,7 +42,7 @@ contract WavesTCGNFTTest is Test {
                         DEPLOYMENT TESTS
     //////////////////////////////////////////////////////////////*/
     
-    function test_Deployment() public {
+    function test_Deployment() public view {
         assertEq(nft.name(), NAME);
         assertEq(nft.symbol(), SYMBOL);
         assertEq(nft.owner(), owner);
@@ -52,7 +52,7 @@ contract WavesTCGNFTTest is Test {
         assertEq(nft.totalSupply(), 0);
     }
     
-    function test_RoyaltyInfo() public {
+    function test_RoyaltyInfo() public view {
         (address receiver, uint256 amount) = nft.royaltyInfo(1, 1 ether);
         assertEq(receiver, royaltyReceiver);
         assertEq(amount, 0.05 ether); // 5% of 1 ETH
@@ -81,22 +81,29 @@ contract WavesTCGNFTTest is Test {
     
     function test_Mint_RefundsExcessPayment() public {
         vm.startPrank(user1);
-        
+
         uint256 balanceBefore = user1.balance;
-        nft.mint{value: MINT_PRICE + 0.5 ether}("1.json");
+        uint256 paymentAmount = 0.5 ether;
+        nft.mint{value: paymentAmount}("1.json");
         uint256 balanceAfter = user1.balance;
-        
-        assertEq(balanceBefore - balanceAfter, MINT_PRICE);
-        
+
+        // With free minting (mintPrice = 0), all payment should be refunded
+        // User only pays for gas, not the mint itself
+        assertEq(balanceBefore - balanceAfter, 0);
+
         vm.stopPrank();
     }
     
-    function test_Mint_RevertsInsufficientPayment() public {
+    function test_Mint_FreeMinting() public {
         vm.startPrank(user1);
-        
-        vm.expectRevert(WavesTCGNFT.InsufficientPayment.selector);
-        nft.mint{value: MINT_PRICE - 1}("1.json");
-        
+
+        // With mintPrice = 0, minting should work with no payment (only gas)
+        uint256 tokenId = nft.mint{value: 0}("1.json");
+
+        assertEq(tokenId, 1);
+        assertEq(nft.ownerOf(1), user1);
+        assertEq(nft.totalSupply(), 1);
+
         vm.stopPrank();
     }
     
@@ -420,7 +427,7 @@ contract WavesTCGNFTTest is Test {
                         INTERFACE SUPPORT TESTS
     //////////////////////////////////////////////////////////////*/
     
-    function test_SupportsInterface() public {
+    function test_SupportsInterface() public view {
         // ERC-721
         assertTrue(nft.supportsInterface(0x80ac58cd));
         // ERC-2981 (Royalties)
