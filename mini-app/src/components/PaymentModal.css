@@ -130,13 +130,17 @@
 }
 
 .btn-primary::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 100%);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.2) 0%,
+    rgba(255, 255, 255, 0) 100%
+  );
   opacity: 0;
   transition: opacity 0.3s;
 }
@@ -151,7 +155,7 @@
 }
 
 .btn-primary:disabled {
-  opacity: 0.5;
+  opacity: 0.7;
   cursor: not-allowed;
 }
 
@@ -193,11 +197,80 @@
   font-size: 0.8rem;
 }
 
+.payment-disclaimer strong {
+  color: #667eea;
+}
+
+/* Status message styles */
+.status-message {
+  text-align: center;
+  padding: 15px;
+  border-radius: 10px;
+  margin-bottom: 15px;
+  font-weight: 600;
+}
+
+.status-message .status-title {
+  font-size: 1rem;
+  margin-bottom: 4px;
+}
+
+.status-message .status-description {
+  font-size: 0.85rem;
+  font-weight: 400;
+  opacity: 0.8;
+}
+
 .status-message.paying,
 .status-message.creating_session,
-.status-message.confirming_payment {
+.status-message.verifying_payment {
   background: rgba(102, 126, 234, 0.1);
   color: #667eea;
+}
+
+.status-message.success {
+  background: rgba(76, 217, 100, 0.1);
+  color: #34c759;
+}
+
+.status-message.error {
+  background: rgba(255, 59, 48, 0.1);
+  color: #ff3b30;
+}
+
+.error-message {
+  background: rgba(255, 59, 48, 0.1);
+  border: 1px solid rgba(255, 59, 48, 0.2);
+  color: #ff3b30;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.error-message strong {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.tx-hash {
+  text-align: center;
+  margin-bottom: 15px;
+  padding: 10px;
+  background: rgba(102, 126, 234, 0.05);
+  border-radius: 8px;
+}
+
+.tx-hash a {
+  color: #667eea;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.tx-hash a:hover {
+  text-decoration: underline;
 }
 
 @media (max-width: 768px) {

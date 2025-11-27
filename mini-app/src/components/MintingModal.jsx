@@ -1,53 +1,53 @@
-import { useState } from 'react'
-import { useAccount } from 'wagmi'
-import { ConnectButton } from '@rainbow-me/rainbowkit'
-import { useMintCard } from '../hooks/useMintCard'
-import './MintingModal.css'
+import { useState } from "react";
+import { useAccount } from "wagmi";
+import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { useMintCard } from "../hooks/useMintCard";
+import "./MintingModal.css";
 
 function MintingModal({ cards, onClose, onSuccess }) {
-  const { isConnected } = useAccount()
-  const { mint, status, error } = useMintCard()
-  const [txHash, setTxHash] = useState(null)
+  const { isConnected } = useAccount();
+  const { mint, status, error } = useMintCard();
+  const [txHash, setTxHash] = useState(null);
 
   const handleMint = async () => {
     try {
-      const hash = await mint(cards)
-      setTxHash(hash)
+      const hash = await mint(cards);
+      setTxHash(hash);
 
       // Wait a bit then call success
       setTimeout(() => {
-        onSuccess(hash)
-      }, 2000)
+        onSuccess(hash);
+      }, 2000);
     } catch (err) {
-      console.error('Minting error:', err)
+      console.error("Minting error:", err);
     }
-  }
+  };
 
-  const gasCost = '~$0.01' // Approximate gas cost on Base L2
+  const gasCost = "~$0.01"; // Approximate gas cost on Base L2
 
   const getStatusMessage = () => {
     switch (status) {
-      case 'uploading':
-        return '📤 Uploading to IPFS...'
-      case 'minting':
-        return '⚡ Minting NFT on BASE...'
-      case 'confirming':
-        return '⏳ Confirming transaction...'
-      case 'success':
-        return '🎉 Minted successfully!'
-      case 'error':
-        return '❌ Minting failed'
+      case "uploading":
+        return "📤 Uploading to IPFS...";
+      case "minting":
+        return "⚡ Minting NFT on BASE...";
+      case "confirming":
+        return "⏳ Confirming transaction...";
+      case "success":
+        return "🎉 Minted successfully!";
+      case "error":
+        return "❌ Minting failed";
       default:
-        return null
+        return null;
     }
-  }
+  };
 
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-          <button className="modal-close" onClick={onClose}>
-            ✕
-          </button>
+        <button className="modal-close" onClick={onClose}>
+          ✕
+        </button>
 
         <h2>🪙 Mint NFTs on BASE</h2>
 
@@ -72,16 +72,10 @@ function MintingModal({ cards, onClose, onSuccess }) {
         </div>
 
         {getStatusMessage() && (
-          <div className={`status-message ${status}`}>
-            {getStatusMessage()}
-          </div>
+          <div className={`status-message ${status}`}>{getStatusMessage()}</div>
         )}
 
-        {error && (
-          <div className="error-message">
-            {error}
-          </div>
-        )}
+        {error && <div className="error-message">{error}</div>}
 
         {txHash && (
           <div className="tx-hash">
@@ -100,11 +94,11 @@ function MintingModal({ cards, onClose, onSuccess }) {
             <p>Connect your wallet to mint</p>
             <ConnectButton />
           </div>
-        ) : status === 'idle' || status === 'error' ? (
+        ) : status === "idle" || status === "error" ? (
           <button className="mint-btn" onClick={handleMint}>
-            🪙 Mint {cards.length} Card{cards.length > 1 ? 's' : ''} (FREE)
+            🪙 Mint {cards.length} Card{cards.length > 1 ? "s" : ""} (FREE)
           </button>
-        ) : status === 'success' ? (
+        ) : status === "success" ? (
           <button className="success-btn" onClick={onClose}>
             ✅ Done
           </button>
@@ -115,7 +109,7 @@ function MintingModal({ cards, onClose, onSuccess }) {
         )}
       </div>
     </div>
-  )
+  );
 }
 
-export default MintingModal
+export default MintingModal;

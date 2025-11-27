@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from 'wagmi'
+import { useAccount, useWriteContract, useReadContract } from 'wagmi'
 import { parseUnits } from 'viem'
 import USDC_ABI from '../contracts/USDC.json'
 
@@ -14,10 +14,10 @@ export function useGenerationPayment() {
   const { writeContractAsync } = useWriteContract()
 
   const USDC_CONTRACT_ADDRESS = import.meta.env.VITE_USDC_CONTRACT_ADDRESS
-  const TREASURY_ADDRESS = import.meta.env.TREASURY_ADDRESS || import.meta.env.VITE_TREASURY_ADDRESS
+  const TREASURY_ADDRESS = import.meta.env.VITE_TREASURY_ADDRESS
 
   // Read USDC balance
-  const { data: usdcBalance } = useReadContract({
+  const { data: usdcBalance, refetch: refetchBalance } = useReadContract({
     address: USDC_CONTRACT_ADDRESS,
     abi: USDC_ABI.abi,
     functionName: 'balanceOf',
@@ -53,6 +53,7 @@ export function useGenerationPayment() {
 
   /**
    * Pay USDC for generation credits (1 initial + 2 re-rolls)
+   * Now includes on-chain verification
    */
   const payForGeneration = async () => {
     try {
@@ -65,7 +66,7 @@ export function useGenerationPayment() {
       }
 
       if (!TREASURY_ADDRESS) {
-        throw new Error('Treasury address not configured. Set TREASURY_ADDRESS in .env')
+        throw new Error('Treasury address not configured. Set VITE_TREASURY_ADDRESS in .env')
       }
 
       // Calculate USDC amount (6 decimals)
@@ -76,8 +77,9 @@ export function useGenerationPayment() {
         throw new Error(`Insufficient USDC balance. Need ${GENERATION_FEE_USDC} USDC`)
       }
 
-      // Transfer USDC to treasury
+      // Step 1: Transfer USDC to treasury
       setStatus('paying')
+      setError(null)
       console.log(`💰 Paying ${GENERATION_FEE_USDC} USDC for generation credits...`)
 
       const hash = await writeContractAsync({
@@ -89,7 +91,7 @@ export function useGenerationPayment() {
 
       console.log('⏳ Payment transaction submitted:', hash)
 
-      // Create payment session in backend
+      // Step 2: Create pending session in backend
       setStatus('creating_session')
 
       const sessionResponse = await fetch(`${API_BASE_URL}/api/payment/initiate`, {
@@ -110,42 +112,73 @@ export function useGenerationPayment() {
       }
 
       const sessionData = await sessionResponse.json()
-      console.log('✅ Payment session created:', sessionData.sessionId)
+      console.log('📝 Pending session created:', sessionData.sessionId)
 
-      setPaymentSession({
-        id: sessionData.sessionId,
-        generationsRemaining: sessionData.generationsRemaining,
-        expiresAt: sessionData.expiresAt,
-      })
+      // Step 3: Verify payment on-chain (backend checks the actual tx)
+      setStatus('verifying_payment')
+      console.log('🔍 Verifying payment on-chain...')
 
-      // Wait for transaction to be mined
-      setStatus('confirming_payment')
-
-      // Confirm payment after a delay (in production, you'd watch for transaction confirmation)
-      await new Promise(resolve => setTimeout(resolve, 3000))
-
-      await fetch(`${API_BASE_URL}/api/payment/confirm`, {
+      const verifyResponse = await fetch(`${API_BASE_URL}/api/payment/verify`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           transactionHash: hash,
+          walletAddress: address,
         }),
+      })
+
+      if (!verifyResponse.ok) {
+        const data = await verifyResponse.json()
+        throw new Error(data.message || data.error || 'Payment verification failed')
+      }
+
+      const verifyData = await verifyResponse.json()
+      console.log('✅ Payment verified on-chain:', verifyData.verification)
+
+      // Update session state
+      setPaymentSession({
+        id: verifyData.sessionId,
+        generationsRemaining: verifyData.generationsRemaining,
+        expiresAt: sessionData.expiresAt,
       })
 
       setStatus('success')
       console.log('🎉 Payment confirmed! You have 3 generations (1 initial + 2 re-rolls)')
 
+      // Refresh balance
+      refetchBalance()
+
       return {
         transactionHash: hash,
-        sessionId: sessionData.sessionId,
+        sessionId: verifyData.sessionId,
+        verification: verifyData.verification,
       }
     } catch (err) {
       console.error('Payment failed:', err)
       setError(err.message)
       setStatus('error')
       throw err
+    }
+  }
+
+  /**
+   * Check payment status by transaction hash
+   */
+  const checkPaymentStatus = async (transactionHash) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/payment/status/${transactionHash}`)
+      
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || 'Failed to check payment status')
+      }
+
+      return await response.json()
+    } catch (err) {
+      console.error('Error checking payment status:', err)
+      return null
     }
   }
 
@@ -157,6 +190,8 @@ export function useGenerationPayment() {
       feeUsdc: GENERATION_FEE_USDC,
       generationsIncluded: 3,
       description: 'Includes 1 initial generation + 2 re-rolls',
+      treasuryAddress: TREASURY_ADDRESS,
+      usdcContract: USDC_CONTRACT_ADDRESS,
     }
   }
 
@@ -169,16 +204,26 @@ export function useGenerationPayment() {
     return BigInt(usdcBalance) >= BigInt(requiredAmount)
   }
 
+  /**
+   * Reset error state
+   */
+  const clearError = () => {
+    setError(null)
+    setStatus('idle')
+  }
+
   return {
     payForGeneration,
     checkActiveSession,
+    checkPaymentStatus,
     getPaymentInfo,
     hasSufficientBalance,
+    clearError,
     paymentSession,
     usdcBalance,
     status,
     error,
-    isLoading: status !== 'idle' && status !== 'error' && status !== 'success',
+    isLoading: ['paying', 'creating_session', 'verifying_payment'].includes(status),
     generationFeeUsdc: GENERATION_FEE_USDC,
   }
 }

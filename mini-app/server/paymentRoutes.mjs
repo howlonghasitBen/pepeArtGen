@@ -1,13 +1,19 @@
-// Payment tracking routes for USDC payments
+// Payment tracking routes for USDC payments with on-chain verification
 import express from 'express';
 import {
   paymentSessionService,
   cardService,
   analyticsService,
-  isSupabaseConfigured
+  isSupabaseConfigured,
+  supabase
 } from './supabaseClient.mjs';
+import { verifyPayment, isTransactionUsed, waitForConfirmation } from './verifyPayment.mjs';
 
 const router = express.Router();
+
+// Get treasury address from env
+const TREASURY_ADDRESS = process.env.TREASURY_ADDRESS || process.env.VITE_TREASURY_ADDRESS;
+const NETWORK = process.env.NETWORK || 'base'; // 'base' or 'baseSepolia'
 
 // Middleware to check Supabase configuration
 const requireSupabase = (req, res, next) => {
@@ -20,11 +26,23 @@ const requireSupabase = (req, res, next) => {
   next();
 };
 
+// Middleware to check treasury is configured
+const requireTreasury = (req, res, next) => {
+  if (!TREASURY_ADDRESS) {
+    return res.status(503).json({
+      error: 'Treasury not configured',
+      message: 'Please set TREASURY_ADDRESS in your .env file'
+    });
+  }
+  next();
+};
+
 /**
  * POST /api/payment/initiate
  * Initiate a payment session (called after USDC transaction is submitted)
+ * Now includes on-chain verification
  */
-router.post('/initiate', requireSupabase, async (req, res) => {
+router.post('/initiate', requireSupabase, requireTreasury, async (req, res) => {
   try {
     const { walletAddress, transactionHash, amountUsdc } = req.body;
 
@@ -34,7 +52,23 @@ router.post('/initiate', requireSupabase, async (req, res) => {
       });
     }
 
-    // Create payment session
+    // Validate transaction hash format
+    if (!/^0x[a-fA-F0-9]{64}$/.test(transactionHash)) {
+      return res.status(400).json({
+        error: 'Invalid transaction hash format'
+      });
+    }
+
+    // Check if transaction hash already used (prevent replay)
+    const alreadyUsed = await isTransactionUsed(transactionHash, supabase);
+    if (alreadyUsed) {
+      return res.status(409).json({
+        error: 'Transaction already used',
+        message: 'This transaction has already been used to create a session'
+      });
+    }
+
+    // Create pending session first (will verify async)
     const session = await paymentSessionService.createSession(
       walletAddress,
       amountUsdc,
@@ -44,15 +78,19 @@ router.post('/initiate', requireSupabase, async (req, res) => {
     // Track analytics
     await analyticsService.trackEvent('payment_initiated', walletAddress, {
       amount: amountUsdc,
-      transactionHash
+      transactionHash,
+      network: NETWORK
     });
 
     res.json({
       success: true,
       sessionId: session.id,
+      status: 'pending',
+      message: 'Payment session created. Awaiting on-chain verification.',
       generationsRemaining: session.generations_remaining,
       expiresAt: session.expires_at
     });
+
   } catch (error) {
     console.error('Error initiating payment session:', error);
 
@@ -72,16 +110,142 @@ router.post('/initiate', requireSupabase, async (req, res) => {
 });
 
 /**
- * POST /api/payment/confirm
- * Confirm a payment after transaction is mined
+ * POST /api/payment/verify
+ * Verify a payment on-chain and confirm the session
  */
-router.post('/confirm', requireSupabase, async (req, res) => {
+router.post('/verify', requireSupabase, requireTreasury, async (req, res) => {
   try {
-    const { transactionHash } = req.body;
+    const { transactionHash, walletAddress } = req.body;
 
     if (!transactionHash) {
       return res.status(400).json({
         error: 'Missing required field: transactionHash'
+      });
+    }
+
+    console.log(`\n💰 Verifying payment: ${transactionHash}`);
+
+    // 1. Wait for transaction to be mined (if needed)
+    const { confirmed, error: confirmError } = await waitForConfirmation(
+      transactionHash,
+      NETWORK,
+      30 // Max 30 attempts (60 seconds)
+    );
+
+    if (!confirmed) {
+      return res.status(400).json({
+        error: 'Transaction not confirmed',
+        message: confirmError || 'Transaction not found on-chain after waiting'
+      });
+    }
+
+    // 2. Verify the payment details on-chain
+    const verification = await verifyPayment(
+      transactionHash,
+      walletAddress,
+      TREASURY_ADDRESS,
+      NETWORK
+    );
+
+    if (!verification.valid) {
+      console.log(`   ❌ Verification failed: ${verification.error}`);
+      
+      // Mark session as failed if it exists
+      if (supabase) {
+        await supabase
+          .from('payment_sessions')
+          .update({ status: 'failed' })
+          .eq('transaction_hash', transactionHash);
+      }
+
+      return res.status(400).json({
+        error: 'Payment verification failed',
+        message: verification.error
+      });
+    }
+
+    // 3. Confirm the session
+    const session = await paymentSessionService.confirmSession(transactionHash);
+
+    // 4. Track analytics
+    await analyticsService.trackEvent('payment_verified', session.wallet_address, {
+      sessionId: session.id,
+      transactionHash,
+      amount: verification.details.amount,
+      blockNumber: verification.details.blockNumber
+    });
+
+    console.log(`   ✅ Payment verified and session confirmed!`);
+
+    res.json({
+      success: true,
+      sessionId: session.id,
+      status: 'confirmed',
+      generationsRemaining: session.generations_remaining,
+      confirmedAt: session.confirmed_at,
+      verification: {
+        amount: verification.details.amount,
+        blockNumber: verification.details.blockNumber
+      }
+    });
+
+  } catch (error) {
+    console.error('Error verifying payment:', error);
+    res.status(500).json({
+      error: 'Failed to verify payment',
+      message: error.message
+    });
+  }
+});
+
+/**
+ * POST /api/payment/confirm
+ * Legacy endpoint - now calls verify internally
+ * Kept for backwards compatibility
+ */
+router.post('/confirm', requireSupabase, requireTreasury, async (req, res) => {
+  try {
+    const { transactionHash, walletAddress } = req.body;
+
+    if (!transactionHash) {
+      return res.status(400).json({
+        error: 'Missing required field: transactionHash'
+      });
+    }
+
+    // Get the session to find wallet address if not provided
+    let senderWallet = walletAddress;
+    if (!senderWallet && supabase) {
+      const { data: session } = await supabase
+        .from('payment_sessions')
+        .select('wallet_address')
+        .eq('transaction_hash', transactionHash)
+        .single();
+      
+      senderWallet = session?.wallet_address;
+    }
+
+    if (!senderWallet) {
+      return res.status(400).json({
+        error: 'Could not determine wallet address for verification'
+      });
+    }
+
+    // Verify payment on-chain
+    console.log(`\n💰 Confirming payment: ${transactionHash}`);
+    
+    const verification = await verifyPayment(
+      transactionHash,
+      senderWallet,
+      TREASURY_ADDRESS,
+      NETWORK
+    );
+
+    if (!verification.valid) {
+      console.log(`   ❌ Verification failed: ${verification.error}`);
+      return res.status(400).json({
+        error: 'Payment verification failed',
+        message: verification.error
       });
     }
 
@@ -100,6 +264,7 @@ router.post('/confirm', requireSupabase, async (req, res) => {
       generationsRemaining: session.generations_remaining,
       confirmedAt: session.confirmed_at
     });
+
   } catch (error) {
     console.error('Error confirming payment:', error);
     res.status(500).json({
@@ -189,7 +354,7 @@ router.post('/use-generation', requireSupabase, async (req, res) => {
     if (session.generations_remaining <= 0) {
       return res.status(403).json({
         error: 'No generations remaining',
-        message: 'You have used all 3 generations (1 initial + 2 re-rolls). Please make a new payment to generate more cards.',
+        message: 'You have used all 3 generations (1 initial + 2 re-rolls). Please make a new payment.',
         generationsRemaining: 0
       });
     }
@@ -228,9 +393,52 @@ router.get('/check-price', (req, res) => {
   res.json({
     priceUsdc: '2.50',
     currency: 'USDC',
+    network: NETWORK,
+    treasuryConfigured: !!TREASURY_ADDRESS,
     generationsIncluded: 3,
     description: 'Includes 1 initial generation + 2 re-rolls'
   });
+});
+
+/**
+ * GET /api/payment/status/:transactionHash
+ * Check the status of a specific transaction/session
+ */
+router.get('/status/:transactionHash', requireSupabase, async (req, res) => {
+  try {
+    const { transactionHash } = req.params;
+
+    const { data: session, error } = await supabase
+      .from('payment_sessions')
+      .select('*')
+      .eq('transaction_hash', transactionHash)
+      .single();
+
+    if (error || !session) {
+      return res.status(404).json({
+        error: 'Session not found',
+        transactionHash
+      });
+    }
+
+    res.json({
+      transactionHash,
+      status: session.status,
+      walletAddress: session.wallet_address,
+      amountUsdc: session.amount_usdc,
+      generationsRemaining: session.generations_remaining,
+      createdAt: session.created_at,
+      confirmedAt: session.confirmed_at,
+      expiresAt: session.expires_at
+    });
+
+  } catch (error) {
+    console.error('Error checking payment status:', error);
+    res.status(500).json({
+      error: 'Failed to check payment status',
+      message: error.message
+    });
+  }
 });
 
 export default router;
