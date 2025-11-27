@@ -3,7 +3,7 @@ import { useAccount, useWriteContract, useReadContract } from 'wagmi'
 import { parseUnits } from 'viem'
 import USDC_ABI from '../contracts/USDC.json'
 
-const API_BASE_URL = 'http://localhost:3001'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001'
 const GENERATION_FEE_USDC = '2.50' // $2.50 USDC for 1 gen + 2 re-rolls
 
 export function useGenerationPayment() {

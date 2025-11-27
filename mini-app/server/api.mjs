@@ -32,7 +32,7 @@ const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.join(__dirname, "../../.env") });
 
 const app = express();
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
 
 // Free tier limits
 const FREE_DAILY_LIMIT = 100;
@@ -727,7 +727,7 @@ app.post("/api/upload-to-ipfs", async (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`🚀 Card Generator API running on http://localhost:${PORT}`);
+  console.log(`🚀 Card Generator API running on port ${PORT}`);
   console.log(`📊 Free tier limit: ${FREE_DAILY_LIMIT} cards/day`);
   console.log(`📦 Batch limit: ${BATCH_LIMIT} cards`);
   console.log(`🎨 Using node-vibrant for color extraction`);
