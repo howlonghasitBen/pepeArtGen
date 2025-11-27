@@ -135,22 +135,16 @@ WavesTCGNFT deployed at: 0x1234567890abcdef...
 VITE_NFT_CONTRACT_ADDRESS=0x1234567890abcdef...
 ```
 
-### 5. Set Mint Price to Zero (FREE Minting)
+### 5. Verify Mint Price (Already FREE)
 
-After deployment, call `setMintPrice(0)` to make minting free:
+The contract is deployed with `mintPrice = 0` by default. Verify it:
 
-```bash
-cast send $VITE_NFT_CONTRACT_ADDRESS \
-  "setMintPrice(uint256)" 0 \
-  --rpc-url $BASE_RPC_URL \
-  --private-key $PRIVATE_KEY
-```
-
-**Verify it's set to 0:**
 ```bash
 cast call $VITE_NFT_CONTRACT_ADDRESS "mintPrice()" --rpc-url $BASE_RPC_URL
 # Should return: 0 [0]
 ```
+
+✅ **Minting is FREE from deployment - no additional configuration needed!**
 
 ---
 
@@ -372,7 +366,13 @@ SELECT * FROM minting_history ORDER BY minted_at DESC LIMIT 10;
 
 ### Minting fails with "InsufficientPayment"
 
-**Solution:** Mint price is not set to 0. Run:
+**Solution:** This error means the contract is expecting payment. Verify mint price is 0:
+```bash
+cast call $VITE_NFT_CONTRACT_ADDRESS "mintPrice()" --rpc-url $BASE_RPC_URL
+# Should return: 0 [0]
+```
+
+If it's not 0, the contract may have been modified. Reset it:
 ```bash
 cast send $VITE_NFT_CONTRACT_ADDRESS "setMintPrice(uint256)" 0 --rpc-url $BASE_RPC_URL --private-key $PRIVATE_KEY
 ```
