@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useAccount, useWriteContract } from 'wagmi'
+import { useAccount, useWriteContract, usePublicClient, useWaitForTransactionReceipt } from 'wagmi'
 import PEPE_CARD_NFT_ABI from '../contracts/PepeCardNFT.json'
 
 const API_BASE_URL = 'http://localhost:3001'
@@ -8,10 +8,49 @@ export function useMintCard() {
   const [status, setStatus] = useState('idle')
   const [error, setError] = useState(null)
   const [transactionHash, setTransactionHash] = useState(null)
+  const [mintData, setMintData] = useState(null)
   const { address } = useAccount()
   const { writeContractAsync } = useWriteContract()
+  const publicClient = usePublicClient()
 
   const NFT_CONTRACT_ADDRESS = import.meta.env.VITE_NFT_CONTRACT_ADDRESS
+
+  /**
+   * Record mint to backend database
+   */
+  const recordMint = async (cardIds, transactionHash, metadataURIs) => {
+    try {
+      console.log('💾 Recording mint to database...')
+
+      const response = await fetch(`${API_BASE_URL}/api/mint/record`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          cardIds,
+          transactionHash,
+          minterAddress: address,
+          metadataURIs,
+          verify: true, // Enable on-chain verification
+        }),
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || 'Failed to record mint')
+      }
+
+      const data = await response.json()
+      console.log('✅ Mint recorded successfully:', data)
+      return data
+    } catch (err) {
+      console.error('❌ Failed to record mint:', err)
+      // Don't throw - recording failure shouldn't fail the entire mint
+      // The mint already succeeded on-chain
+      return null
+    }
+  }
 
   /**
    * Upload card to IPFS via backend
@@ -76,6 +115,24 @@ export function useMintCard() {
       setStatus('confirming')
       console.log('⏳ Transaction submitted:', hash)
 
+      // Step 3: Wait for confirmation
+      console.log('⏳ Waiting for transaction confirmation...')
+      const receipt = await publicClient.waitForTransactionReceipt({ hash })
+      console.log('✅ Transaction confirmed in block:', receipt.blockNumber)
+
+      // Step 4: Record mint to database
+      const recordedMint = await recordMint([card.id], hash, [metadataURI])
+
+      // Step 5: Store mint data for success modal
+      if (recordedMint) {
+        setMintData({
+          cards: [card],
+          tokenIds: recordedMint.tokenIds || [],
+          transactionHash: hash,
+        })
+      }
+
+      setStatus('success')
       return hash
     } catch (err) {
       console.error('Minting failed:', err)
@@ -127,6 +184,25 @@ export function useMintCard() {
       setStatus('confirming')
       console.log('⏳ Batch transaction submitted:', hash)
 
+      // Step 3: Wait for confirmation
+      console.log('⏳ Waiting for transaction confirmation...')
+      const receipt = await publicClient.waitForTransactionReceipt({ hash })
+      console.log('✅ Transaction confirmed in block:', receipt.blockNumber)
+
+      // Step 4: Record mints to database
+      const cardIds = cards.map(card => card.id)
+      const recordedMint = await recordMint(cardIds, hash, metadataURIs)
+
+      // Step 5: Store mint data for success modal
+      if (recordedMint) {
+        setMintData({
+          cards: cards,
+          tokenIds: recordedMint.tokenIds || [],
+          transactionHash: hash,
+        })
+      }
+
+      setStatus('success')
       return hash
     } catch (err) {
       console.error('Batch minting failed:', err)
@@ -143,6 +219,7 @@ export function useMintCard() {
     setStatus('idle')
     setError(null)
     setTransactionHash(null)
+    setMintData(null)
 
     if (Array.isArray(cards) && cards.length > 1) {
       return mintBatchCards(cards)
@@ -157,6 +234,7 @@ export function useMintCard() {
     status,
     error,
     transactionHash,
+    mintData,
     isLoading: status !== 'idle' && status !== 'error' && status !== 'success',
   }
 }

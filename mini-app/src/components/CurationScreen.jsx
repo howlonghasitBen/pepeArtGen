@@ -3,6 +3,7 @@ import { useAccount } from 'wagmi'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
 import SwipeableCard from './SwipeableCard'
 import MintingModal from './MintingModal'
+import MintSuccessModal from './MintSuccessModal'
 import './CurationScreen.css'
 
 function CurationScreen({ cards, onBack }) {
@@ -11,6 +12,8 @@ function CurationScreen({ cards, onBack }) {
   const [toMint, setToMint] = useState([])
   const [showMintModal, setShowMintModal] = useState(false)
   const [showMintingModal, setShowMintingModal] = useState(false)
+  const [showSuccessModal, setShowSuccessModal] = useState(false)
+  const [mintData, setMintData] = useState(null)
   const { isConnected } = useAccount()
 
   const currentCard = cards[currentIndex]
@@ -52,10 +55,16 @@ function CurationScreen({ cards, onBack }) {
     setShowMintingModal(true)
   }
 
-  const handleMintSuccess = (txHash) => {
-    console.log('Minted successfully! Tx:', txHash)
+  const handleMintSuccess = (data) => {
+    console.log('Minted successfully!', data)
+    setMintData(data)
     setShowMintingModal(false)
-    // Could add a success screen here
+    setShowSuccessModal(true)
+  }
+
+  const handleCloseSuccess = () => {
+    setShowSuccessModal(false)
+    setMintData(null)
   }
 
   if (cards.length === 0) {
@@ -141,6 +150,13 @@ function CurationScreen({ cards, onBack }) {
             cards={toMint}
             onClose={() => setShowMintingModal(false)}
             onSuccess={handleMintSuccess}
+          />
+        )}
+
+        {showSuccessModal && mintData && (
+          <MintSuccessModal
+            mintData={mintData}
+            onClose={handleCloseSuccess}
           />
         )}
       </div>

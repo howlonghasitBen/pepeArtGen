@@ -24,6 +24,7 @@ import {
   isSupabaseConfigured,
 } from "./supabaseClient.mjs";
 import paymentRoutes from "./paymentRoutes.mjs";
+import mintRoutes from "./mintRoutes.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -42,6 +43,9 @@ app.use(express.json({ limit: "50mb" })); // Increased for base64 images
 
 // Mount payment routes
 app.use("/api/payment", paymentRoutes);
+
+// Mount mint recording routes
+app.use("/api/mint", mintRoutes);
 
 // In-memory storage for demo (use Redis/DB in production)
 const generatedCards = new Map();
@@ -517,13 +521,45 @@ app.get("/api/limits", (req, res) => {
   });
 });
 
-// Get card by ID
+// Get card by ID (in-memory)
 app.get("/api/card/:id", (req, res) => {
   const card = generatedCards.get(req.params.id);
   if (!card) {
     return res.status(404).json({ error: "Card not found" });
   }
   res.json(card);
+});
+
+// Get card by ID with IPFS links (from database)
+app.get("/api/cards/:id", async (req, res) => {
+  try {
+    if (!isSupabaseConfigured()) {
+      return res.status(503).json({
+        error: "Database not configured",
+        message: "Please configure Supabase in your .env file",
+      });
+    }
+
+    const { id } = req.params;
+
+    // Get card details
+    const card = await cardService.getCard(id);
+
+    if (!card) {
+      return res.status(404).json({ error: "Card not found" });
+    }
+
+    // Get IPFS links for this card
+    const ipfsLinks = await ipfsService.getCardLinks(id);
+
+    res.json({
+      ...card,
+      ipfsLinks,
+    });
+  } catch (error) {
+    console.error("Error fetching card:", error);
+    res.status(500).json({ error: error.message });
+  }
 });
 
 // ============================================

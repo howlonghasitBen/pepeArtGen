@@ -6,21 +6,24 @@ import "./MintingModal.css";
 
 function MintingModal({ cards, onClose, onSuccess }) {
   const { isConnected } = useAccount();
-  const { mint, status, error } = useMintCard();
+  const { mint, status, error, mintData } = useMintCard();
   const [txHash, setTxHash] = useState(null);
 
   const handleMint = async () => {
     try {
       const hash = await mint(cards);
       setTxHash(hash);
-
-      // Wait a bit then call success
-      setTimeout(() => {
-        onSuccess(hash);
-      }, 2000);
     } catch (err) {
       console.error("Minting error:", err);
     }
+  };
+
+  // Call onSuccess when minting completes and we have mint data
+  const handleSuccess = () => {
+    if (mintData) {
+      onSuccess(mintData);
+    }
+    onClose();
   };
 
   const gasCost = "~$0.01"; // Approximate gas cost on Base L2
@@ -99,7 +102,7 @@ function MintingModal({ cards, onClose, onSuccess }) {
             🪙 Mint {cards.length} Card{cards.length > 1 ? "s" : ""} (FREE)
           </button>
         ) : status === "success" ? (
-          <button className="success-btn" onClick={onClose}>
+          <button className="success-btn" onClick={handleSuccess}>
             ✅ Done
           </button>
         ) : (
