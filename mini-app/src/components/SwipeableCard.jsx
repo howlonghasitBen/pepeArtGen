@@ -1,7 +1,7 @@
-import React from 'react'
-import { useSpring, animated } from 'react-spring'
-import { useDrag } from '@use-gesture/react'
-import './SwipeableCard.css'
+import React from "react";
+import { useSpring, animated } from "@react-spring/web";
+import { useDrag } from "@use-gesture/react";
+import "./SwipeableCard.css";
 
 function SwipeableCard({ card, onSwipeLeft, onSwipeRight }) {
   const [{ x, rotate, scale }, api] = useSpring(() => ({
@@ -9,74 +9,74 @@ function SwipeableCard({ card, onSwipeLeft, onSwipeRight }) {
     rotate: 0,
     scale: 1,
     config: { tension: 200, friction: 20 },
-  }))
+  }));
 
   // Initial tilt animation to hint at swipeability
-  const [hasShownHint, setHasShownHint] = React.useState(false)
+  const [hasShownHint, setHasShownHint] = React.useState(false);
 
   React.useEffect(() => {
     if (!hasShownHint) {
       // Subtle tilt left, then right, then center
       const showHint = async () => {
-        await new Promise(resolve => setTimeout(resolve, 300))
-        api.start({ rotate: -3, x: -20 })
-        await new Promise(resolve => setTimeout(resolve, 400))
-        api.start({ rotate: 3, x: 20 })
-        await new Promise(resolve => setTimeout(resolve, 400))
-        api.start({ rotate: 0, x: 0 })
-        setHasShownHint(true)
-      }
-      showHint()
+        await new Promise((resolve) => setTimeout(resolve, 300));
+        api.start({ rotate: -3, x: -20 });
+        await new Promise((resolve) => setTimeout(resolve, 400));
+        api.start({ rotate: 3, x: 20 });
+        await new Promise((resolve) => setTimeout(resolve, 400));
+        api.start({ rotate: 0, x: 0 });
+        setHasShownHint(true);
+      };
+      showHint();
     }
-  }, [hasShownHint, api])
+  }, [hasShownHint, api]);
 
   const bind = useDrag(
     ({ active, movement: [mx], direction: [xDir], velocity: [vx] }) => {
-      const trigger = vx > 0.2 || Math.abs(mx) > 100
+      const trigger = vx > 0.2 || Math.abs(mx) > 100;
 
       if (!active && trigger) {
         // Swipe completed
         if (xDir > 0) {
-          onSwipeRight()
+          onSwipeRight();
         } else {
-          onSwipeLeft()
+          onSwipeLeft();
         }
-        api.start({ x: xDir > 0 ? 1000 : -1000, rotate: xDir * 50, scale: 0.8 })
+        api.start({
+          x: xDir > 0 ? 1000 : -1000,
+          rotate: xDir * 50,
+          scale: 0.8,
+        });
       } else {
         // Dragging or released without trigger
         api.start({
           x: active ? mx : 0,
           rotate: active ? mx / 10 : 0,
           scale: active ? 1.05 : 1,
-        })
+        });
       }
     },
     {
-      axis: 'x',
+      axis: "x",
       bounds: { left: -300, right: 300 },
       rubberband: true,
     }
-  )
+  );
 
   // Color indicators during swipe - subtle glow only
-  const leftGlow = x.to(
-    (val) => val < -50 ? Math.abs(val) / 300 : 0
-  )
-  const rightGlow = x.to(
-    (val) => val > 50 ? val / 300 : 0
-  )
+  const leftGlow = x.to((val) => (val < -50 ? Math.abs(val) / 300 : 0));
+  const rightGlow = x.to((val) => (val > 50 ? val / 300 : 0));
 
-  const theme = card.theme || {}
+  const theme = card.theme || {};
 
   // Helper functions for orb labels and tooltips
   const getOrbTooltip = (type) => {
     const tooltips = {
-      hp: 'Health Points',
-      mana: 'Mana Cost to Play',
-      terrain: 'Terrain Alignment',
-    }
-    return tooltips[type] || type
-  }
+      hp: "Health Points",
+      mana: "Mana Cost to Play",
+      terrain: "Terrain Alignment",
+    };
+    return tooltips[type] || type;
+  };
 
   return (
     <animated.div
@@ -86,7 +86,7 @@ function SwipeableCard({ card, onSwipeLeft, onSwipeRight }) {
         x,
         rotate,
         scale,
-        touchAction: 'none',
+        touchAction: "none",
       }}
     >
       {/* Subtle glow indicators */}
@@ -106,7 +106,8 @@ function SwipeableCard({ card, onSwipeLeft, onSwipeRight }) {
       <div
         className="card-content"
         style={{
-          background: theme.background || 'linear-gradient(145deg, #2a2a2a, #1a1a1a)',
+          background:
+            theme.background || "linear-gradient(145deg, #2a2a2a, #1a1a1a)",
         }}
       >
         {/* Header */}
@@ -127,7 +128,7 @@ function SwipeableCard({ card, onSwipeLeft, onSwipeRight }) {
                   className="mana-orb"
                   style={{
                     background: mana.color,
-                    color: mana.textColor || '#fff',
+                    color: mana.textColor || "#fff",
                   }}
                   title={getOrbTooltip(mana.type)}
                 >
@@ -248,7 +249,7 @@ function SwipeableCard({ card, onSwipeLeft, onSwipeRight }) {
         </div>
       </div>
     </animated.div>
-  )
+  );
 }
 
-export default SwipeableCard
+export default SwipeableCard;
