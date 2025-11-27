@@ -1,136 +1,139 @@
-import { useState, useEffect } from 'react'
-import { useAccount } from 'wagmi'
-import PaymentModal from './PaymentModal'
-import { useGenerationPayment } from '../hooks/useGenerationPayment'
-import './GeneratorScreen.css'
+import { useState, useEffect } from "react";
+import { useAccount } from "wagmi";
+import PaymentModal from "./PaymentModal";
+import { useGenerationPayment } from "../hooks/useGenerationPayment";
+import "./GeneratorScreen.css";
 
 function GeneratorScreen({ onCardsGenerated }) {
-  const [monsterName, setMonsterName] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-  const [showPaymentModal, setShowPaymentModal] = useState(false)
-  const [paymentSession, setPaymentSession] = useState(null)
-  const [rerollsUsed, setRerollsUsed] = useState(0)
+  const [monsterName, setMonsterName] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [paymentSession, setPaymentSession] = useState(null);
+  const [rerollsUsed, setRerollsUsed] = useState(0);
 
-  const { isConnected, address } = useAccount()
-  const { checkActiveSession } = useGenerationPayment()
+  const { isConnected, address } = useAccount();
+  const { checkActiveSession } = useGenerationPayment();
 
   // Check for active session on mount and when wallet connects
   useEffect(() => {
     if (isConnected && address) {
-      loadActiveSession()
+      loadActiveSession();
     } else {
-      setPaymentSession(null)
+      setPaymentSession(null);
     }
-  }, [isConnected, address])
+  }, [isConnected, address]);
 
   const loadActiveSession = async () => {
-    const session = await checkActiveSession()
+    const session = await checkActiveSession();
     if (session && session.generationsRemaining > 0) {
-      setPaymentSession(session)
+      setPaymentSession(session);
       // Calculate re-rolls used (3 - remaining)
-      const used = 3 - session.generationsRemaining
-      setRerollsUsed(used)
+      const used = 3 - session.generationsRemaining;
+      setRerollsUsed(used);
     }
-  }
+  };
 
   const handlePaymentSuccess = (session) => {
-    setPaymentSession(session)
-    setRerollsUsed(0)
-    setShowPaymentModal(false)
-  }
+    setPaymentSession(session);
+    setRerollsUsed(0);
+    setShowPaymentModal(false);
+  };
 
   const handleGenerate = async (isReroll = false) => {
-    setError('')
-    setLoading(true)
+    setError("");
+    setLoading(true);
 
     try {
       if (!monsterName.trim()) {
-        setError('Please enter a monster name')
-        setLoading(false)
-        return
+        setError("Please enter a monster name");
+        setLoading(false);
+        return;
       }
 
       // Check if user needs to pay first
       if (!paymentSession || paymentSession.generationsRemaining <= 0) {
-        setShowPaymentModal(true)
-        setLoading(false)
-        return
+        setShowPaymentModal(true);
+        setLoading(false);
+        return;
       }
 
-      const monsterNames = [monsterName.trim()]
+      const monsterNames = [monsterName.trim()];
 
       // Call API to generate card with Imagen
-      const response = await fetch('http://localhost:3001/api/generate', {
-        method: 'POST',
+      const response = await fetch("http://localhost:3001/api/generate", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           monsterNames,
           sessionId: paymentSession.id,
           walletAddress: address,
         }),
-      })
+      });
 
       if (!response.ok) {
-        const data = await response.json()
+        const data = await response.json();
 
         // Handle specific errors
-        if (data.error === 'No generations remaining') {
-          setError('No generations remaining. Please make a new payment.')
-          setPaymentSession(null)
-          setLoading(false)
-          return
+        if (data.error === "No generations remaining") {
+          setError("No generations remaining. Please make a new payment.");
+          setPaymentSession(null);
+          setLoading(false);
+          return;
         }
 
-        throw new Error(data.error || 'Generation failed')
+        throw new Error(data.error || "Generation failed");
       }
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (data.success && data.cards.length > 0) {
         // Increment re-rolls used if this is a re-roll
         if (isReroll) {
-          setRerollsUsed(prev => prev + 1)
+          setRerollsUsed((prev) => prev + 1);
         }
 
         // Update session generations remaining
-        setPaymentSession(prev => ({
+        setPaymentSession((prev) => ({
           ...prev,
-          generationsRemaining: prev.generationsRemaining - 1
-        }))
+          generationsRemaining: prev.generationsRemaining - 1,
+        }));
 
-        onCardsGenerated(data.cards)
+        onCardsGenerated(data.cards);
       } else {
-        setError('Generation failed')
+        setError("Generation failed");
       }
     } catch (err) {
-      setError(err.message)
+      setError(err.message);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleReroll = () => {
-    handleGenerate(true)
-  }
+    handleGenerate(true);
+  };
 
   const exampleMonsters = [
-    'Shadow Dragon',
-    'Crystal Golem',
-    'Void Reaper',
-    'Lightning Phoenix',
-    'Frost Giant',
-  ]
+    "Shadow Dragon",
+    "Crystal Golem",
+    "Void Reaper",
+    "Lightning Phoenix",
+    "Frost Giant",
+  ];
 
   const handleExampleClick = (name) => {
-    setMonsterName(name)
-  }
+    setMonsterName(name);
+  };
 
-  const rerollsRemaining = paymentSession ? paymentSession.generationsRemaining - 1 : 0
-  const canReroll = rerollsRemaining > 0
-  const hasActiveSession = paymentSession && paymentSession.generationsRemaining > 0
+  const rerollsRemaining = paymentSession
+    ? paymentSession.generationsRemaining - 1
+    : 0;
+  const canReroll = rerollsRemaining > 0;
+  const hasActiveSession =
+    paymentSession && paymentSession.generationsRemaining > 0;
 
   return (
     <div className="generator-screen">
@@ -146,7 +149,8 @@ function GeneratorScreen({ onCardsGenerated }) {
           <div className="active-session">
             <span className="session-badge">✓ Active Session</span>
             <span className="generations-info">
-              {paymentSession.generationsRemaining} generation{paymentSession.generationsRemaining !== 1 ? 's' : ''} remaining
+              {paymentSession.generationsRemaining} generation
+              {paymentSession.generationsRemaining !== 1 ? "s" : ""} remaining
             </span>
           </div>
         ) : (
@@ -165,7 +169,9 @@ function GeneratorScreen({ onCardsGenerated }) {
           placeholder="Enter monster name..."
           value={monsterName}
           onChange={(e) => setMonsterName(e.target.value)}
-          onKeyPress={(e) => e.key === 'Enter' && !loading && handleGenerate(false)}
+          onKeyPress={(e) =>
+            e.key === "Enter" && !loading && handleGenerate(false)
+          }
           disabled={loading}
           className="monster-input"
         />
@@ -187,17 +193,15 @@ function GeneratorScreen({ onCardsGenerated }) {
         </div>
       </div>
 
-      {error && (
-        <div className="error-message">
-          ⚠️ {error}
-        </div>
-      )}
+      {error && <div className="error-message">⚠️ {error}</div>}
 
       {loading && (
         <div className="loading-container">
           <div className="spinner" />
           <p className="loading-text">Generating card...</p>
-          <p className="loading-subtext">AI is creating your unique Pepe card...</p>
+          <p className="loading-subtext">
+            AI is creating your unique Pepe card...
+          </p>
         </div>
       )}
 
@@ -206,7 +210,11 @@ function GeneratorScreen({ onCardsGenerated }) {
         onClick={() => handleGenerate(false)}
         disabled={loading || !isConnected}
       >
-        {loading ? 'Generating...' : !isConnected ? 'Connect Wallet to Generate' : '🎨 Generate Card'}
+        {loading
+          ? "Generating..."
+          : !isConnected
+          ? "Connect Wallet to Generate"
+          : "🎨 Generate Card"}
       </button>
 
       {hasActiveSession && rerollsRemaining > 0 && (
@@ -221,24 +229,8 @@ function GeneratorScreen({ onCardsGenerated }) {
           </button>
         </div>
       )}
-
-      {!hasActiveSession && isConnected && (
-        <div className="payment-prompt">
-          <p>Pay $2.50 USDC to unlock:</p>
-          <ul>
-            <li>✨ 1 initial generation</li>
-            <li>🔄 2 re-rolls for curation</li>
-          </ul>
-          <button
-            className="pay-btn"
-            onClick={() => setShowPaymentModal(true)}
-          >
-            💰 Pay $2.50 USDC
-          </button>
-        </div>
-      )}
     </div>
-  )
+  );
 }
 
-export default GeneratorScreen
+export default GeneratorScreen;
