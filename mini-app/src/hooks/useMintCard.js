@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useAccount, useWriteContract, usePublicClient, useWaitForTransactionReceipt } from 'wagmi'
-import PEPE_CARD_NFT_ABI from '../contracts/PepeCardNFT.json'
+import { parseEther } from 'viem'
+import WAVES_TCG_NFT_ABI from '../contracts/WavesTCGNFT.json'
 
 const API_BASE_URL = 'http://localhost:3001'
 
@@ -99,16 +100,17 @@ export function useMintCard() {
       // Step 1: Upload to IPFS
       const metadataURI = await uploadToIPFS(card)
 
-      // Step 2: Mint NFT (FREE - only gas fees)
+      // Step 2: Mint NFT on WavesTCGNFT (FREE - only gas)
       setStatus('minting')
       console.log('🎨 Minting NFT with metadata:', metadataURI)
       console.log('💰 Minting is FREE - only gas fees (~$0.01 on Base)')
 
       const hash = await writeContractAsync({
         address: NFT_CONTRACT_ADDRESS,
-        abi: PEPE_CARD_NFT_ABI.abi,
-        functionName: 'mintCard',
-        args: [address, metadataURI],
+        abi: WAVES_TCG_NFT_ABI.abi,
+        functionName: 'mint',
+        args: [metadataURI],
+        value: 0n, // Free minting (set mintPrice to 0 in contract)
       })
 
       setTransactionHash(hash)
@@ -168,16 +170,17 @@ export function useMintCard() {
 
       console.log('✅ All cards uploaded to IPFS')
 
-      // Step 2: Batch mint NFTs (FREE - only gas fees)
+      // Step 2: Batch mint NFTs on WavesTCGNFT (FREE - only gas)
       setStatus('minting')
       console.log(`🎨 Batch minting ${cards.length} NFTs...`)
-      console.log('💰 Minting is FREE - only gas fees (~$0.01 on Base)')
+      console.log('💰 Minting is FREE - only gas fees')
 
       const hash = await writeContractAsync({
         address: NFT_CONTRACT_ADDRESS,
-        abi: PEPE_CARD_NFT_ABI.abi,
-        functionName: 'batchMintCards',
-        args: [address, metadataURIs],
+        abi: WAVES_TCG_NFT_ABI.abi,
+        functionName: 'mintBatch',
+        args: [metadataURIs],
+        value: 0n, // Free minting (set mintPrice to 0 in contract)
       })
 
       setTransactionHash(hash)
