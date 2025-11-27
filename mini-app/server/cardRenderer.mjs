@@ -11,7 +11,7 @@ export async function renderCardToPNG(cardHTML) {
   try {
     console.log("    🖼️  Launching browser...");
 
-    // Launch headless browser
+    // Launch headless browser with production-friendly config
     browser = await puppeteer.launch({
       headless: 'new',
       args: [
@@ -19,7 +19,10 @@ export async function renderCardToPNG(cardHTML) {
         '--disable-setuid-sandbox',
         '--disable-dev-shm-usage',
         '--disable-gpu',
+        '--disable-software-rasterizer',
+        '--disable-extensions',
       ],
+      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || process.env.CHROME_BIN || undefined,
     });
 
     const page = await browser.newPage();
