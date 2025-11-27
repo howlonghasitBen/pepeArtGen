@@ -739,7 +739,7 @@ app.post("/api/upload-to-ipfs", async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Card Generator API running on port ${PORT}`);
   console.log(`📊 Free tier limit: ${FREE_DAILY_LIMIT} cards/day`);
   console.log(`📦 Batch limit: ${BATCH_LIMIT} cards`);
