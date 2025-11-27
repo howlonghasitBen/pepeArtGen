@@ -15,6 +15,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { Buffer } from "buffer";
 import { generateCardHTML } from "./cardHTMLGenerator.mjs";
+// Import cardRenderer but handle failures gracefully
 import { renderCardToPNG } from "./cardRenderer.mjs";
 import {
   paymentSessionService,
@@ -42,6 +43,16 @@ const BATCH_LIMIT = 10;
 
 app.use(cors());
 app.use(express.json({ limit: "50mb" })); // Increased for base64 images
+
+// Health check endpoint
+app.get("/", (req, res) => {
+  res.json({
+    status: "ok",
+    message: "SURF Waves TCG API Server",
+    version: "1.0.0",
+    endpoints: ["/api/generate", "/api/payment", "/api/mint"]
+  });
+});
 
 // Mount payment routes
 app.use("/api/payment", paymentRoutes);
@@ -728,7 +739,7 @@ app.post("/api/upload-to-ipfs", async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Card Generator API running on port ${PORT}`);
   console.log(`📊 Free tier limit: ${FREE_DAILY_LIMIT} cards/day`);
   console.log(`📦 Batch limit: ${BATCH_LIMIT} cards`);
