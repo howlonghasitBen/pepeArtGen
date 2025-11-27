@@ -24,6 +24,7 @@ import {
   isSupabaseConfigured,
 } from "./supabaseClient.mjs";
 import paymentRoutes from "./paymentRoutes.mjs";
+import mintRoutes from "./mintRoutes.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -42,6 +43,9 @@ app.use(express.json({ limit: "50mb" })); // Increased for base64 images
 
 // Mount payment routes
 app.use("/api/payment", paymentRoutes);
+
+// Mount mint recording routes
+app.use("/api/mint", mintRoutes);
 
 // In-memory storage for demo (use Redis/DB in production)
 const generatedCards = new Map();
