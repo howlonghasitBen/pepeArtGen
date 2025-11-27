@@ -15,7 +15,7 @@ This migration implements a complete payment-first flow with USDC on Base L2, re
 - **After:** Persistent Supabase database with full IPFS indexing
 
 ### 🪙 Smart Contract Changes
-- **Before:** `PepeArtGenNFT.sol` (ETH-based, 0.001 ETH per mint)
+- **Before:** `WavesTCGNFT.sol` (ETH-based, 0.001 ETH per mint)
 - **After:** `PepeCardNFT.sol` (FREE minting - only gas fees ~$0.01)
 
 ## Implementation Details

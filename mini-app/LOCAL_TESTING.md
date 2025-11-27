@@ -102,7 +102,7 @@ Before testing the full system, verify the contract works:
 forge test -vv
 
 # Expected output:
-# Ran 26 tests for test/PepeArtGenNFT.t.sol:PepeArtGenNFTTest
+# Ran 26 tests for test/WavesTCGNFT.t.sol:WavesTCGNFTTest
 # [PASS] test_Mint_Success() (gas: 162554)
 # [PASS] test_MintBatch_Success() (gas: 261367)
 # ... (24 more tests)
@@ -341,7 +341,7 @@ ROYALTY_RECEIVER=0x...your_address
 BASE_SEPOLIA_RPC_URL=https://sepolia.base.org
 
 # Deploy
-forge script script/Deploy.s.sol:DeployPepeArtGen \
+forge script script/Deploy.s.sol:DeployWavesTCG \
   --rpc-url base_sepolia \
   --broadcast \
   --verify

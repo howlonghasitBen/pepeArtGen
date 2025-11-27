@@ -1,4 +1,4 @@
-# PepeArtGen NFT Minting Contract
+# WavesTCG NFT Minting Contract
 
 Production-ready ERC-721 NFT contract for minting AI-generated SURF Waves trading cards on Base L2.
 
@@ -30,7 +30,7 @@ Production-ready ERC-721 NFT contract for minting AI-generated SURF Waves tradin
                   ▼
          ┌────────────────────────┐
          │  Smart Contract Mint   │
-         │  (PepeArtGenNFT.sol)   │
+         │  (WavesTCGNFT.sol)   │
          └────────┬───────────────┘
                   │
                   ▼
@@ -83,7 +83,7 @@ forge test --match-test test_Mint_Success -vvv
 
 ```bash
 # Deploy
-forge script script/Deploy.s.sol:DeployPepeArtGen \
+forge script script/Deploy.s.sol:DeployWavesTCG \
   --rpc-url base_sepolia \
   --broadcast \
   --verify
@@ -124,7 +124,7 @@ cast send <CONTRACT_ADDRESS> \
 Once tested on testnet:
 
 ```bash
-forge script script/Deploy.s.sol:DeployPepeArtGen \
+forge script script/Deploy.s.sol:DeployWavesTCG \
   --rpc-url base \
   --broadcast \
   --verify \
@@ -348,7 +348,7 @@ forge test --gas-report
 forge coverage
 
 # Test specific contract
-forge test --match-contract PepeArtGenNFTTest
+forge test --match-contract WavesTCGNFTTest
 
 # Fuzz testing (already included in test suite)
 forge test --match-test testFuzz

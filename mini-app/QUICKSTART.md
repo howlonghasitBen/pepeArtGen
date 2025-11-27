@@ -68,7 +68,7 @@ npm run deploy:testnet
 
 # Save the deployed contract address!
 # Example output:
-# PepeArtGenNFT deployed at: 0x1234...5678
+# WavesTCGNFT deployed at: 0x1234...5678
 ```
 
 ## Upload to IPFS (5 min)
@@ -191,7 +191,7 @@ cast send <MAINNET_CONTRACT_ADDRESS> \
 Questions? Check:
 1. README.md (comprehensive guide)
 2. SETUP_GUIDE.md (account setup)
-3. Test suite (test/PepeArtGenNFT.t.sol)
+3. Test suite (test/WavesTCGNFT.t.sol)
 4. Foundry Book: https://book.getfoundry.sh/
 
 ---

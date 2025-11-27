@@ -9,9 +9,9 @@ A **production-ready NFT minting system** for your AI-generated SURF Waves tradi
 ```
 pepeArtGen-contracts/
 ├── src/
-│   └── PepeArtGenNFT.sol          # Main contract (700+ lines)
+│   └── WavesTCGNFT.sol          # Main contract (700+ lines)
 ├── test/
-│   └── PepeArtGenNFT.t.sol        # Comprehensive test suite (500+ lines)
+│   └── WavesTCGNFT.t.sol        # Comprehensive test suite (500+ lines)
 ├── script/
 │   └── Deploy.s.sol                # Deployment script
 ├── uploadToIPFS.js                 # IPFS upload automation
@@ -67,7 +67,7 @@ completeCardPipeline.mjs      →    uploadToIPFS.js
 ├─ Creates metadata                 ├─ Updates metadata with CIDs
 └─ Outputs to generated-cards/      └─ Uploads metadata to IPFS
 
-                                    PepeArtGenNFT.sol
+                                    WavesTCGNFT.sol
                                     ├─ Mints NFTs on Base L2
                                     ├─ Points to IPFS metadata
                                     └─ Enables OpenSea trading
@@ -207,7 +207,7 @@ Run with: `forge test -vv`
 ## 🎯 Next Steps for You
 
 ### Immediate (Today)
-1. Review the contract code (`src/PepeArtGenNFT.sol`)
+1. Review the contract code (`src/WavesTCGNFT.sol`)
 2. Customize name/symbol if desired
 3. Review SETUP_GUIDE.md for required accounts
 4. Install Foundry: `curl -L https://foundry.paradigm.xyz | bash`
@@ -240,7 +240,7 @@ Run with: `forge test -vv`
 If you need help:
 
 1. **Documentation**: Start with QUICKSTART.md
-2. **Test Suite**: Examples in test/PepeArtGenNFT.t.sol
+2. **Test Suite**: Examples in test/WavesTCGNFT.t.sol
 3. **Foundry Book**: https://book.getfoundry.sh/
 4. **Base Docs**: https://docs.base.org/
 5. **OpenZeppelin**: https://docs.openzeppelin.com/

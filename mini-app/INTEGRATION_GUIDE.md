@@ -162,7 +162,7 @@ OpenSea indexes NFT (1-5 minutes)
 
 **Files Involved:**
 - Frontend: `src/hooks/useMintCard.js` (line 52-87)
-- Contract: `src/PepeArtGenNFT.sol` (line 66-74, 109-123)
+- Contract: `src/WavesTCGNFT.sol` (line 66-74, 109-123)
 - Contract Function: `mint(string memory metadataURI) external payable`
 
 **Transaction Parameters:**
@@ -242,7 +242,7 @@ forge test -vv
 
 ```bash
 # Deploy contract
-forge script script/Deploy.s.sol:DeployPepeArtGen \
+forge script script/Deploy.s.sol:DeployWavesTCG \
   --rpc-url base_sepolia \
   --broadcast \
   --verify
