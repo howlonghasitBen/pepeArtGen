@@ -8,6 +8,7 @@ export function useMintCard() {
   const [status, setStatus] = useState('idle')
   const [error, setError] = useState(null)
   const [transactionHash, setTransactionHash] = useState(null)
+  const [mintData, setMintData] = useState(null)
   const { address } = useAccount()
   const { writeContractAsync } = useWriteContract()
   const publicClient = usePublicClient()
@@ -120,7 +121,16 @@ export function useMintCard() {
       console.log('✅ Transaction confirmed in block:', receipt.blockNumber)
 
       // Step 4: Record mint to database
-      await recordMint([card.id], hash, [metadataURI])
+      const recordedMint = await recordMint([card.id], hash, [metadataURI])
+
+      // Step 5: Store mint data for success modal
+      if (recordedMint) {
+        setMintData({
+          cards: [card],
+          tokenIds: recordedMint.tokenIds || [],
+          transactionHash: hash,
+        })
+      }
 
       setStatus('success')
       return hash
@@ -181,7 +191,16 @@ export function useMintCard() {
 
       // Step 4: Record mints to database
       const cardIds = cards.map(card => card.id)
-      await recordMint(cardIds, hash, metadataURIs)
+      const recordedMint = await recordMint(cardIds, hash, metadataURIs)
+
+      // Step 5: Store mint data for success modal
+      if (recordedMint) {
+        setMintData({
+          cards: cards,
+          tokenIds: recordedMint.tokenIds || [],
+          transactionHash: hash,
+        })
+      }
 
       setStatus('success')
       return hash
@@ -200,6 +219,7 @@ export function useMintCard() {
     setStatus('idle')
     setError(null)
     setTransactionHash(null)
+    setMintData(null)
 
     if (Array.isArray(cards) && cards.length > 1) {
       return mintBatchCards(cards)
@@ -214,6 +234,7 @@ export function useMintCard() {
     status,
     error,
     transactionHash,
+    mintData,
     isLoading: status !== 'idle' && status !== 'error' && status !== 'success',
   }
 }
