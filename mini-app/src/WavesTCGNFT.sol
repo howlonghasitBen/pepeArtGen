@@ -20,9 +20,9 @@ contract WavesTCGNFT is
     using Counters for Counters.Counter;
 
     Counters.Counter private _tokenIds;
-    
+
     uint256 public constant MAX_SUPPLY = 10000;
-    uint256 public mintPrice = 0.001 ether;
+    uint256 public mintPrice = 0; // FREE minting - only gas fees
     uint256 public constant MAX_PER_TX = 10;
     uint256 public mintCooldown = 60;
     
