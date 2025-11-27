@@ -17,7 +17,7 @@ function MintSuccessModal({ mintData, onClose }) {
 
       // Get the styled card IPFS link from the card data
       // The IPFS upload creates a styled_card PNG that we can download
-      const API_BASE_URL = 'http://localhost:3001'
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001'
 
       // Fetch card details to get IPFS links
       const response = await fetch(`${API_BASE_URL}/api/cards/${card.id}`)

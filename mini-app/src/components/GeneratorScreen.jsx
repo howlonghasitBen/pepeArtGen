@@ -61,7 +61,8 @@ function GeneratorScreen({ onCardsGenerated }) {
       const monsterNames = [monsterName.trim()];
 
       // Call API to generate card with Imagen
-      const response = await fetch("http://localhost:3001/api/generate", {
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001'
+      const response = await fetch(`${API_BASE_URL}/api/generate`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -3,7 +3,7 @@ import { useAccount, useWriteContract, usePublicClient, useWaitForTransactionRec
 import { parseEther } from 'viem'
 import WAVES_TCG_NFT_ABI from '../contracts/WavesTCGNFT.json'
 
-const API_BASE_URL = 'http://localhost:3001'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001'
 
 export function useMintCard() {
   const [status, setStatus] = useState('idle')
