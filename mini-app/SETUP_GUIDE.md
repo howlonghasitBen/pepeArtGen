@@ -171,7 +171,7 @@ Should show:
 ## 10. Pre-Deployment Checklist
 
 ### Smart Contract
-- [ ] Review `PepeArtGenNFT.sol` contract
+- [ ] Review `WavesTCGNFT.sol` contract
 - [ ] Customize name/symbol if needed
 - [ ] Verify MAX_SUPPLY (currently 10,000)
 - [ ] Check MINT_PRICE (currently 0.001 ETH)
@@ -183,7 +183,7 @@ Should show:
 
 ### Testnet Deployment
 - [ ] Fund deployment wallet with Base Sepolia ETH
-- [ ] Deploy to testnet: `forge script script/Deploy.s.sol:DeployPepeArtGen --rpc-url base_sepolia --broadcast --verify`
+- [ ] Deploy to testnet: `forge script script/Deploy.s.sol:DeployWavesTCG --rpc-url base_sepolia --broadcast --verify`
 - [ ] Save deployed contract address
 - [ ] Verify on Basescan Sepolia
 
@@ -215,7 +215,7 @@ Should show:
 
 ### Deploy
 ```bash
-forge script script/Deploy.s.sol:DeployPepeArtGen \
+forge script script/Deploy.s.sol:DeployWavesTCG \
   --rpc-url base \
   --broadcast \
   --verify \

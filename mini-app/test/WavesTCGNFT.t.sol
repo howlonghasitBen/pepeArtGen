@@ -2,10 +2,10 @@
 pragma solidity ^0.8.20;
 
 import "forge-std/Test.sol";
-import "../src/PepeArtGenNFT.sol";
+import "../src/WavesTCGNFT.sol";
 
-contract PepeArtGenNFTTest is Test {
-    PepeArtGenNFT public nft;
+contract WavesTCGNFTTest is Test {
+    WavesTCGNFT public nft;
     
     address public owner = address(1);
     address public treasury = address(2);
@@ -23,7 +23,7 @@ contract PepeArtGenNFTTest is Test {
     
     function setUp() public {
         vm.startPrank(owner);
-        nft = new PepeArtGenNFT(
+        nft = new WavesTCGNFT(
             NAME,
             SYMBOL,
             BASE_URI,
@@ -94,7 +94,7 @@ contract PepeArtGenNFTTest is Test {
     function test_Mint_RevertsInsufficientPayment() public {
         vm.startPrank(user1);
         
-        vm.expectRevert(PepeArtGenNFT.InsufficientPayment.selector);
+        vm.expectRevert(WavesTCGNFT.InsufficientPayment.selector);
         nft.mint{value: MINT_PRICE - 1}("1.json");
         
         vm.stopPrank();
@@ -107,7 +107,7 @@ contract PepeArtGenNFTTest is Test {
         nft.mint{value: MINT_PRICE}("1.json");
         
         // Second mint within cooldown fails
-        vm.expectRevert(PepeArtGenNFT.CooldownActive.selector);
+        vm.expectRevert(WavesTCGNFT.CooldownActive.selector);
         nft.mint{value: MINT_PRICE}("2.json");
         
         // Wait for cooldown
@@ -142,7 +142,7 @@ contract PepeArtGenNFTTest is Test {
         
         // Next mint should fail
         vm.startPrank(user1);
-        vm.expectRevert(PepeArtGenNFT.MaxSupplyReached.selector);
+        vm.expectRevert(WavesTCGNFT.MaxSupplyReached.selector);
         nft.mint{value: MINT_PRICE}("10001.json");
         vm.stopPrank();
     }
@@ -179,7 +179,7 @@ contract PepeArtGenNFTTest is Test {
             uris[i] = string(abi.encodePacked(vm.toString(i + 1), ".json"));
         }
         
-        vm.expectRevert(PepeArtGenNFT.ExceedsMaxPerTransaction.selector);
+        vm.expectRevert(WavesTCGNFT.ExceedsMaxPerTransaction.selector);
         nft.mintBatch{value: MINT_PRICE * 11}(uris);
         
         vm.stopPrank();

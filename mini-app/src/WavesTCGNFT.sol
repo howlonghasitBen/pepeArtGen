@@ -9,12 +9,12 @@ import "openzeppelin/security/ReentrancyGuard.sol";
 import "openzeppelin/security/Pausable.sol";
 import "openzeppelin/utils/Counters.sol";
 
-contract PepeArtGenNFT is 
-    ERC721, 
-    ERC721URIStorage, 
-    ERC2981, 
-    Ownable, 
-    ReentrancyGuard, 
+contract WavesTCGNFT is
+    ERC721,
+    ERC721URIStorage,
+    ERC2981,
+    Ownable,
+    ReentrancyGuard,
     Pausable 
 {
     using Counters for Counters.Counter;
