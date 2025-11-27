@@ -728,7 +728,18 @@ app.post("/api/upload-to-ipfs", async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
+// ... existing API routes ...
+
+// Serve static files from the React build
+// Note: We go up one level from 'server/' to get to 'dist/'
+app.use(express.static(path.join(__dirname, "../dist")));
+
+// Handle React routing, return all requests to React app
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "../dist", "index.html"));
+});
+
+app.listen(PORT, "0.0.0.0", () => {
   console.log(`🚀 Card Generator API running on port ${PORT}`);
   console.log(`📊 Free tier limit: ${FREE_DAILY_LIMIT} cards/day`);
   console.log(`📦 Batch limit: ${BATCH_LIMIT} cards`);

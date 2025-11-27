@@ -3,7 +3,7 @@
  * This creates a preview image of the full styled card
  */
 
-import puppeteer from 'puppeteer';
+import puppeteer from "puppeteer";
 
 export async function renderCardToPNG(cardHTML) {
   let browser;
@@ -12,17 +12,15 @@ export async function renderCardToPNG(cardHTML) {
     console.log("    🖼️  Launching browser...");
 
     // Launch headless browser with production-friendly config
-    browser = await puppeteer.launch({
-      headless: 'new',
+    const browser = await puppeteer.launch({
+      headless: "new",
+      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
       args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-gpu',
-        '--disable-software-rasterizer',
-        '--disable-extensions',
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage",
+        "--disable-gpu",
       ],
-      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || process.env.CHROME_BIN || undefined,
     });
 
     const page = await browser.newPage();
@@ -38,7 +36,7 @@ export async function renderCardToPNG(cardHTML) {
 
     // Load the HTML content
     await page.setContent(cardHTML, {
-      waitUntil: 'networkidle0', // Wait for all resources (fonts, images)
+      waitUntil: "networkidle0", // Wait for all resources (fonts, images)
     });
 
     // Wait a bit for any animations/transitions
@@ -48,7 +46,7 @@ export async function renderCardToPNG(cardHTML) {
 
     // Take screenshot as buffer
     const screenshot = await page.screenshot({
-      type: 'png',
+      type: "png",
       omitBackground: false,
     });
 
@@ -74,24 +72,24 @@ export async function renderCardElementToPNG(cardHTML) {
 
   try {
     browser = await puppeteer.launch({
-      headless: 'new',
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+      headless: "new",
+      args: ["--no-sandbox", "--disable-setuid-sandbox"],
     });
 
     const page = await browser.newPage();
 
-    await page.setContent(cardHTML, { waitUntil: 'networkidle0' });
+    await page.setContent(cardHTML, { waitUntil: "networkidle0" });
     await page.waitForTimeout(500);
 
     // Find the card container element and screenshot just that
-    const cardElement = await page.$('.card-container');
+    const cardElement = await page.$(".card-container");
 
     if (!cardElement) {
-      throw new Error('Card container not found in HTML');
+      throw new Error("Card container not found in HTML");
     }
 
     const screenshot = await cardElement.screenshot({
-      type: 'png',
+      type: "png",
       omitBackground: false,
     });
 
