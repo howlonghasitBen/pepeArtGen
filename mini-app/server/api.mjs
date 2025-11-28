@@ -720,7 +720,8 @@ app.post("/api/upload-to-ipfs", async (req, res) => {
       metadataCID,
       imageURI: `ipfs://${cardImageCID}`,
       animationURI: `ipfs://${htmlCID}`,
-      metadataURI: `ipfs://${metadataCID}`,
+      // Use HTTPS gateway URL for metadata (OpenSea compatible + no double prefix)
+      metadataURI: `https://gateway.pinata.cloud/ipfs/${metadataCID}`,
       rawImageGateway: `https://gateway.pinata.cloud/ipfs/${rawImageCID}`,
       cardImageGateway: `https://gateway.pinata.cloud/ipfs/${cardImageCID}`,
       htmlGateway: `https://gateway.pinata.cloud/ipfs/${htmlCID}`,
