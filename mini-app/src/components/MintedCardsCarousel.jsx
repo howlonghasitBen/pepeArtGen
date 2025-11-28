@@ -57,7 +57,7 @@ const MintedCardsCarousel = ({ cards }) => {
   return (
     <div className="minted-cards-carousel">
       <div className="carousel-header">
-        <h3>Your Minted Cards ({cards.length})</h3>
+        <h3>All Minted Cards ({cards.length})</h3>
       </div>
 
       <div className="carousel-container">

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useAccount } from "wagmi";
 import PaymentModal from "./PaymentModal";
 import { useGenerationPayment } from "../hooks/useGenerationPayment";
-import { useMyCards } from "../hooks/useMyCards";
+import { useAllCards } from "../hooks/useAllCards";
 import MintedCardsCarousel from "./MintedCardsCarousel";
 import "./GeneratorScreen.css";
 
@@ -16,7 +16,7 @@ function GeneratorScreen({ onCardsGenerated }) {
 
   const { isConnected, address } = useAccount();
   const { checkActiveSession } = useGenerationPayment();
-  const { cards: mintedCards } = useMyCards();
+  const { cards: allMintedCards } = useAllCards();
 
   // Check for active session on mount and when wallet connects
   useEffect(() => {
@@ -237,8 +237,8 @@ function GeneratorScreen({ onCardsGenerated }) {
         </div>
       )}
 
-      {isConnected && mintedCards && mintedCards.length > 0 && (
-        <MintedCardsCarousel cards={mintedCards} />
+      {allMintedCards && allMintedCards.length > 0 && (
+        <MintedCardsCarousel cards={allMintedCards} />
       )}
     </div>
   );
