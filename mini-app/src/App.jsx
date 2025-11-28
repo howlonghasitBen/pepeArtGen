@@ -12,6 +12,7 @@ import "@rainbow-me/rainbowkit/styles.css";
 
 import GeneratorScreen from "./components/GeneratorScreen";
 import CurationScreen from "./components/CurationScreen";
+import MyCardsScreen from "./components/MyCardsScreen";
 import InfoModal from "./components/InfoModal";
 import "./App.css";
 
@@ -30,45 +31,115 @@ const config = getDefaultConfig({
 const queryClient = new QueryClient();
 
 function AppContent() {
-  const [screen, setScreen] = useState("generate"); // 'generate' or 'curate'
+  const [screen, setScreen] = useState("generate"); // 'generate', 'curate', or 'mycards'
   const [generatedCards, setGeneratedCards] = useState([]);
   const [showInfoModal, setShowInfoModal] = useState(false);
+  const { isConnected } = useAccount();
 
   const handleCardsGenerated = (cards) => {
     setGeneratedCards(cards.filter((card) => !card.error));
     setScreen("curate");
   };
 
+  // Show hero only on generate screen
+  const showHero = screen === "generate";
+
   return (
     <div className="app">
-      <header className="app-header">
-        <h1>wavesTCG Community Creations</h1>
-        <p className="subtitle">
-          AI-generated trading cards. Near zero minting on Base L2.
-        </p>
-
-        <div className="header-actions">
-          <button
-            className="info-button"
-            onClick={() => setShowInfoModal(true)}
-          >
-            How It Works
-          </button>
-          <div className="wallet-connect-wrapper">
-            <ConnectButton />
+      {/* Hero Section - only on generate screen */}
+      {showHero && (
+        <header className="hero-section">
+          <div className="hero-glow"></div>
+          <div className="hero-content">
+            <div className="logo-container">
+              <span className="logo-icon">
+                <img src="src/images/waves-collection-logo.png" alt="" />
+              </span>
+              <div className="logo-rings">
+                <div className="ring ring-1"></div>
+                <div className="ring ring-2"></div>
+                <div className="ring ring-3"></div>
+              </div>
+            </div>
+            <h1 className="hero-title">wavesTCG Community Creations</h1>
+            <p className="hero-subtitle">AI-generated trading cards on Base</p>
+            <div className="hero-stats">
+              <div className="hero-stat">
+                <span className="stat-value">~$0.01</span>
+                <span className="stat-label">gas to mint</span>
+              </div>
+              <div className="hero-stat-divider"></div>
+              <div className="hero-stat">
+                <span className="stat-value">FREE</span>
+                <span className="stat-label">minting</span>
+              </div>
+              <div className="hero-stat-divider"></div>
+              <div className="hero-stat">
+                <span className="stat-value">Base L2</span>
+                <span className="stat-label">network</span>
+              </div>
+            </div>
           </div>
-        </div>
-      </header>
-
-      {screen === "generate" ? (
-        <GeneratorScreen onCardsGenerated={handleCardsGenerated} />
-      ) : (
-        <CurationScreen
-          cards={generatedCards}
-          onBack={() => setScreen("generate")}
-        />
+        </header>
       )}
 
+      {/* Main Content */}
+      <main className="main-content">
+        {screen === "generate" && (
+          <GeneratorScreen onCardsGenerated={handleCardsGenerated} />
+        )}
+        {screen === "curate" && (
+          <CurationScreen
+            cards={generatedCards}
+            onBack={() => setScreen("generate")}
+          />
+        )}
+        {screen === "mycards" && (
+          <MyCardsScreen onBack={() => setScreen("generate")} />
+        )}
+      </main>
+
+      {/* Bottom Fixed Bar */}
+      <div className="bottom-bar">
+        <div className="wallet-container">
+          <ConnectButton
+            showBalance={false}
+            chainStatus="icon"
+            accountStatus={{
+              smallScreen: "avatar",
+              largeScreen: "full",
+            }}
+          />
+        </div>
+
+        <div className="bottom-bar-actions">
+          {/* My Cards Button */}
+          <button
+            className={`my-cards-btn ${screen === "mycards" ? "active" : ""}`}
+            onClick={() =>
+              setScreen(screen === "mycards" ? "generate" : "mycards")
+            }
+            aria-label="My Cards"
+          >
+            <svg viewBox="0 0 512 512" fill="currentColor">
+              <path d="M0 96C0 60.7 28.7 32 64 32H448c35.3 0 64 28.7 64 64V416c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V96zM323.8 202.5c-4.5-6.6-11.9-10.5-19.8-10.5s-15.4 3.9-19.8 10.5l-87 127.6L170.7 297c-4.6-5.7-11.5-9-18.7-9s-14.2 3.3-18.7 9l-64 80c-5.8 7.2-6.9 17.1-2.9 25.4s12.4 13.6 21.6 13.6h96 32H424c8.9 0 17.1-4.9 21.2-12.8s3.6-17.4-1.4-24.7l-120-176zM112 192a48 48 0 1 0 0-96 48 48 0 1 0 0 96z" />
+            </svg>
+          </button>
+
+          {/* Info Button */}
+          <button
+            className="info-btn"
+            onClick={() => setShowInfoModal(true)}
+            aria-label="How it works"
+          >
+            <svg viewBox="0 0 512 512" fill="currentColor">
+              <path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM216 336h24V272H216c-13.3 0-24-10.7-24-24s10.7-24 24-24h48c13.3 0 24 10.7 24 24v88h8c13.3 0 24 10.7 24 24s-10.7 24-24 24H216c-13.3 0-24-10.7-24-24s10.7-24 24-24zm40-208a32 32 0 1 1 0 64 32 32 0 1 1 0-64z" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      {/* Info Modal */}
       {showInfoModal && <InfoModal onClose={() => setShowInfoModal(false)} />}
     </div>
   );

@@ -1,4 +1,10 @@
 :root {
+  /* Base Blue - Primary Accent */
+  --base-blue: #0052FF;
+  --base-blue-light: rgba(0, 82, 255, 0.15);
+  --base-blue-glow: rgba(0, 82, 255, 0.4);
+  --base-blue-dark: #0047e0;
+
   /* Glassmorphism Design System */
   --glass-bg: rgba(255, 255, 255, 0.15);
   --glass-bg-strong: rgba(255, 255, 255, 0.25);
@@ -37,12 +43,21 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
+  background: linear-gradient(
+    135deg,
+    #f5f7fa 0%,
+    #e4e8f0 25%,
+    #dce3ed 50%,
+    #e8ecf4 75%,
+    #f0f4f8 100%
+  );
   background-size: 400% 400%;
   animation: gradientShift 15s ease infinite;
   min-height: 100vh;
   position: relative;
 }
 
+/* Subtle blue accent overlay */
 body::before {
   content: "";
   position: fixed;
@@ -50,6 +65,9 @@ body::before {
   left: 0;
   right: 0;
   bottom: 0;
+  background: 
+    radial-gradient(ellipse at top, rgba(0, 82, 255, 0.03) 0%, transparent 50%),
+    radial-gradient(ellipse at bottom right, rgba(0, 82, 255, 0.05) 0%, transparent 50%);
   pointer-events: none;
   z-index: 0;
 }
@@ -107,7 +125,9 @@ body {
 
 .card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 16px 64px rgba(0, 0, 0, 0.2);
+  box-shadow: 
+    0 16px 64px rgba(0, 0, 0, 0.2),
+    0 0 40px var(--base-blue-light);
 }
 
 .card:active {
@@ -119,4 +139,36 @@ body {
   position: absolute;
   will-change: transform;
   touch-action: none;
+}
+
+/* Selection with Base blue */
+::selection {
+  background: var(--base-blue-light);
+  color: var(--text-primary);
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 82, 255, 0.3);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 82, 255, 0.5);
+}
+
+/* Focus styles with Base blue */
+*:focus-visible {
+  outline: 2px solid var(--base-blue);
+  outline-offset: 2px;
 }
