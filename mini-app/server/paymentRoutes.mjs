@@ -129,7 +129,7 @@ router.post('/verify', requireSupabase, requireTreasury, async (req, res) => {
     const { confirmed, error: confirmError } = await waitForConfirmation(
       transactionHash,
       NETWORK,
-      30 // Max 30 attempts (60 seconds)
+      90 // Max 90 attempts (180 seconds = 3 minutes)
     );
 
     if (!confirmed) {
