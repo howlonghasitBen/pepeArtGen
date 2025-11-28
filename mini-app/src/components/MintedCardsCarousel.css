@@ -53,15 +53,56 @@
   cursor: grabbing;
 }
 
-.carousel-card-wrapper .minted-card-display {
+.carousel-card {
   max-width: 350px;
   margin: 0 auto;
+  border-radius: 12px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.3);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
   transition: transform 0.2s ease;
 }
 
-.carousel-card-wrapper:active .minted-card-display {
+.carousel-card-wrapper:active .carousel-card {
   transform: scale(0.98);
+}
+
+.card-image {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: contain;
+}
+
+.card-placeholder {
+  width: 350px;
+  height: 490px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.card-info {
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(10px);
+}
+
+.card-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #fff;
+  margin: 0 0 0.25rem 0;
+  text-align: center;
+}
+
+.card-token-id {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.6);
+  margin: 0;
+  text-align: center;
 }
 
 .carousel-nav {
@@ -158,8 +199,13 @@
     min-height: 350px;
   }
 
-  .carousel-card-wrapper .minted-card-display {
+  .carousel-card {
     max-width: 280px;
+  }
+
+  .card-placeholder {
+    width: 280px;
+    height: 392px;
   }
 
   .carousel-nav {
@@ -191,8 +237,13 @@
     min-height: 320px;
   }
 
-  .carousel-card-wrapper .minted-card-display {
+  .carousel-card {
     max-width: 240px;
+  }
+
+  .card-placeholder {
+    width: 240px;
+    height: 336px;
   }
 
   .carousel-nav {
@@ -211,5 +262,13 @@
 
   .carousel-content {
     padding: 0 0.5rem;
+  }
+
+  .card-name {
+    font-size: 1rem;
+  }
+
+  .card-token-id {
+    font-size: 0.85rem;
   }
 }
