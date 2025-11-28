@@ -31,10 +31,10 @@ export async function uploadBufferToIPFS(buffer, filename, mimeType = 'applicati
   const blob = new Blob([buffer], { type: mimeType });
   const file = new File([blob], filename, { type: mimeType });
 
-  // Upload using the Pinata SDK v2 public upload API
-  const result = await sdk.upload.file(file);
+  // Upload using the Pinata SDK v2 upload.public.file() API
+  const result = await sdk.upload.public.file(file);
 
-  // Normalize response format (new SDK returns 'cid' instead of 'IpfsHash')
+  // Normalize response format (SDK returns 'cid', we need 'IpfsHash')
   if (result.cid && !result.IpfsHash) {
     result.IpfsHash = result.cid;
   }
@@ -51,8 +51,8 @@ export async function uploadBufferToIPFS(buffer, filename, mimeType = 'applicati
 export async function uploadJSONToIPFS(json, name = 'metadata.json') {
   const sdk = getPinata();
 
-  // Upload using the Pinata SDK v2 public upload API
-  const result = await sdk.upload.json(json);
+  // Upload using the Pinata SDK v2 upload.public.json() API
+  const result = await sdk.upload.public.json(json);
 
   // Normalize response format (new SDK returns 'cid' instead of 'IpfsHash')
   if (result.cid && !result.IpfsHash) {
