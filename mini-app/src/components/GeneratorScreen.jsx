@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { useAccount } from "wagmi";
 import PaymentModal from "./PaymentModal";
 import { useGenerationPayment } from "../hooks/useGenerationPayment";
+import { useAllCards } from "../hooks/useAllCards";
+import MintedCardsCarousel from "./MintedCardsCarousel";
 import "./GeneratorScreen.css";
 
 function GeneratorScreen({ onCardsGenerated }) {
@@ -14,6 +16,7 @@ function GeneratorScreen({ onCardsGenerated }) {
 
   const { isConnected, address } = useAccount();
   const { checkActiveSession } = useGenerationPayment();
+  const { cards: allMintedCards } = useAllCards();
 
   // Check for active session on mount and when wallet connects
   useEffect(() => {
@@ -232,6 +235,10 @@ function GeneratorScreen({ onCardsGenerated }) {
             🔄 Re-roll ({rerollsRemaining} remaining)
           </button>
         </div>
+      )}
+
+      {allMintedCards && allMintedCards.length > 0 && (
+        <MintedCardsCarousel cards={allMintedCards} />
       )}
     </div>
   );

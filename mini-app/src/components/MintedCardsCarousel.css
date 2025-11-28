@@ -1,0 +1,215 @@
+.minted-cards-carousel {
+  width: 100%;
+  max-width: 600px;
+  margin: 2rem auto 0;
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.carousel-header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.carousel-header h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #fff;
+  margin: 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.carousel-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+}
+
+.carousel-content {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  padding: 0 1rem;
+}
+
+.carousel-card-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: grab;
+  user-select: none;
+  touch-action: pan-y;
+  will-change: transform;
+}
+
+.carousel-card-wrapper:active {
+  cursor: grabbing;
+}
+
+.carousel-card-wrapper .minted-card-display {
+  max-width: 350px;
+  margin: 0 auto;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  transition: transform 0.2s ease;
+}
+
+.carousel-card-wrapper:active .minted-card-display {
+  transform: scale(0.98);
+}
+
+.carousel-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  background: rgba(0, 82, 255, 0.3);
+  backdrop-filter: blur(10px);
+  color: #fff;
+  font-size: 2rem;
+  font-weight: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 10;
+  padding: 0;
+  line-height: 1;
+}
+
+.carousel-nav:hover {
+  background: rgba(0, 82, 255, 0.6);
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: translateY(-50%) scale(1.1);
+  box-shadow: 0 4px 16px rgba(0, 82, 255, 0.5);
+}
+
+.carousel-nav:active {
+  transform: translateY(-50%) scale(0.95);
+}
+
+.carousel-nav-left {
+  left: -24px;
+}
+
+.carousel-nav-right {
+  right: -24px;
+}
+
+.carousel-dots {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 1.5rem;
+  flex-wrap: wrap;
+  max-height: 60px;
+  overflow-y: auto;
+}
+
+.carousel-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0;
+}
+
+.carousel-dot:hover {
+  background: rgba(255, 255, 255, 0.5);
+  transform: scale(1.2);
+}
+
+.carousel-dot.active {
+  background: #0052ff;
+  width: 24px;
+  border-radius: 4px;
+  box-shadow: 0 0 8px rgba(0, 82, 255, 0.6);
+}
+
+.carousel-counter {
+  text-align: center;
+  margin-top: 1rem;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .minted-cards-carousel {
+    padding: 1rem;
+    margin-top: 1.5rem;
+  }
+
+  .carousel-container {
+    min-height: 350px;
+  }
+
+  .carousel-card-wrapper .minted-card-display {
+    max-width: 280px;
+  }
+
+  .carousel-nav {
+    width: 40px;
+    height: 40px;
+    font-size: 1.5rem;
+  }
+
+  .carousel-nav-left {
+    left: -16px;
+  }
+
+  .carousel-nav-right {
+    right: -16px;
+  }
+
+  .carousel-header h3 {
+    font-size: 1.1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .minted-cards-carousel {
+    padding: 0.75rem;
+    margin-top: 1rem;
+  }
+
+  .carousel-container {
+    min-height: 320px;
+  }
+
+  .carousel-card-wrapper .minted-card-display {
+    max-width: 240px;
+  }
+
+  .carousel-nav {
+    width: 36px;
+    height: 36px;
+    font-size: 1.25rem;
+  }
+
+  .carousel-nav-left {
+    left: -12px;
+  }
+
+  .carousel-nav-right {
+    right: -12px;
+  }
+
+  .carousel-content {
+    padding: 0 0.5rem;
+  }
+}
