@@ -35,8 +35,8 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  overflow: hidden;
-  padding: 0 1rem;
+  overflow: visible;
+  padding: 0;
 }
 
 .carousel-card-wrapper {
@@ -47,6 +47,8 @@
   user-select: none;
   touch-action: pan-y;
   will-change: transform;
+  width: 100%;
+  max-width: 400px;
 }
 
 .carousel-card-wrapper:active {
@@ -54,7 +56,7 @@
 }
 
 .carousel-card {
-  max-width: 350px;
+  width: 100%;
   margin: 0 auto;
   border-radius: 12px;
   overflow: hidden;
@@ -75,8 +77,9 @@
 }
 
 .card-placeholder {
-  width: 350px;
-  height: 490px;
+  width: 100%;
+  aspect-ratio: 5 / 7;
+  min-height: 400px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -199,13 +202,13 @@
     min-height: 350px;
   }
 
-  .carousel-card {
-    max-width: 280px;
+  .carousel-card-wrapper {
+    max-width: 320px;
   }
 
   .card-placeholder {
-    width: 280px;
-    height: 392px;
+    width: 100%;
+    height: 448px;
   }
 
   .carousel-nav {
@@ -237,13 +240,13 @@
     min-height: 320px;
   }
 
-  .carousel-card {
-    max-width: 240px;
+  .carousel-card-wrapper {
+    max-width: 280px;
   }
 
   .card-placeholder {
-    width: 240px;
-    height: 336px;
+    width: 100%;
+    height: 392px;
   }
 
   .carousel-nav {
@@ -258,10 +261,6 @@
 
   .carousel-nav-right {
     right: -12px;
-  }
-
-  .carousel-content {
-    padding: 0 0.5rem;
   }
 
   .card-name {
