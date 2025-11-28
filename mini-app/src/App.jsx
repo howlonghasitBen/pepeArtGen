@@ -14,6 +14,7 @@ import GeneratorScreen from "./components/GeneratorScreen";
 import CurationScreen from "./components/CurationScreen";
 import MyCardsScreen from "./components/MyCardsScreen";
 import InfoModal from "./components/InfoModal";
+import wavesLogo from "./images/waves-collection-logo.png";
 import "./App.css";
 
 // Get WalletConnect Project ID from env (optional for now)
@@ -74,7 +75,7 @@ function AppContent() {
             <div className="logo-container">
               <span className="logo-icon">
                 <img
-                  src="src/images/waves-collection-logo.png"
+                  src={wavesLogo}
                   alt="two surfboard crossed above intersecting waves. blue and orange sunset."
                 />
               </span>
