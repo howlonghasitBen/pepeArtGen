@@ -75,25 +75,17 @@ const MintedCardsCarousel = ({ cards }) => {
             }}
             className="carousel-card-wrapper"
           >
-            <div className="carousel-card">
-              {cards[currentIndex].image || cards[currentIndex].imageData ? (
-                <img
-                  src={cards[currentIndex].image || cards[currentIndex].imageData}
-                  alt={cards[currentIndex].name || `Card #${cards[currentIndex].tokenId}`}
-                  className="card-image"
-                />
-              ) : (
-                <div className="card-placeholder">
-                  <p>Loading card...</p>
-                </div>
-              )}
-              <div className="card-info">
-                <p className="card-name">{cards[currentIndex].name || `Card #${cards[currentIndex].tokenId}`}</p>
-                {cards[currentIndex].tokenId && (
-                  <p className="card-token-id">Token #{cards[currentIndex].tokenId}</p>
-                )}
+            {cards[currentIndex].image || cards[currentIndex].imageData ? (
+              <img
+                src={cards[currentIndex].image || cards[currentIndex].imageData}
+                alt={cards[currentIndex].name || `Card #${cards[currentIndex].tokenId}`}
+                className="card-image"
+              />
+            ) : (
+              <div className="card-placeholder">
+                <p>Loading card...</p>
               </div>
-            </div>
+            )}
           </animated.div>
         </div>
 
@@ -101,6 +93,13 @@ const MintedCardsCarousel = ({ cards }) => {
           <button className="carousel-nav carousel-nav-right" onClick={goToNext}>
             ›
           </button>
+        )}
+      </div>
+
+      <div className="carousel-info">
+        <p className="card-name">{cards[currentIndex].name || `Card #${cards[currentIndex].tokenId}`}</p>
+        {cards[currentIndex].tokenId && (
+          <p className="card-token-id">Token #{cards[currentIndex].tokenId}</p>
         )}
       </div>
 

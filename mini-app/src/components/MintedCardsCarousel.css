@@ -47,7 +47,6 @@
   user-select: none;
   touch-action: pan-y;
   will-change: transform;
-  width: 100%;
   max-width: 400px;
 }
 
@@ -55,25 +54,20 @@
   cursor: grabbing;
 }
 
-.carousel-card {
-  width: 100%;
-  margin: 0 auto;
-  border-radius: 12px;
-  overflow: hidden;
-  background: rgba(0, 0, 0, 0.3);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-  transition: transform 0.2s ease;
-}
-
-.carousel-card-wrapper:active .carousel-card {
-  transform: scale(0.98);
-}
-
 .card-image {
   width: 100%;
   height: auto;
+  max-height: 550px;
   display: block;
   object-fit: contain;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  background: rgba(0, 0, 0, 0.3);
+  transition: transform 0.2s ease;
+}
+
+.carousel-card-wrapper:active .card-image {
+  transform: scale(0.98);
 }
 
 .card-placeholder {
@@ -87,10 +81,10 @@
   color: rgba(255, 255, 255, 0.5);
 }
 
-.card-info {
-  padding: 1rem;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(10px);
+.carousel-info {
+  text-align: center;
+  padding: 1rem 0;
+  margin-top: 1rem;
 }
 
 .card-name {
@@ -203,12 +197,16 @@
   }
 
   .carousel-card-wrapper {
-    max-width: 320px;
+    max-width: 300px;
+  }
+
+  .card-image {
+    max-height: 420px;
   }
 
   .card-placeholder {
     width: 100%;
-    height: 448px;
+    height: 420px;
   }
 
   .carousel-nav {
@@ -237,16 +235,20 @@
   }
 
   .carousel-container {
-    min-height: 320px;
+    min-height: 300px;
   }
 
   .carousel-card-wrapper {
-    max-width: 280px;
+    max-width: 260px;
+  }
+
+  .card-image {
+    max-height: 364px;
   }
 
   .card-placeholder {
     width: 100%;
-    height: 392px;
+    height: 364px;
   }
 
   .carousel-nav {
