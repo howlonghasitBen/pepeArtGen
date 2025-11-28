@@ -71,15 +71,36 @@ export async function renderCardElementToPNG(cardHTML) {
   let browser;
 
   try {
+    console.log("    🖼️  Launching browser...");
+
     browser = await puppeteer.launch({
       headless: "new",
-      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
+      args: [
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage",
+        "--disable-gpu",
+      ],
     });
 
     const page = await browser.newPage();
 
+    // Set viewport large enough for card to render properly
+    await page.setViewport({
+      width: 1200,
+      height: 1600,
+      deviceScaleFactor: 2, // High DPI for quality
+    });
+
+    console.log("    📄 Loading HTML...");
+
     await page.setContent(cardHTML, { waitUntil: "networkidle0" });
+
+    // Wait for fonts and animations
     await new Promise(resolve => setTimeout(resolve, 500));
+
+    console.log("    📸 Capturing card element...");
 
     // Find the card container element and screenshot just that
     const cardElement = await page.$(".card-container");
@@ -93,9 +114,11 @@ export async function renderCardElementToPNG(cardHTML) {
       omitBackground: false,
     });
 
+    console.log("    ✅ Card element captured");
+
     return screenshot;
   } catch (error) {
-    console.error("Screenshot error:", error);
+    console.error("    ❌ Screenshot error:", error);
     throw new Error(`Failed to render card element: ${error.message}`);
   } finally {
     if (browser) {
