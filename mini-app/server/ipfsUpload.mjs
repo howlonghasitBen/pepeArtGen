@@ -1,6 +1,6 @@
 // IPFS upload helper for Pinata SDK v2 (Node.js compatible)
 import { PinataSDK } from 'pinata';
-import { Readable } from 'stream';
+import { Blob } from 'buffer';
 
 let pinata = null;
 
@@ -18,7 +18,7 @@ function getPinata() {
 }
 
 /**
- * Upload a buffer to IPFS via Pinata using stream
+ * Upload a buffer to IPFS via Pinata
  * @param {Buffer} buffer - The file buffer
  * @param {string} filename - The filename
  * @param {string} mimeType - The MIME type
@@ -26,33 +26,30 @@ function getPinata() {
  */
 export async function uploadBufferToIPFS(buffer, filename, mimeType = 'application/octet-stream') {
   const sdk = getPinata();
-  
-  // Convert buffer to readable stream
-  const stream = Readable.from(buffer);
-  
-  // Use stream upload with metadata
-  const result = await sdk.upload.stream(stream, {
-    metadata: {
-      name: filename,
-    },
-  });
-  
+
+  // Convert buffer to Blob, then to File
+  const blob = new Blob([buffer]);
+  const file = new File([blob], filename, { type: mimeType });
+
+  // Upload the file
+  const result = await sdk.upload.file(file);
+
   return result;
 }
 
 /**
  * Upload JSON to IPFS via Pinata
  * @param {object} json - The JSON object
- * @param {string} name - The name for the pin
+ * @param {string} name - The name for the pin (optional)
  * @returns {Promise<{IpfsHash: string}>}
  */
 export async function uploadJSONToIPFS(json, name = 'metadata.json') {
   const sdk = getPinata();
-  const result = await sdk.upload.json(json, {
-    metadata: {
-      name: name,
-    },
-  });
+
+  // Pinata SDK v2 upload.json() only accepts the JSON object
+  // The name can be added via pinata.update() after upload if needed
+  const result = await sdk.upload.json(json);
+
   return result;
 }
 
