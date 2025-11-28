@@ -105,6 +105,17 @@ export function useMyCards() {
       console.log('🔍 Fetching NFTs from blockchain for address:', address)
       console.log('📝 Contract address:', NFT_CONTRACT_ADDRESS)
 
+      // Get current block to calculate a reasonable starting block
+      const currentBlock = await publicClient.getBlockNumber()
+
+      // Query last ~3 months of blocks (assuming ~2 sec block time on Base)
+      // Base: ~15,768,000 blocks per year, so ~3.9M blocks in 3 months
+      // We'll query from 4M blocks ago or genesis, whichever is more recent
+      const blocksToQuery = 4_000_000n
+      const fromBlock = currentBlock > blocksToQuery ? currentBlock - blocksToQuery : 0n
+
+      console.log(`📊 Querying events from block ${fromBlock} to ${currentBlock}`)
+
       // Query CardMinted events for this address using getContractEvents
       const logs = await publicClient.getContractEvents({
         address: NFT_CONTRACT_ADDRESS,
@@ -113,7 +124,7 @@ export function useMyCards() {
         args: {
           minter: address
         },
-        fromBlock: 0n,
+        fromBlock,
         toBlock: 'latest'
       })
 
