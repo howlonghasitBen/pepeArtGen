@@ -16,7 +16,7 @@ import { fileURLToPath } from "url";
 import { Buffer } from "buffer";
 import { generateCardHTML } from "./cardHTMLGenerator.mjs";
 // Import cardRenderer but handle failures gracefully
-import { renderCardToPNG } from "./cardRenderer.mjs";
+import { renderCardElementToPNG } from "./cardRenderer.mjs";
 import {
   paymentSessionService,
   cardService,
@@ -614,9 +614,9 @@ app.post("/api/upload-to-ipfs", async (req, res) => {
     const imageGatewayUrl = `https://gateway.pinata.cloud/ipfs/${rawImageCID}`;
     const cardHTML = generateCardHTML(card, imageGatewayUrl);
 
-    // Step 3: Render HTML card to PNG
+    // Step 3: Render HTML card to PNG (using element-based screenshot to remove margins)
     console.log("  🖼️  Rendering card to PNG...");
-    const cardImageBuffer = await renderCardToPNG(cardHTML);
+    const cardImageBuffer = await renderCardElementToPNG(cardHTML);
 
     console.log("  📤 Uploading rendered card image...");
     const cardImageUpload = await uploadBufferToIPFS(
