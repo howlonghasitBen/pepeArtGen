@@ -126,7 +126,7 @@ router.post('/verify', requireSupabase, requireTreasury, async (req, res) => {
     console.log(`\n💰 Verifying payment: ${transactionHash}`);
 
     // 1. Wait for transaction to be mined (if needed)
-    const { confirmed, receipt, error: confirmError } = await waitForConfirmation(
+    const { confirmed, receipt, block, error: confirmError } = await waitForConfirmation(
       transactionHash,
       NETWORK,
       90 // Max 90 attempts (180 seconds = 3 minutes)
@@ -139,13 +139,14 @@ router.post('/verify', requireSupabase, requireTreasury, async (req, res) => {
       });
     }
 
-    // 2. Verify the payment details on-chain (reuse receipt from waitForConfirmation)
+    // 2. Verify the payment details on-chain (reuse receipt and block from waitForConfirmation)
     const verification = await verifyPayment(
       transactionHash,
       walletAddress,
       TREASURY_ADDRESS,
       NETWORK,
-      receipt // Pass the receipt we already fetched
+      receipt, // Pass the receipt we already fetched
+      block    // Pass the block we already fetched (same RPC node)
     );
 
     if (!verification.valid) {

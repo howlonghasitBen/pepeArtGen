@@ -40,9 +40,10 @@ function getClient(network = 'base') {
  * @param {string} expectedTo - Expected recipient (treasury) address
  * @param {string} network - 'base' or 'baseSepolia'
  * @param {object} existingReceipt - Optional pre-fetched receipt to avoid re-fetching
+ * @param {object} existingBlock - Optional pre-fetched block to avoid re-fetching
  * @returns {Promise<{valid: boolean, error?: string, details?: object}>}
  */
-export async function verifyPayment(transactionHash, expectedFrom, expectedTo, network = 'base', existingReceipt = null) {
+export async function verifyPayment(transactionHash, expectedFrom, expectedTo, network = 'base', existingReceipt = null, existingBlock = null) {
   try {
     const client = getClient(network)
     const usdcAddress = USDC_ADDRESSES[network]
@@ -73,7 +74,7 @@ export async function verifyPayment(transactionHash, expectedFrom, expectedTo, n
     }
 
     // 3. Find USDC Transfer event in logs
-    const transferLog = receipt.logs.find(log => 
+    const transferLog = receipt.logs.find(log =>
       log.address.toLowerCase() === usdcAddress.toLowerCase() &&
       log.topics[0] === '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef' // Transfer event signature
     )
@@ -93,40 +94,45 @@ export async function verifyPayment(transactionHash, expectedFrom, expectedTo, n
 
     // 5. Validate sender
     if (from !== expectedFrom.toLowerCase()) {
-      return { 
-        valid: false, 
-        error: `Sender mismatch. Expected ${expectedFrom}, got ${from}` 
+      return {
+        valid: false,
+        error: `Sender mismatch. Expected ${expectedFrom}, got ${from}`
       }
     }
 
     // 6. Validate recipient (treasury)
     if (to !== expectedTo.toLowerCase()) {
-      return { 
-        valid: false, 
-        error: `Recipient mismatch. Expected ${expectedTo}, got ${to}` 
+      return {
+        valid: false,
+        error: `Recipient mismatch. Expected ${expectedTo}, got ${to}`
       }
     }
 
     // 7. Validate amount (allow small variance for rounding)
     const minAmount = EXPECTED_AMOUNT_USDC - 1000n // Allow 0.001 USDC variance
     if (value < minAmount) {
-      return { 
-        valid: false, 
-        error: `Insufficient payment. Expected $2.50 USDC, got $${formatUnits(value, 6)}` 
+      return {
+        valid: false,
+        error: `Insufficient payment. Expected $2.50 USDC, got $${formatUnits(value, 6)}`
       }
     }
 
-    // 8. Get block timestamp for additional verification
-    const block = await client.getBlock({ blockNumber: receipt.blockNumber })
+    // 8. Get block timestamp for additional verification (use existing if provided)
+    let block = existingBlock;
+    if (!block) {
+      block = await client.getBlock({ blockNumber: receipt.blockNumber })
+    } else {
+      console.log(`   ℹ️  Using pre-fetched block from waitForConfirmation`)
+    }
 
     // 9. Check transaction isn't too old (prevent replay attacks)
     const txAge = Date.now() / 1000 - Number(block.timestamp)
     const MAX_TX_AGE_SECONDS = 3600 // 1 hour
 
     if (txAge > MAX_TX_AGE_SECONDS) {
-      return { 
-        valid: false, 
-        error: `Transaction too old. Must be within ${MAX_TX_AGE_SECONDS / 60} minutes` 
+      return {
+        valid: false,
+        error: `Transaction too old. Must be within ${MAX_TX_AGE_SECONDS / 60} minutes`
       }
     }
 
@@ -147,12 +153,12 @@ export async function verifyPayment(transactionHash, expectedFrom, expectedTo, n
 
   } catch (error) {
     console.error('Payment verification error:', error)
-    
+
     // Handle specific errors
     if (error.message?.includes('could not be found')) {
       return { valid: false, error: 'Transaction not found. It may still be pending.' }
     }
-    
+
     return { valid: false, error: `Verification failed: ${error.message}` }
   }
 }
@@ -177,25 +183,30 @@ export async function isTransactionUsed(transactionHash, supabase) {
 
 /**
  * Wait for transaction confirmation with retries
- * @param {string} transactionHash 
- * @param {string} network 
- * @param {number} maxAttempts 
+ * Fetches both receipt and block using the same RPC client to avoid inconsistencies
+ * @param {string} transactionHash
+ * @param {string} network
+ * @param {number} maxAttempts
  * @returns {Promise<object>}
  */
 export async function waitForConfirmation(transactionHash, network = 'base', maxAttempts = 30) {
   const client = getClient(network)
-  
+
   console.log(`   ⏳ Waiting for tx confirmation (max ${maxAttempts * 2}s)...`)
-  
+
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     try {
       const receipt = await client.getTransactionReceipt({
         hash: transactionHash,
       })
-      
+
       if (receipt) {
+        // Fetch block using the SAME client to avoid RPC node inconsistencies
+        console.log(`   📦 Fetching block ${receipt.blockNumber} from same RPC node...`)
+        const block = await client.getBlock({ blockNumber: receipt.blockNumber })
+
         console.log(`   ✅ Tx confirmed in block ${receipt.blockNumber} (attempt ${attempt + 1})`)
-        return { confirmed: true, receipt }
+        return { confirmed: true, receipt, block }
       }
     } catch (error) {
       // Transaction not yet mined - this is expected
@@ -203,11 +214,11 @@ export async function waitForConfirmation(transactionHash, network = 'base', max
         console.log(`   ⏳ Still waiting... (attempt ${attempt + 1}/${maxAttempts}) - ${error.message?.slice(0, 50)}`)
       }
     }
-    
+
     // Wait 2 seconds between attempts
     await new Promise(resolve => setTimeout(resolve, 2000))
   }
-  
+
   console.log(`   ❌ Tx confirmation timeout after ${maxAttempts} attempts`)
   return { confirmed: false, error: 'Transaction confirmation timeout' }
 }
