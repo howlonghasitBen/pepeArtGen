@@ -640,11 +640,18 @@ app.post("/api/upload-to-ipfs", async (req, res) => {
 
     // Step 5: Create and upload metadata
     console.log("  📝 Creating metadata...");
+
+    // Use Pinata gateway URLs for OpenSea compatibility
+    // OpenSea prefers HTTPS gateway URLs over ipfs:// URIs for reliable display
+    const imageGatewayURL = `https://gateway.pinata.cloud/ipfs/${cardImageCID}`;
+    const animationGatewayURL = `https://gateway.pinata.cloud/ipfs/${htmlCID}`;
+
     const metadata = {
       name: card.name,
       description: card.flavorText || `${card.name} - A unique trading card`,
-      image: `ipfs://${cardImageCID}`,
-      animation_url: `ipfs://${htmlCID}`,
+      image: imageGatewayURL,  // Primary: HTTPS gateway URL for OpenSea
+      animation_url: animationGatewayURL,  // Primary: HTTPS gateway URL for OpenSea
+      external_url: "https://surf.works",  // Link back to project site
       attributes: [
         { trait_type: "Type", value: card.type || "Creature" },
         { trait_type: "Level", value: card.level || "1" },
@@ -655,6 +662,9 @@ app.post("/api/upload-to-ipfs", async (req, res) => {
         { trait_type: "Rarity", value: card.rarity || "Common" },
         { trait_type: "Artist", value: card.artist || "Waves TCG" },
       ],
+      // Include IPFS URIs as well for full decentralization support
+      image_ipfs: `ipfs://${cardImageCID}`,
+      animation_url_ipfs: `ipfs://${htmlCID}`,
     };
 
     console.log("  📤 Uploading metadata...");
