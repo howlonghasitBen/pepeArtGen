@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { WagmiProvider, createConfig, http } from "wagmi";
+import { WagmiProvider, createConfig, http, fallback } from "wagmi";
 import { base, baseSepolia } from "wagmi/chains";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
@@ -20,11 +20,31 @@ import "./App.css";
 const projectId =
   import.meta.env.VITE_WALLETCONNECT_PROJECT_ID || "demo-project-id";
 
-// Configure Wagmi with RainbowKit (wallet connection optional)
+// Configure multiple RPC endpoints with fallback for reliability
+// Base public RPCs can be unreliable, so we use multiple providers
+const baseTransport = fallback([
+  http('https://base.llamarpc.com'),
+  http('https://base.meowrpc.com'),
+  http('https://base-rpc.publicnode.com'),
+  http('https://mainnet.base.org'),
+  http('https://base.gateway.tenderly.co'),
+]);
+
+const baseSepoliaTransport = fallback([
+  http('https://base-sepolia-rpc.publicnode.com'),
+  http('https://sepolia.base.org'),
+  http('https://base-sepolia.gateway.tenderly.co'),
+]);
+
+// Configure Wagmi with custom transports for better reliability
 const config = getDefaultConfig({
   appName: "wavesTCG Community Creations",
   projectId,
   chains: [base, baseSepolia],
+  transports: {
+    [base.id]: baseTransport,
+    [baseSepolia.id]: baseSepoliaTransport,
+  },
   ssr: false,
 });
 
