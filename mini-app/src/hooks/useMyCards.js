@@ -34,26 +34,54 @@ export function useMyCards() {
   }
 
   /**
-   * Fetch token metadata from IPFS
+   * Fetch token metadata from IPFS (with fallback gateways)
    */
   const fetchTokenMetadata = async (tokenURI) => {
-    try {
-      // Handle IPFS URIs
-      let url = tokenURI
-      if (tokenURI.startsWith('ipfs://')) {
-        url = tokenURI.replace('ipfs://', 'https://ipfs.io/ipfs/')
-      }
+    // IPFS gateways to try (in order)
+    const gateways = [
+      'https://gateway.pinata.cloud/ipfs/',
+      'https://ipfs.io/ipfs/',
+      'https://cloudflare-ipfs.com/ipfs/',
+      'https://dweb.link/ipfs/'
+    ]
 
-      const response = await fetch(url)
-      if (!response.ok) {
-        throw new Error('Failed to fetch metadata')
-      }
+    let ipfsCID = null
+    let url = tokenURI
 
-      return await response.json()
-    } catch (err) {
-      console.error('Error fetching token metadata:', err)
-      return null
+    // Extract CID if it's an ipfs:// URI
+    if (tokenURI.startsWith('ipfs://')) {
+      ipfsCID = tokenURI.replace('ipfs://', '')
+    } else if (tokenURI.includes('/ipfs/')) {
+      // Extract CID from gateway URL
+      const match = tokenURI.match(/\/ipfs\/([^/?]+)/)
+      if (match) {
+        ipfsCID = match[1]
+      }
     }
+
+    // Try each gateway
+    for (const gateway of gateways) {
+      try {
+        const fetchUrl = ipfsCID ? `${gateway}${ipfsCID}` : url
+        console.log(`    Trying gateway: ${fetchUrl}`)
+
+        const response = await fetch(fetchUrl, {
+          signal: AbortSignal.timeout(10000) // 10 second timeout
+        })
+
+        if (response.ok) {
+          const metadata = await response.json()
+          console.log(`    ✅ Success with ${gateway}`)
+          return metadata
+        }
+      } catch (err) {
+        console.warn(`    ⚠️ Gateway ${gateway} failed:`, err.message)
+        continue
+      }
+    }
+
+    console.error(`    ❌ All gateways failed for: ${tokenURI}`)
+    return null
   }
 
   /**
@@ -70,27 +98,26 @@ export function useMyCards() {
   const fetchCardsFromBlockchain = async () => {
     try {
       if (!NFT_CONTRACT_ADDRESS || !publicClient) {
+        console.warn('Missing NFT_CONTRACT_ADDRESS or publicClient')
         return []
       }
 
-      // Query CardMinted events for this address
-      const logs = await publicClient.getLogs({
+      console.log('🔍 Fetching NFTs from blockchain for address:', address)
+      console.log('📝 Contract address:', NFT_CONTRACT_ADDRESS)
+
+      // Query CardMinted events for this address using getContractEvents
+      const logs = await publicClient.getContractEvents({
         address: NFT_CONTRACT_ADDRESS,
-        event: {
-          type: 'event',
-          name: 'CardMinted',
-          inputs: [
-            { type: 'address', indexed: true, name: 'minter' },
-            { type: 'uint256', indexed: true, name: 'tokenId' },
-            { type: 'string', indexed: false, name: 'tokenURI' }
-          ]
-        },
+        abi: WAVES_TCG_NFT_ABI.abi,
+        eventName: 'CardMinted',
         args: {
           minter: address
         },
-        fromBlock: 'earliest',
+        fromBlock: 0n,
         toBlock: 'latest'
       })
+
+      console.log(`📦 Found ${logs.length} CardMinted events`)
 
       if (!logs || logs.length === 0) {
         return []
@@ -102,8 +129,17 @@ export function useMyCards() {
           const tokenId = log.args.tokenId.toString()
           const tokenURI = log.args.tokenURI
 
+          console.log(`  🎴 Processing token #${tokenId}`)
+          console.log(`  📍 Token URI: ${tokenURI}`)
+
           // Fetch metadata from IPFS
           const metadata = await fetchTokenMetadata(tokenURI)
+
+          if (!metadata) {
+            console.warn(`  ⚠️ Failed to fetch metadata for token #${tokenId}`)
+          } else {
+            console.log(`  ✅ Metadata loaded for token #${tokenId}: ${metadata.name}`)
+          }
 
           if (!metadata) {
             return {
@@ -199,10 +235,13 @@ export function useMyCards() {
       })
 
       const cards = await Promise.all(cardsPromises)
-      return cards.filter(card => card !== null)
+      const validCards = cards.filter(card => card !== null)
+      console.log(`✅ Successfully processed ${validCards.length} cards from blockchain`)
+      return validCards
     } catch (err) {
-      console.error('Error fetching cards from blockchain:', err)
-      return []
+      console.error('❌ Error fetching cards from blockchain:', err)
+      console.error('Error details:', err.message, err.stack)
+      throw err // Propagate error so it can be caught by fetchCards
     }
   }
 
@@ -249,16 +288,41 @@ export function useMyCards() {
 
       // Fallback: fetch from blockchain using CardMinted events
       console.log('Backend returned no cards, fetching from blockchain...')
-      const blockchainCards = await fetchCardsFromBlockchain()
 
-      if (blockchainCards.length > 0) {
-        setCards(blockchainCards)
-      } else {
+      if (!NFT_CONTRACT_ADDRESS) {
+        console.error('❌ NFT_CONTRACT_ADDRESS not configured')
+        setError('NFT contract not configured. Please set VITE_NFT_CONTRACT_ADDRESS in your environment.')
+        setCards([])
+        setLoading(false)
+        return
+      }
+
+      if (!publicClient) {
+        console.error('❌ publicClient not available')
+        setError('Blockchain client not configured. Please check your wallet connection.')
+        setCards([])
+        setLoading(false)
+        return
+      }
+
+      try {
+        const blockchainCards = await fetchCardsFromBlockchain()
+
+        if (blockchainCards.length > 0) {
+          console.log(`✅ Loaded ${blockchainCards.length} cards from blockchain`)
+          setCards(blockchainCards)
+        } else {
+          console.log('ℹ️ No cards found for this wallet')
+          setCards([])
+        }
+      } catch (blockchainErr) {
+        console.error('❌ Blockchain fetch failed:', blockchainErr)
+        setError(`Failed to fetch NFTs: ${blockchainErr.message}`)
         setCards([])
       }
 
     } catch (err) {
-      console.error('Error fetching cards:', err)
+      console.error('❌ Error fetching cards:', err)
       setError(err.message)
     } finally {
       setLoading(false)
