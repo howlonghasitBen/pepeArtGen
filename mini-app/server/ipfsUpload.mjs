@@ -27,12 +27,11 @@ function getPinata() {
 export async function uploadBufferToIPFS(buffer, filename, mimeType = 'application/octet-stream') {
   const sdk = getPinata();
 
-  // Convert buffer to Blob, then to File
-  const blob = new Blob([buffer]);
-  const file = new File([blob], filename, { type: mimeType });
+  // Convert buffer to Blob (File is not needed, Blob works directly)
+  const blob = new Blob([buffer], { type: mimeType });
 
-  // Upload the file
-  const result = await sdk.upload.file(file);
+  // Upload using the correct Pinata SDK v2 API
+  const result = await sdk.upload.file(blob);
 
   return result;
 }
@@ -46,8 +45,7 @@ export async function uploadBufferToIPFS(buffer, filename, mimeType = 'applicati
 export async function uploadJSONToIPFS(json, name = 'metadata.json') {
   const sdk = getPinata();
 
-  // Pinata SDK v2 upload.json() only accepts the JSON object
-  // The name can be added via pinata.update() after upload if needed
+  // Upload using the correct Pinata SDK v2 API
   const result = await sdk.upload.json(json);
 
   return result;
