@@ -27,11 +27,17 @@ function getPinata() {
 export async function uploadBufferToIPFS(buffer, filename, mimeType = 'application/octet-stream') {
   const sdk = getPinata();
 
-  // Convert buffer to Blob (File is not needed, Blob works directly)
+  // Convert buffer to Blob, then to File (required for public upload)
   const blob = new Blob([buffer], { type: mimeType });
+  const file = new File([blob], filename, { type: mimeType });
 
-  // Upload using the correct Pinata SDK v2 API
-  const result = await sdk.upload.file(blob);
+  // Upload using the Pinata SDK v2 public upload API
+  const result = await sdk.upload.file(file);
+
+  // Normalize response format (new SDK returns 'cid' instead of 'IpfsHash')
+  if (result.cid && !result.IpfsHash) {
+    result.IpfsHash = result.cid;
+  }
 
   return result;
 }
@@ -45,8 +51,13 @@ export async function uploadBufferToIPFS(buffer, filename, mimeType = 'applicati
 export async function uploadJSONToIPFS(json, name = 'metadata.json') {
   const sdk = getPinata();
 
-  // Upload using the correct Pinata SDK v2 API
+  // Upload using the Pinata SDK v2 public upload API
   const result = await sdk.upload.json(json);
+
+  // Normalize response format (new SDK returns 'cid' instead of 'IpfsHash')
+  if (result.cid && !result.IpfsHash) {
+    result.IpfsHash = result.cid;
+  }
 
   return result;
 }
