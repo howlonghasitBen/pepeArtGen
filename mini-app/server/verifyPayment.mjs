@@ -39,9 +39,10 @@ function getClient(network = 'base') {
  * @param {string} expectedFrom - Expected sender wallet address
  * @param {string} expectedTo - Expected recipient (treasury) address
  * @param {string} network - 'base' or 'baseSepolia'
+ * @param {object} existingReceipt - Optional pre-fetched receipt to avoid re-fetching
  * @returns {Promise<{valid: boolean, error?: string, details?: object}>}
  */
-export async function verifyPayment(transactionHash, expectedFrom, expectedTo, network = 'base') {
+export async function verifyPayment(transactionHash, expectedFrom, expectedTo, network = 'base', existingReceipt = null) {
   try {
     const client = getClient(network)
     const usdcAddress = USDC_ADDRESSES[network]
@@ -50,12 +51,17 @@ export async function verifyPayment(transactionHash, expectedFrom, expectedTo, n
       return { valid: false, error: `Unsupported network: ${network}` }
     }
 
-    // 1. Get transaction receipt
+    // 1. Get transaction receipt (use existing if provided)
     console.log(`🔍 Verifying transaction: ${transactionHash}`)
-    
-    const receipt = await client.getTransactionReceipt({
-      hash: transactionHash,
-    })
+
+    let receipt = existingReceipt;
+    if (!receipt) {
+      receipt = await client.getTransactionReceipt({
+        hash: transactionHash,
+      })
+    } else {
+      console.log(`   ℹ️  Using pre-fetched receipt from waitForConfirmation`)
+    }
 
     if (!receipt) {
       return { valid: false, error: 'Transaction not found or not yet mined' }
