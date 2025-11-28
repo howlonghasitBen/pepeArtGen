@@ -65,6 +65,148 @@ export function useMyCards() {
   }
 
   /**
+   * Fetch cards from blockchain using CardMinted events
+   */
+  const fetchCardsFromBlockchain = async () => {
+    try {
+      if (!NFT_CONTRACT_ADDRESS || !publicClient) {
+        return []
+      }
+
+      // Query CardMinted events for this address
+      const logs = await publicClient.getLogs({
+        address: NFT_CONTRACT_ADDRESS,
+        event: {
+          type: 'event',
+          name: 'CardMinted',
+          inputs: [
+            { type: 'address', indexed: true, name: 'minter' },
+            { type: 'uint256', indexed: true, name: 'tokenId' },
+            { type: 'string', indexed: false, name: 'tokenURI' }
+          ]
+        },
+        args: {
+          minter: address
+        },
+        fromBlock: 'earliest',
+        toBlock: 'latest'
+      })
+
+      if (!logs || logs.length === 0) {
+        return []
+      }
+
+      // Process each minted card
+      const cardsPromises = logs.map(async (log) => {
+        try {
+          const tokenId = log.args.tokenId.toString()
+          const tokenURI = log.args.tokenURI
+
+          // Fetch metadata from IPFS
+          const metadata = await fetchTokenMetadata(tokenURI)
+
+          if (!metadata) {
+            return {
+              id: `token-${tokenId}`,
+              tokenId,
+              name: `Card #${tokenId}`,
+              image: null,
+              openSeaUrl: getOpenSeaUrl(tokenId),
+            }
+          }
+
+          // Extract attributes from metadata
+          const getAttr = (traitType, defaultValue = '') => {
+            const attr = metadata.attributes?.find(attr => attr.trait_type === traitType)
+            return attr ? attr.value : defaultValue
+          }
+
+          // Process image URL
+          let imageUrl = metadata.image
+          if (imageUrl?.startsWith('ipfs://')) {
+            imageUrl = imageUrl.replace('ipfs://', 'https://ipfs.io/ipfs/')
+          }
+
+          // Build card object compatible with MintedCardDisplay
+          return {
+            id: `token-${tokenId}`,
+            tokenId,
+            name: metadata.name || `Card #${tokenId}`,
+            subtitle: '',
+            image: imageUrl,
+            imageData: imageUrl,
+            rarity: getAttr('Rarity', 'Common'),
+            type: getAttr('Type', 'Creature'),
+            level: getAttr('Level', '1'),
+            artist: getAttr('Artist', 'Waves TCG'),
+            stats: {
+              attack: getAttr('Attack', 0),
+              defense: getAttr('Defense', 0),
+            },
+            manaCost: [
+              { type: 'hp', value: getAttr('HP', 0), color: '#ff4444', textColor: '#fff' },
+              { type: 'mana', value: getAttr('Mana', 0), color: '#4444ff', textColor: '#fff' },
+            ],
+            flavorText: metadata.description || `${metadata.name} - A unique trading card`,
+            theme: {
+              background: 'linear-gradient(145deg, #2a2a2a, #1a1a1a)',
+              header: {
+                background: 'rgba(0, 0, 0, 0.6)',
+                color: '#fff',
+                textShadow: '0 2px 4px rgba(0,0,0,0.5)',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+              },
+              imageArea: {
+                background: 'rgba(0, 0, 0, 0.3)',
+                border: '2px solid rgba(255, 255, 255, 0.1)',
+                boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.3)',
+              },
+              typeSection: {
+                background: 'rgba(0, 0, 0, 0.6)',
+                color: '#fff',
+                textShadow: '0 1px 2px rgba(0,0,0,0.5)',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
+              },
+              stat: {
+                background: 'rgba(255, 255, 255, 0.1)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                color: '#fff',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
+              },
+              flavorText: {
+                background: 'rgba(0, 0, 0, 0.4)',
+                color: '#ddd',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+              },
+              bottomSection: {
+                background: 'rgba(0, 0, 0, 0.6)',
+              },
+              rarity: {
+                background: 'rgba(255, 215, 0, 0.2)',
+                color: '#ffd700',
+                border: '1px solid rgba(255, 215, 0, 0.4)',
+                boxShadow: '0 0 10px rgba(255, 215, 0, 0.3)',
+              },
+            },
+            transactionHash: log.transactionHash,
+            blockNumber: log.blockNumber,
+            openSeaUrl: getOpenSeaUrl(tokenId),
+          }
+        } catch (err) {
+          console.error(`Error processing token ${log.args.tokenId}:`, err)
+          return null
+        }
+      })
+
+      const cards = await Promise.all(cardsPromises)
+      return cards.filter(card => card !== null)
+    } catch (err) {
+      console.error('Error fetching cards from blockchain:', err)
+      return []
+    }
+  }
+
+  /**
    * Fetch cards - tries backend first, then falls back to on-chain
    */
   const fetchCards = useCallback(async () => {
@@ -79,7 +221,7 @@ export function useMyCards() {
     try {
       // Try backend first
       const backendCards = await fetchCardsFromBackend()
-      
+
       if (backendCards && backendCards.length > 0) {
         // Format backend cards
         const formattedCards = backendCards.map(card => ({
@@ -87,7 +229,7 @@ export function useMyCards() {
           tokenId: card.tokenId,
           name: card.name || 'Unknown Card',
           imageData: card.imageData || card.image,
-          image: card.ipfsLinks?.find(l => l.type === 'styled_card')?.gateway_url || 
+          image: card.ipfsLinks?.find(l => l.type === 'styled_card')?.gateway_url ||
                  card.ipfsLinks?.find(l => l.type === 'raw_image')?.gateway_url ||
                  card.imageData,
           rarity: card.rarity,
@@ -105,35 +247,16 @@ export function useMyCards() {
         return
       }
 
-      // Fallback: fetch from contract (if backend is empty or failed)
-      if (!NFT_CONTRACT_ADDRESS || !publicClient) {
+      // Fallback: fetch from blockchain using CardMinted events
+      console.log('Backend returned no cards, fetching from blockchain...')
+      const blockchainCards = await fetchCardsFromBlockchain()
+
+      if (blockchainCards.length > 0) {
+        setCards(blockchainCards)
+      } else {
         setCards([])
-        setLoading(false)
-        return
       }
 
-      // Get wallet's mint count from contract
-      const mintCount = await publicClient.readContract({
-        address: NFT_CONTRACT_ADDRESS,
-        abi: WAVES_TCG_NFT_ABI.abi,
-        functionName: 'walletMintCount',
-        args: [address],
-      })
-
-      if (!mintCount || mintCount === 0n) {
-        setCards([])
-        setLoading(false)
-        return
-      }
-
-      // Note: This is a simplified approach. In production, you'd want to 
-      // use events or an indexer to get the actual token IDs owned by the wallet
-      console.log(`Wallet has minted ${mintCount} cards total`)
-      
-      // For now, show empty if backend didn't return cards
-      // A full implementation would query Transfer events or use an indexer
-      setCards([])
-      
     } catch (err) {
       console.error('Error fetching cards:', err)
       setError(err.message)
