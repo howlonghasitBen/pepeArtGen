@@ -40,7 +40,7 @@ export async function renderCardToPNG(cardHTML) {
     });
 
     // Wait a bit for any animations/transitions
-    await page.waitForTimeout(500);
+    await new Promise(resolve => setTimeout(resolve, 500));
 
     console.log("    📸 Capturing screenshot...");
 
@@ -79,7 +79,7 @@ export async function renderCardElementToPNG(cardHTML) {
     const page = await browser.newPage();
 
     await page.setContent(cardHTML, { waitUntil: "networkidle0" });
-    await page.waitForTimeout(500);
+    await new Promise(resolve => setTimeout(resolve, 500));
 
     // Find the card container element and screenshot just that
     const cardElement = await page.$(".card-container");
