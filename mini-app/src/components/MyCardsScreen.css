@@ -94,9 +94,7 @@
   border: 1px solid var(--glass-border);
   border-radius: 16px;
   margin-bottom: 20px;
-  box-shadow: 
-    var(--glass-shadow),
-    0 0 30px var(--base-blue-light);
+  box-shadow: var(--glass-shadow), 0 0 30px var(--base-blue-light);
 }
 
 .stat-item {
@@ -120,7 +118,7 @@
 
 .opensea-collection-link {
   padding: 10px 16px;
-  background: #2081E2;
+  background: #2081e2;
   color: white;
   text-decoration: none;
   border-radius: 10px;
@@ -157,15 +155,13 @@
 
 .card-grid-item:hover {
   transform: translateY(-6px) scale(1.02);
-  box-shadow: 
-    0 12px 40px rgba(0, 0, 0, 0.2),
-    0 0 30px var(--base-blue-light);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2), 0 0 30px var(--base-blue-light);
   border-color: var(--base-blue);
 }
 
 .card-image-wrapper {
   position: relative;
-  aspect-ratio: 1;
+  aspect-ratio: 3 / 4;
   overflow: hidden;
   background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
 }
@@ -295,7 +291,7 @@
   justify-content: center;
   gap: 10px;
   padding: 14px 24px;
-  background: #2081E2;
+  background: #2081e2;
   color: white;
   text-decoration: none;
   border-radius: 14px;
