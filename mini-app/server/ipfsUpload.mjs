@@ -63,18 +63,15 @@ export async function uploadJSONToIPFS(json, name = 'metadata.json') {
  * @returns {Promise<{IpfsHash: string}>}
  */
 export async function uploadBase64ImageToIPFS(base64Data, filename) {
-  const sdk = getPinata();
-  
   // Remove data URI prefix if present
   const cleanBase64 = base64Data.replace(/^data:image\/\w+;base64,/, '');
-  
-  // Use base64 upload method
-  const result = await sdk.upload.base64(cleanBase64, {
-    metadata: {
-      name: filename,
-    },
-  });
-  
+
+  // Convert base64 to buffer
+  const buffer = Buffer.from(cleanBase64, 'base64');
+
+  // Use the buffer upload method (which uses stream internally)
+  const result = await uploadBufferToIPFS(buffer, filename, 'image/png');
+
   return result;
 }
 
