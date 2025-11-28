@@ -61,7 +61,8 @@ function GeneratorScreen({ onCardsGenerated }) {
       const monsterNames = [monsterName.trim()];
 
       // Call API to generate card with Imagen
-      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001'
+      const API_BASE_URL =
+        import.meta.env.VITE_API_BASE_URL || "http://localhost:3001";
       const response = await fetch(`${API_BASE_URL}/api/generate`, {
         method: "POST",
         headers: {
@@ -156,7 +157,9 @@ function GeneratorScreen({ onCardsGenerated }) {
           </div>
         ) : (
           <div className="no-session">
-            <span className="session-badge warning">⚠️ No Active Session</span>
+            <span className="session-badge warning">
+              No Active Gemini Imagen Session
+            </span>
             <span className="generations-info">Pay $2.50 USDC to start</span>
           </div>
         )}
@@ -215,7 +218,7 @@ function GeneratorScreen({ onCardsGenerated }) {
           ? "Generating..."
           : !isConnected
           ? "Connect Wallet to Generate"
-          : "🎨 Generate Card"}
+          : "Generate Card"}
       </button>
 
       {hasActiveSession && rerollsRemaining > 0 && (

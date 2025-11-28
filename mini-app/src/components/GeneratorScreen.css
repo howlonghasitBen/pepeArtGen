@@ -97,7 +97,7 @@
 
 .monster-input::placeholder,
 .batch-input::placeholder {
-  color: var(--text-muted);
+  color: var(--text-primary);
 }
 
 .monster-input:focus,
