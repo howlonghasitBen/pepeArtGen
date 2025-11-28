@@ -748,3 +748,8 @@ const server = app.listen(PORT, "0.0.0.0", () => {
   console.log(`🎨 Using node-vibrant for color extraction`);
   console.log(`📤 IPFS upload endpoint ready`);
 });
+
+// Set server timeout to 5 minutes to allow payment verification to complete
+// (verification can take up to 3 minutes)
+server.timeout = 300000; // 5 minutes in milliseconds
+server.keepAliveTimeout = 310000; // Slightly longer than timeout
