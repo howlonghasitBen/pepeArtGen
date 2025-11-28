@@ -53,7 +53,10 @@ function AppContent() {
           <div className="hero-content">
             <div className="logo-container">
               <span className="logo-icon">
-                <img src="src/images/waves-collection-logo.png" alt="" />
+                <img
+                  src="src/images/waves-collection-logo.png"
+                  alt="two surfboard crossed above intersecting waves. blue and orange sunset."
+                />
               </span>
               <div className="logo-rings">
                 <div className="ring ring-1"></div>
