@@ -15,6 +15,7 @@ import CurationScreen from "./components/CurationScreen";
 import MyCardsScreen from "./components/MyCardsScreen";
 import InfoModal from "./components/InfoModal";
 import wavesLogo from "./images/waves-collection-logo.png";
+import openseaLogo from "./images/opensea-logo.svg";
 import "./App.css";
 
 // Get WalletConnect Project ID from env (optional for now)
@@ -24,17 +25,17 @@ const projectId =
 // Configure multiple RPC endpoints with fallback for reliability
 // Base public RPCs can be unreliable, so we use multiple providers
 const baseTransport = fallback([
-  http('https://base.llamarpc.com'),
-  http('https://base.meowrpc.com'),
-  http('https://base-rpc.publicnode.com'),
-  http('https://mainnet.base.org'),
-  http('https://base.gateway.tenderly.co'),
+  http("https://base.llamarpc.com"),
+  http("https://base.meowrpc.com"),
+  http("https://base-rpc.publicnode.com"),
+  http("https://mainnet.base.org"),
+  http("https://base.gateway.tenderly.co"),
 ]);
 
 const baseSepoliaTransport = fallback([
-  http('https://base-sepolia-rpc.publicnode.com'),
-  http('https://sepolia.base.org'),
-  http('https://base-sepolia.gateway.tenderly.co'),
+  http("https://base-sepolia-rpc.publicnode.com"),
+  http("https://sepolia.base.org"),
+  http("https://base-sepolia.gateway.tenderly.co"),
 ]);
 
 // Configure Wagmi with custom transports for better reliability
@@ -158,9 +159,11 @@ function AppContent() {
             className="opensea-btn"
             aria-label="View on OpenSea"
           >
-            <svg viewBox="0 0 90 90" fill="currentColor">
-              <path d="M45 0C20.151 0 0 20.151 0 45s20.151 45 45 45 45-20.151 45-45S69.849 0 45 0zm22.202 46.587l-8.684 13.182c-.122.185-.326.296-.543.296H42.238c-.413 0-.63-.502-.345-.8l14.014-14.627c.207-.216.07-.584-.222-.584h-6.856c-.413 0-.63-.502-.345-.8l8.684-9.058c.122-.127.289-.2.463-.2h15.573c.413 0 .63.502.345.8l-6.347 6.625c-.122.127-.122.346 0 .473l6.347 6.625c.285.298.068.8-.345.8h-5.002z"/>
-            </svg>
+            <img
+              src={openseaLogo}
+              alt="opensea ship logo"
+              viewBox="0 0 90 90"
+            ></img>
           </a>
 
           {/* Info Button */}
