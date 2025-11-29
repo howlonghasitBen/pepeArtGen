@@ -17,32 +17,37 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 if (!supabaseServiceRoleKey) {
   console.warn('⚠️  SUPABASE_SERVICE_ROLE_KEY not found in .env file');
-  console.warn('⚠️  Analytics tracking will be disabled due to RLS policies');
+  console.warn('⚠️  All database operations will be disabled due to RLS policies');
+  console.warn('⚠️  Get your service role key from: https://app.supabase.com/project/_/settings/api');
 }
 
-// Create Supabase client (will be undefined if credentials missing)
+// Create Supabase client with anon key (legacy - kept for reference)
+// NOTE: With RLS enabled on all tables, this client cannot access any data
+// All operations must use the service role client below
 export const supabase = supabaseUrl && supabaseAnonKey
   ? createClient(supabaseUrl, supabaseAnonKey)
   : null;
 
-// Create service role client for server-side operations that bypass RLS
-// This should ONLY be used for trusted server operations (e.g., analytics)
+// Create service role client for ALL server-side database operations
+// SECURITY: Service role bypasses RLS, enabling secure server-only database access
+// This is the PRIMARY client used by all database services
+// IMPORTANT: Never expose this client or key to the frontend
 const supabaseServiceRole = supabaseUrl && supabaseServiceRoleKey
   ? createClient(supabaseUrl, supabaseServiceRoleKey)
   : null;
 
 // Helper function to check if Supabase is configured
 export const isSupabaseConfigured = () => {
-  return supabase !== null;
+  return supabaseServiceRole !== null;
 };
 
 // Payment session helpers
 export const paymentSessionService = {
   // Create a new payment session
   async createSession(walletAddress, amountUsdc, transactionHash) {
-    if (!supabase) throw new Error('Supabase not configured');
+    if (!supabaseServiceRole) throw new Error('Supabase not configured');
 
-    const { data, error } = await supabase
+    const { data, error } = await supabaseServiceRole
       .from('payment_sessions')
       .insert({
         wallet_address: walletAddress,
@@ -60,9 +65,9 @@ export const paymentSessionService = {
 
   // Confirm payment session
   async confirmSession(transactionHash) {
-    if (!supabase) throw new Error('Supabase not configured');
+    if (!supabaseServiceRole) throw new Error('Supabase not configured');
 
-    const { data, error } = await supabase
+    const { data, error } = await supabaseServiceRole
       .from('payment_sessions')
       .update({
         status: 'confirmed',
@@ -78,9 +83,9 @@ export const paymentSessionService = {
 
   // Get active session for wallet
   async getActiveSession(walletAddress) {
-    if (!supabase) throw new Error('Supabase not configured');
+    if (!supabaseServiceRole) throw new Error('Supabase not configured');
 
-    const { data, error } = await supabase
+    const { data, error } = await supabaseServiceRole
       .from('payment_sessions')
       .select('*')
       .eq('wallet_address', walletAddress)
@@ -97,21 +102,21 @@ export const paymentSessionService = {
 
   // Decrement generations remaining
   async useGeneration(sessionId) {
-    if (!supabase) throw new Error('Supabase not configured');
+    if (!supabaseServiceRole) throw new Error('Supabase not configured');
 
-    const { data, error } = await supabase
+    const { data, error } = await supabaseServiceRole
       .rpc('decrement_generations', { session_id: sessionId });
 
     if (error) {
       // Fallback if RPC not available
-      const { data: session } = await supabase
+      const { data: session } = await supabaseServiceRole
         .from('payment_sessions')
         .select('generations_remaining')
         .eq('id', sessionId)
         .single();
 
       if (session && session.generations_remaining > 0) {
-        const { data, error } = await supabase
+        const { data, error } = await supabaseServiceRole
           .from('payment_sessions')
           .update({
             generations_remaining: session.generations_remaining - 1
@@ -130,9 +135,9 @@ export const paymentSessionService = {
 
   // Get session by ID
   async getSession(sessionId) {
-    if (!supabase) throw new Error('Supabase not configured');
+    if (!supabaseServiceRole) throw new Error('Supabase not configured');
 
-    const { data, error } = await supabase
+    const { data, error } = await supabaseServiceRole
       .from('payment_sessions')
       .select('*')
       .eq('id', sessionId)
@@ -147,9 +152,9 @@ export const paymentSessionService = {
 export const cardService = {
   // Create a new card
   async createCard(sessionId, cardData) {
-    if (!supabase) throw new Error('Supabase not configured');
+    if (!supabaseServiceRole) throw new Error('Supabase not configured');
 
-    const { data, error } = await supabase
+    const { data, error } = await supabaseServiceRole
       .from('cards')
       .insert({
         payment_session_id: sessionId,
@@ -174,9 +179,9 @@ export const cardService = {
 
   // Get card by ID
   async getCard(cardId) {
-    if (!supabase) throw new Error('Supabase not configured');
+    if (!supabaseServiceRole) throw new Error('Supabase not configured');
 
-    const { data, error } = await supabase
+    const { data, error } = await supabaseServiceRole
       .from('cards')
       .select('*')
       .eq('id', cardId)
@@ -188,9 +193,9 @@ export const cardService = {
 
   // Get all cards for a session
   async getSessionCards(sessionId) {
-    if (!supabase) throw new Error('Supabase not configured');
+    if (!supabaseServiceRole) throw new Error('Supabase not configured');
 
-    const { data, error } = await supabase
+    const { data, error } = await supabaseServiceRole
       .from('cards')
       .select('*')
       .eq('payment_session_id', sessionId)
@@ -205,9 +210,9 @@ export const cardService = {
 export const ipfsService = {
   // Add IPFS link
   async addLink(cardId, cid, type, gatewayUrl, fileSize = null) {
-    if (!supabase) throw new Error('Supabase not configured');
+    if (!supabaseServiceRole) throw new Error('Supabase not configured');
 
-    const { data, error } = await supabase
+    const { data, error } = await supabaseServiceRole
       .from('ipfs_links')
       .insert({
         card_id: cardId,
@@ -225,9 +230,9 @@ export const ipfsService = {
 
   // Get all links for a card
   async getCardLinks(cardId) {
-    if (!supabase) throw new Error('Supabase not configured');
+    if (!supabaseServiceRole) throw new Error('Supabase not configured');
 
-    const { data, error } = await supabase
+    const { data, error } = await supabaseServiceRole
       .from('ipfs_links')
       .select('*')
       .eq('card_id', cardId);
@@ -238,9 +243,9 @@ export const ipfsService = {
 
   // Get link by CID
   async getLinkByCid(cid) {
-    if (!supabase) throw new Error('Supabase not configured');
+    if (!supabaseServiceRole) throw new Error('Supabase not configured');
 
-    const { data, error } = await supabase
+    const { data, error } = await supabaseServiceRole
       .from('ipfs_links')
       .select('*')
       .eq('cid', cid)
@@ -255,9 +260,9 @@ export const ipfsService = {
 export const mintService = {
   // Record a mint
   async recordMint(cardId, sessionId, minterAddress, tokenId, metadataUri, transactionHash, contractAddress, network = 'base') {
-    if (!supabase) throw new Error('Supabase not configured');
+    if (!supabaseServiceRole) throw new Error('Supabase not configured');
 
-    const { data, error } = await supabase
+    const { data, error } = await supabaseServiceRole
       .from('mints')
       .insert({
         card_id: cardId,
@@ -278,9 +283,9 @@ export const mintService = {
 
   // Get mints for a wallet
   async getWalletMints(walletAddress) {
-    if (!supabase) throw new Error('Supabase not configured');
+    if (!supabaseServiceRole) throw new Error('Supabase not configured');
 
-    const { data, error } = await supabase
+    const { data, error } = await supabaseServiceRole
       .from('mints')
       .select('*')
       .eq('minter_address', walletAddress)
