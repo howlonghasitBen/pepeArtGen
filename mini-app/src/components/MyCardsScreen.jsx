@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { useAccount } from 'wagmi'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { useMyCards } from '../hooks/useMyCards'
-import MintedCardDisplay from './MintedCardDisplay'
 import './MyCardsScreen.css'
 
 function MyCardsScreen({ onBack }) {
@@ -124,13 +123,20 @@ function MyCardsScreen({ onBack }) {
         </div>
 
         <div className="card-detail-view">
-          <MintedCardDisplay card={selectedCard} />
-          
+          {/* Display the IPFS image directly (already a full card screenshot) */}
+          <div className="nft-image-container">
+            <img
+              src={selectedCard.image || selectedCard.imageData}
+              alt={selectedCard.name}
+              className="nft-card-image"
+            />
+          </div>
+
           <div className="card-detail-info">
             {selectedCard.tokenId && (
               <div className="token-badge">Token #{selectedCard.tokenId}</div>
             )}
-            
+
             <div className="detail-actions">
               {selectedCard.tokenId && (
                 <a
