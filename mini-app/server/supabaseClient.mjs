@@ -6,6 +6,7 @@ dotenv.config();
 // Supabase configuration
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
+const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 // Validate environment variables
 if (!supabaseUrl || !supabaseAnonKey) {
@@ -14,9 +15,20 @@ if (!supabaseUrl || !supabaseAnonKey) {
   console.warn('⚠️  Running without persistent storage - data will be lost on server restart');
 }
 
+if (!supabaseServiceRoleKey) {
+  console.warn('⚠️  SUPABASE_SERVICE_ROLE_KEY not found in .env file');
+  console.warn('⚠️  Analytics tracking will be disabled due to RLS policies');
+}
+
 // Create Supabase client (will be undefined if credentials missing)
 export const supabase = supabaseUrl && supabaseAnonKey
   ? createClient(supabaseUrl, supabaseAnonKey)
+  : null;
+
+// Create service role client for server-side operations that bypass RLS
+// This should ONLY be used for trusted server operations (e.g., analytics)
+const supabaseServiceRole = supabaseUrl && supabaseServiceRoleKey
+  ? createClient(supabaseUrl, supabaseServiceRoleKey)
   : null;
 
 // Helper function to check if Supabase is configured
@@ -282,11 +294,12 @@ export const mintService = {
 // Analytics helpers
 export const analyticsService = {
   // Track an event
+  // Uses service role client to bypass RLS policies on analytics_events table
   async trackEvent(eventType, walletAddress = null, metadata = {}) {
-    if (!supabase) return; // Silently skip if not configured
+    if (!supabaseServiceRole) return; // Silently skip if not configured
 
     try {
-      await supabase
+      await supabaseServiceRole
         .from('analytics_events')
         .insert({
           event_type: eventType,
