@@ -146,7 +146,6 @@
   backdrop-filter: var(--blur-light);
   -webkit-backdrop-filter: var(--blur-light);
   border: 1px solid var(--glass-border);
-  border-radius: 16px;
   overflow: hidden;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -269,7 +268,6 @@
 .nft-card-image {
   width: 100%;
   height: auto;
-  border-radius: 16px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 40px var(--base-blue-light);
   transition: transform 0.3s ease;
 }
