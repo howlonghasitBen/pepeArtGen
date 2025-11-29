@@ -275,6 +275,39 @@
   box-shadow: 0 0 20px var(--base-blue-glow);
 }
 
+/* OpenSea Button */
+.opensea-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: #2081e2;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 0 20px rgba(32, 129, 226, 0.3);
+  border: none;
+  cursor: pointer;
+  flex-shrink: 0;
+  text-decoration: none;
+}
+
+.opensea-btn svg {
+  width: 22px;
+  height: 22px;
+}
+
+.opensea-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 25px rgba(32, 129, 226, 0.4);
+  background: #1868b7;
+}
+
+.opensea-btn:active {
+  transform: translateY(0);
+}
+
 /* Info Button */
 .info-btn {
   width: 44px;
@@ -364,11 +397,15 @@
     padding: 10px 12px;
   }
 
+  .my-cards-btn,
+  .opensea-btn,
   .info-btn {
     width: 40px;
     height: 40px;
   }
 
+  .my-cards-btn svg,
+  .opensea-btn svg,
   .info-btn svg {
     width: 20px;
     height: 20px;
