@@ -40,10 +40,10 @@
   "dependencies": {
     "@ai-sdk/google": "^1.2.22",
     "@google/genai": "^1.0.0",
-    "@rainbow-me/rainbowkit": "2.1.7",
+    "@rainbow-me/rainbowkit": "2.2.9",
     "@react-spring/web": "9.7.5",
     "@supabase/supabase-js": "^2.49.2",
-    "@tanstack/react-query": "^5.62.13",
+    "@tanstack/react-query": "^5.90.11",
     "@use-gesture/react": "^10.3.1",
     "ai": "^4.3.19",
     "cors": "^2.8.5",
@@ -55,7 +55,7 @@
     "puppeteer": "^24.31.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "viem": "2.21.54",
+    "viem": "2.40.3",
     "wagmi": "2.14.11"
   },
   "devDependencies": {

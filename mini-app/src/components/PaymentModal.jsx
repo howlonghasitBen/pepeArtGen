@@ -11,11 +11,16 @@ function PaymentModal({ onClose, onPaymentSuccess }) {
     checkActiveSession,
     getPaymentInfo,
     hasSufficientBalance,
+    isCorrectChain,
     clearError,
     paymentSession,
     usdcBalance,
     status,
     error,
+    isBalanceLoading,
+    balanceError,
+    chainId,
+    expectedChainId,
     generationFeeUsdc,
   } = useGenerationPayment();
 
@@ -99,9 +104,20 @@ function PaymentModal({ onClose, onPaymentSuccess }) {
   };
 
   const formatUsdcBalance = () => {
+    if (isBalanceLoading) return "Loading...";
+    if (balanceError) return "Error";
     if (!usdcBalance) return "0.00";
     // USDC has 6 decimals
     return (Number(usdcBalance) / 1_000_000).toFixed(2);
+  };
+
+  const getChainName = (id) => {
+    switch (id) {
+      case 8453: return "Base";
+      case 84532: return "Base Sepolia";
+      case 1: return "Ethereum";
+      default: return `Chain ${id}`;
+    }
   };
 
   return (
@@ -168,6 +184,31 @@ function PaymentModal({ onClose, onPaymentSuccess }) {
               </div>
             )}
 
+            {isConnected && !isCorrectChain() && (
+              <div className="error-message">
+                <strong>⚠️ Wrong Network</strong>
+                <p>
+                  You're connected to {getChainName(chainId)}. Please switch to{" "}
+                  {getChainName(expectedChainId)} to continue.
+                </p>
+                <p className="help-text">
+                  Your wallet should prompt you to switch networks automatically.
+                </p>
+              </div>
+            )}
+
+            {balanceError && isCorrectChain() && (
+              <div className="error-message">
+                <strong>⚠️ Balance Error</strong>
+                <p>
+                  Unable to read USDC balance: {balanceError.message || "Unknown error"}
+                </p>
+                <p className="help-text">
+                  Check your wallet connection and try again.
+                </p>
+              </div>
+            )}
+
             {error && (
               <div className="error-message">
                 <strong>Error:</strong> {error}
@@ -189,6 +230,13 @@ function PaymentModal({ onClose, onPaymentSuccess }) {
             <div className="modal-actions">
               {!isConnected ? (
                 <ConnectButton />
+              ) : !isCorrectChain() ? (
+                <div className="insufficient-balance">
+                  <p>⚠️ Switch to Base Network</p>
+                  <p className="help-text">
+                    This app requires Base network. Please switch in your wallet.
+                  </p>
+                </div>
               ) : !hasSufficientBalance() ? (
                 <div className="insufficient-balance">
                   <p>⚠️ Insufficient USDC balance</p>
@@ -211,12 +259,16 @@ function PaymentModal({ onClose, onPaymentSuccess }) {
                     className="btn-primary"
                     onClick={handlePayment}
                     disabled={
+                      !isCorrectChain() ||
+                      isBalanceLoading ||
                       status === "paying" ||
                       status === "creating_session" ||
                       status === "verifying_payment"
                     }
                   >
-                    {status === "paying"
+                    {isBalanceLoading
+                      ? "Loading Balance..."
+                      : status === "paying"
                       ? "Confirm in Wallet..."
                       : status === "creating_session"
                       ? "Creating Session..."
