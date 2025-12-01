@@ -5,7 +5,7 @@ import { useGenerationPayment } from "../hooks/useGenerationPayment";
 import "./PaymentModal.css";
 
 function PaymentModal({ onClose, onPaymentSuccess }) {
-  const { isConnected } = useAccount();
+  const { isConnected, address } = useAccount();
   const {
     payForGeneration,
     checkActiveSession,
@@ -13,8 +13,11 @@ function PaymentModal({ onClose, onPaymentSuccess }) {
     hasSufficientBalance,
     isCorrectChain,
     clearError,
+    refetchBalance,
+    fetchBalanceManually,
     paymentSession,
     usdcBalance,
+    manualBalance,
     status,
     error,
     isBalanceLoading,
@@ -105,10 +108,26 @@ function PaymentModal({ onClose, onPaymentSuccess }) {
 
   const formatUsdcBalance = () => {
     if (isBalanceLoading) return "Loading...";
-    if (balanceError) return "Error";
-    if (!usdcBalance) return "0.00";
+    if (balanceError && !manualBalance) return "Error";
+
+    // Use manualBalance as fallback if wagmi balance is not available
+    const effectiveBalance = usdcBalance !== undefined && usdcBalance !== null ? usdcBalance : manualBalance;
+
+    if (!effectiveBalance) return "0.00";
     // USDC has 6 decimals
-    return (Number(usdcBalance) / 1_000_000).toFixed(2);
+    return (Number(effectiveBalance) / 1_000_000).toFixed(2);
+  };
+
+  const formatAddress = (addr) => {
+    if (!addr) return "";
+    return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
+  };
+
+  const handleRefreshBalance = async () => {
+    await Promise.all([
+      refetchBalance(),
+      fetchBalanceManually()
+    ]);
   };
 
   const getChainName = (id) => {
@@ -160,12 +179,35 @@ function PaymentModal({ onClose, onPaymentSuccess }) {
 
             <div className="mint-summary">
               <div className="summary-row">
+                <span>Wallet:</span>
+                <span className="value" style={{fontSize: '0.9em', fontFamily: 'monospace'}}>
+                  {formatAddress(address)}
+                </span>
+              </div>
+              <div className="summary-row">
                 <span>Generation package:</span>
                 <span className="value">3 attempts</span>
               </div>
               <div className="summary-row">
                 <span>Your USDC balance:</span>
-                <span className="value">{formatUsdcBalance()} USDC</span>
+                <span className="value">
+                  {formatUsdcBalance()} USDC
+                  <button
+                    onClick={handleRefreshBalance}
+                    style={{
+                      marginLeft: '8px',
+                      padding: '2px 8px',
+                      fontSize: '0.8em',
+                      cursor: 'pointer',
+                      background: '#f0f0f0',
+                      border: '1px solid #ddd',
+                      borderRadius: '4px'
+                    }}
+                    title="Refresh balance"
+                  >
+                    🔄
+                  </button>
+                </span>
               </div>
               <div className="summary-row total">
                 <span>Total cost:</span>
