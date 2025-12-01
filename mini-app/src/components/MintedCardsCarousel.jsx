@@ -1,16 +1,12 @@
 import React, { useState } from 'react';
-import { useSpring, animated } from '@react-spring/web';
-import { useDrag } from '@use-gesture/react';
 import './MintedCardsCarousel.css';
 
 const MintedCardsCarousel = ({ cards }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [{ x }, api] = useSpring(() => ({ x: 0 }));
 
   const goToCard = (index) => {
     if (index < 0 || index >= cards.length) return;
     setCurrentIndex(index);
-    api.start({ x: 0, immediate: false });
   };
 
   const goToPrevious = () => {
@@ -25,40 +21,27 @@ const MintedCardsCarousel = ({ cards }) => {
     }
   };
 
-  const bind = useDrag(
-    ({ movement: [mx], direction: [xDir], cancel, down }) => {
-      if (down && Math.abs(mx) > 50) {
-        if (xDir > 0 && currentIndex > 0) {
-          cancel();
-          goToPrevious();
-        } else if (xDir < 0 && currentIndex < cards.length - 1) {
-          cancel();
-          goToNext();
-        }
-      }
-      if (down) {
-        api.start({ x: mx, immediate: true });
-      } else {
-        api.start({ x: 0, immediate: false });
-      }
-    },
-    {
-      axis: 'x',
-      bounds: { left: -100, right: 100 },
-      rubberband: true,
+  // Extract unique identifier from IPFS URL or use tokenId/id
+  const getCardKey = (card) => {
+    const imageUrl = card.image || card.imageData;
+    if (imageUrl && imageUrl.includes('/ipfs/')) {
+      // Extract IPFS filename/CID from URL
+      const match = imageUrl.match(/\/ipfs\/([^/?]+)/);
+      if (match) return match[1];
     }
-  );
+    // Fallback to tokenId or id
+    return card.tokenId || card.id || `card-${currentIndex}`;
+  };
 
   if (!cards || cards.length === 0) {
     return null;
   }
 
+  const currentCard = cards[currentIndex];
+  const cardKey = getCardKey(currentCard);
+
   return (
     <div className="minted-cards-carousel">
-      <div className="carousel-header">
-        <h3>All Minted Cards ({cards.length})</h3>
-      </div>
-
       <div className="carousel-container">
         {currentIndex > 0 && (
           <button className="carousel-nav carousel-nav-left" onClick={goToPrevious}>
@@ -67,18 +50,14 @@ const MintedCardsCarousel = ({ cards }) => {
         )}
 
         <div className="carousel-content">
-          <animated.div
-            {...bind()}
-            style={{
-              x,
-              touchAction: 'pan-y',
-            }}
+          <div
+            key={cardKey}
             className="carousel-card-wrapper"
           >
-            {cards[currentIndex].image || cards[currentIndex].imageData ? (
+            {currentCard.image || currentCard.imageData ? (
               <img
-                src={cards[currentIndex].image || cards[currentIndex].imageData}
-                alt={cards[currentIndex].name || `Card #${cards[currentIndex].tokenId}`}
+                src={currentCard.image || currentCard.imageData}
+                alt={currentCard.name || `Card #${currentCard.tokenId}`}
                 className="card-image"
               />
             ) : (
@@ -86,7 +65,7 @@ const MintedCardsCarousel = ({ cards }) => {
                 <p>Loading card...</p>
               </div>
             )}
-          </animated.div>
+          </div>
         </div>
 
         {currentIndex < cards.length - 1 && (
@@ -96,18 +75,11 @@ const MintedCardsCarousel = ({ cards }) => {
         )}
       </div>
 
-      <div className="carousel-info">
-        <p className="card-name">{cards[currentIndex].name || `Card #${cards[currentIndex].tokenId}`}</p>
-        {cards[currentIndex].tokenId && (
-          <p className="card-token-id">Token #{cards[currentIndex].tokenId}</p>
-        )}
-      </div>
-
       {cards.length > 1 && (
         <div className="carousel-dots">
-          {cards.map((_, index) => (
+          {cards.map((card, index) => (
             <button
-              key={index}
+              key={getCardKey(card)}
               className={`carousel-dot ${index === currentIndex ? 'active' : ''}`}
               onClick={() => goToCard(index)}
               aria-label={`Go to card ${index + 1}`}

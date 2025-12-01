@@ -25,7 +25,8 @@
   position: relative;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
+  gap: 1rem;
   min-height: 400px;
 }
 
@@ -36,21 +37,15 @@
   align-items: center;
   overflow: visible;
   padding: 0;
+  max-width: 100%;
 }
 
 .carousel-card-wrapper {
   display: flex;
   justify-content: center;
   align-items: center;
-  cursor: grab;
   user-select: none;
-  touch-action: pan-y;
-  will-change: transform;
   max-width: 400px;
-}
-
-.carousel-card-wrapper:active {
-  cursor: grabbing;
 }
 
 .card-image {
@@ -61,11 +56,6 @@
   object-fit: contain;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
   background: rgba(0, 0, 0, 0.3);
-  transition: transform 0.2s ease;
-}
-
-.carousel-card-wrapper:active .card-image {
-  transform: scale(0.98);
 }
 
 .card-placeholder {
@@ -101,11 +91,10 @@
 }
 
 .carousel-nav {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
+  position: relative;
   width: 48px;
   height: 48px;
+  min-width: 48px;
   border-radius: 50%;
   border: 2px solid rgba(255, 255, 255, 0.2);
   background: rgba(0, 82, 255, 0.3);
@@ -121,25 +110,26 @@
   z-index: 10;
   padding: 0;
   line-height: 1;
+  flex-shrink: 0;
 }
 
 .carousel-nav:hover {
   background: rgba(0, 82, 255, 0.6);
   border-color: rgba(255, 255, 255, 0.4);
-  transform: translateY(-50%) scale(1.1);
+  transform: scale(1.1);
   box-shadow: 0 4px 16px rgba(0, 82, 255, 0.5);
 }
 
 .carousel-nav:active {
-  transform: translateY(-50%) scale(0.95);
+  transform: scale(0.95);
 }
 
 .carousel-nav-left {
-  left: -24px;
+  margin-right: auto;
 }
 
 .carousel-nav-right {
-  right: -24px;
+  margin-left: auto;
 }
 
 .carousel-dots {
@@ -210,15 +200,8 @@
   .carousel-nav {
     width: 40px;
     height: 40px;
+    min-width: 40px;
     font-size: 1.5rem;
-  }
-
-  .carousel-nav-left {
-    left: -16px;
-  }
-
-  .carousel-nav-right {
-    right: -16px;
   }
 
   .carousel-header h3 {
@@ -252,15 +235,8 @@
   .carousel-nav {
     width: 36px;
     height: 36px;
+    min-width: 36px;
     font-size: 1.25rem;
-  }
-
-  .carousel-nav-left {
-    left: -12px;
-  }
-
-  .carousel-nav-right {
-    right: -12px;
   }
 
   .card-name {
