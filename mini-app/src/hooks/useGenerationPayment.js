@@ -1,343 +1,184 @@
-import { useState, useEffect } from 'react'
-import { useAccount, useWriteContract, useReadContract, useChainId, usePublicClient } from 'wagmi'
-import { parseUnits, erc20Abi } from 'viem'
-import { base } from 'wagmi/chains'
+import { useState, useEffect } from "react";
+import {
+  useAccount,
+  useWriteContract,
+  useReadContract,
+  useChainId,
+} from "wagmi";
+import { parseUnits } from "viem";
+import USDC_ABI from "../contracts/USDC.json";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001'
-const GENERATION_FEE_USDC = '2.50' // $2.50 USDC for 1 gen + 2 re-rolls
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:3001";
+const GENERATION_FEE_USDC = "2.50"; // $2.50 USDC
+// Default to Base (8453) if not specified in env
+const TARGET_CHAIN_ID = Number(import.meta.env.VITE_TARGET_CHAIN_ID || 8453);
 
 export function useGenerationPayment() {
-  const [status, setStatus] = useState('idle')
-  const [error, setError] = useState(null)
-  const [paymentSession, setPaymentSession] = useState(null)
-  const [manualBalance, setManualBalance] = useState(null)
-  const { address, isConnected } = useAccount()
-  const { writeContractAsync } = useWriteContract()
-  const chainId = useChainId()
-  const publicClient = usePublicClient()
+  const [status, setStatus] = useState("idle");
+  const [error, setError] = useState(null);
+  const [paymentSession, setPaymentSession] = useState(null);
+  const [manualBalance, setManualBalance] = useState(null);
 
-  const USDC_CONTRACT_ADDRESS = import.meta.env.VITE_USDC_CONTRACT_ADDRESS
-  const TREASURY_ADDRESS = import.meta.env.VITE_TREASURY_ADDRESS
+  const { address, isConnected, chainId } = useAccount();
+  const { writeContractAsync } = useWriteContract();
 
-  // Debug: Log config on mount
-  console.log('💰 useGenerationPayment config:', {
-    USDC_CONTRACT_ADDRESS,
-    TREASURY_ADDRESS,
-    baseChainId: base.id,
-    address,
-    chainId,
-    isConnected,
-  })
+  const USDC_CONTRACT_ADDRESS = import.meta.env.VITE_USDC_CONTRACT_ADDRESS;
+  const TREASURY_ADDRESS = import.meta.env.VITE_TREASURY_ADDRESS;
 
-  // Read USDC balance - only when connected to Base chain
-  // Mobile wallets don't support cross-chain reads, so we read from current chain
-  // and rely on isCorrectChain() to verify user is on Base
-  const { data: usdcBalance, refetch: refetchBalance, isLoading: isBalanceLoading, error: balanceError } = useReadContract({
+  // --- FIX: Robust Balance Reading ---
+  const {
+    data: usdcBalance,
+    refetch: refetchBalance,
+    error: balanceError,
+    isLoading: isBalanceLoading,
+  } = useReadContract({
     address: USDC_CONTRACT_ADDRESS,
-    abi: erc20Abi,
-    functionName: 'balanceOf',
+    // Handle both ABI formats (array vs object)
+    abi: USDC_ABI.abi || USDC_ABI,
+    functionName: "balanceOf",
     args: [address],
+    chainId: TARGET_CHAIN_ID, // Force read from correct chain
     query: {
-      // Use loose equality to handle both number and string chainId
-      enabled: !!address && !!USDC_CONTRACT_ADDRESS && isConnected && chainId == base.id,
+      enabled: !!address && !!USDC_CONTRACT_ADDRESS,
+      refetchInterval: 10000, // Refresh every 10s
+      retry: 2,
     },
-  })
+  });
 
-  /**
-   * Manual balance fetch using publicClient (fallback method)
-   */
+  // --- Helper: Check if on correct chain ---
+  const isCorrectChain = () => {
+    if (!chainId) return false;
+    return chainId === TARGET_CHAIN_ID;
+  };
+
+  // --- Helper: Manual fallback for balance ---
   const fetchBalanceManually = async () => {
-    if (!publicClient || !address || !USDC_CONTRACT_ADDRESS || chainId != base.id) {
-      console.log('⚠️ Cannot fetch balance manually - missing requirements')
-      return
-    }
-
     try {
-      console.log('🔄 Fetching USDC balance manually using publicClient...')
-      console.log('📍 Address:', address)
-      console.log('📍 USDC Contract:', USDC_CONTRACT_ADDRESS)
-      console.log('📍 ChainId:', chainId)
-
-      const balance = await publicClient.readContract({
-        address: USDC_CONTRACT_ADDRESS,
-        abi: erc20Abi,
-        functionName: 'balanceOf',
-        args: [address],
-      })
-
-      console.log('✅ Manual balance fetch successful:', {
-        balanceRaw: balance,
-        balanceFormatted: `${Number(balance) / 1_000_000} USDC`
-      })
-
-      setManualBalance(balance)
-      return balance
-    } catch (err) {
-      console.error('❌ Manual balance fetch failed:', err)
-      return null
+      // Just alias to refetch for now, but could be extended
+      const result = await refetchBalance();
+      if (result.data) {
+        setManualBalance(result.data);
+      }
+      return result.data;
+    } catch (e) {
+      console.error("Manual fetch failed", e);
+      return null;
     }
-  }
+  };
 
-  // Auto-fetch balance manually when connected
-  useEffect(() => {
-    if (isConnected && address && chainId == base.id && publicClient) {
-      fetchBalanceManually()
-    }
-  }, [isConnected, address, chainId, publicClient])
-
-  /**
-   * Check if user has an active payment session
-   */
   const checkActiveSession = async () => {
     try {
-      if (!address) return null
+      if (!address) return null;
+      const response = await fetch(
+        `${API_BASE_URL}/api/payment/session/${address}`
+      );
+      if (!response.ok) throw new Error("Failed to check payment session");
 
-      const response = await fetch(`${API_BASE_URL}/api/payment/session/${address}`)
-
-      if (!response.ok) {
-        throw new Error('Failed to check payment session')
-      }
-
-      const data = await response.json()
-
+      const data = await response.json();
       if (data.hasActiveSession) {
-        setPaymentSession(data.session)
-        return data.session
+        setPaymentSession(data.session);
+        return data.session;
       }
-
-      return null
+      return null;
     } catch (err) {
-      console.error('Error checking active session:', err)
-      return null
+      console.error("Error checking active session:", err);
+      return null;
     }
-  }
+  };
 
-  /**
-   * Pay USDC for generation credits (1 initial + 2 re-rolls)
-   * Now includes on-chain verification
-   */
   const payForGeneration = async () => {
     try {
-      if (!address) {
-        throw new Error('Wallet not connected')
+      if (!address) throw new Error("Wallet not connected");
+      if (!isCorrectChain())
+        throw new Error(
+          `Please switch to Base network (Chain ID: ${TARGET_CHAIN_ID})`
+        );
+      if (!USDC_CONTRACT_ADDRESS)
+        throw new Error("USDC contract not configured");
+
+      const usdcAmount = parseUnits(GENERATION_FEE_USDC, 6);
+      const currentBalance = usdcBalance || manualBalance;
+
+      // Check balance (if loaded)
+      if (currentBalance !== undefined && currentBalance < usdcAmount) {
+        throw new Error(
+          `Insufficient USDC balance. Need ${GENERATION_FEE_USDC} USDC`
+        );
       }
 
-      if (!USDC_CONTRACT_ADDRESS) {
-        throw new Error('USDC contract not configured. Set VITE_USDC_CONTRACT_ADDRESS in .env')
-      }
+      setStatus("paying");
+      setError(null);
 
-      if (!TREASURY_ADDRESS) {
-        throw new Error('Treasury address not configured. Set VITE_TREASURY_ADDRESS in .env')
-      }
-
-      // Calculate USDC amount (6 decimals)
-      const usdcAmount = parseUnits(GENERATION_FEE_USDC, 6) // 2.50 USDC = 2500000
-
-      // Check balance
-      if (usdcBalance && BigInt(usdcBalance) < BigInt(usdcAmount)) {
-        throw new Error(`Insufficient USDC balance. Need ${GENERATION_FEE_USDC} USDC`)
-      }
-
-      // Step 1: Transfer USDC to treasury
-      setStatus('paying')
-      setError(null)
-      console.log(`💰 Paying ${GENERATION_FEE_USDC} USDC for generation credits...`)
-
+      // 1. Send TX
       const hash = await writeContractAsync({
         address: USDC_CONTRACT_ADDRESS,
-        abi: erc20Abi,
-        functionName: 'transfer',
+        abi: USDC_ABI.abi || USDC_ABI,
+        functionName: "transfer",
         args: [TREASURY_ADDRESS, usdcAmount],
-      })
+      });
 
-      console.log('⏳ Payment transaction submitted:', hash)
+      // 2. Register Session
+      setStatus("creating_session");
+      const sessionResponse = await fetch(
+        `${API_BASE_URL}/api/payment/initiate`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            walletAddress: address,
+            transactionHash: hash,
+            amountUsdc: GENERATION_FEE_USDC,
+          }),
+        }
+      );
 
-      // Step 2: Create pending session in backend
-      setStatus('creating_session')
+      if (!sessionResponse.ok) throw new Error("Failed to initiate session");
 
-      const sessionResponse = await fetch(`${API_BASE_URL}/api/payment/initiate`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          walletAddress: address,
-          transactionHash: hash,
-          amountUsdc: GENERATION_FEE_USDC,
-        }),
-      })
-
-      if (!sessionResponse.ok) {
-        const data = await sessionResponse.json()
-        throw new Error(data.error || 'Failed to create payment session')
-      }
-
-      const sessionData = await sessionResponse.json()
-      console.log('📝 Pending session created:', sessionData.sessionId)
-
-      // Step 3: Verify payment on-chain (backend checks the actual tx)
-      setStatus('verifying_payment')
-      console.log('🔍 Verifying payment on-chain...')
-
+      // 3. Verify
+      setStatus("verifying_payment");
       const verifyResponse = await fetch(`${API_BASE_URL}/api/payment/verify`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          transactionHash: hash,
-          walletAddress: address,
-        }),
-      })
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ transactionHash: hash, walletAddress: address }),
+      });
 
-      if (!verifyResponse.ok) {
-        const data = await verifyResponse.json()
-        throw new Error(data.message || data.error || 'Payment verification failed')
-      }
+      if (!verifyResponse.ok) throw new Error("Payment verification failed");
+      const verifyData = await verifyResponse.json();
 
-      const verifyData = await verifyResponse.json()
-      console.log('✅ Payment verified on-chain:', verifyData.verification)
-
-      // Update session state
       setPaymentSession({
         id: verifyData.sessionId,
         generationsRemaining: verifyData.generationsRemaining,
-        expiresAt: sessionData.expiresAt,
-      })
+      });
 
-      setStatus('success')
-      console.log('🎉 Payment confirmed! You have 3 generations (1 initial + 2 re-rolls)')
-
-      // Refresh balance
-      refetchBalance()
-
-      return {
-        transactionHash: hash,
-        sessionId: verifyData.sessionId,
-        verification: verifyData.verification,
-      }
+      setStatus("success");
+      refetchBalance();
+      return { sessionId: verifyData.sessionId, transactionHash: hash };
     } catch (err) {
-      console.error('Payment failed:', err)
-      setError(err.message)
-      setStatus('error')
-      throw err
+      console.error("Payment failed:", err);
+      setError(err.message || "Payment failed");
+      setStatus("error");
+      throw err;
     }
-  }
+  };
 
-  /**
-   * Check payment status by transaction hash
-   */
-  const checkPaymentStatus = async (transactionHash) => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/payment/status/${transactionHash}`)
-      
-      if (!response.ok) {
-        const data = await response.json()
-        throw new Error(data.error || 'Failed to check payment status')
-      }
-
-      return await response.json()
-    } catch (err) {
-      console.error('Error checking payment status:', err)
-      return null
-    }
-  }
-
-  /**
-   * Get payment info
-   */
-  const getPaymentInfo = () => {
-    return {
-      feeUsdc: GENERATION_FEE_USDC,
-      generationsIncluded: 3,
-      description: 'Includes 1 initial generation + 2 re-rolls',
-      treasuryAddress: TREASURY_ADDRESS,
-      usdcContract: USDC_CONTRACT_ADDRESS,
-    }
-  }
-
-  /**
-   * Check if user is on the correct chain (Base mainnet)
-   */
-  const isCorrectChain = () => {
-    // Use loose equality to handle both number and string chainId
-    return chainId == base.id
-  }
-
-  /**
-   * Check if user has sufficient USDC
-   */
   const hasSufficientBalance = () => {
-    // Use manualBalance as fallback if wagmi balance is not available
-    const effectiveBalance = usdcBalance !== undefined && usdcBalance !== null ? usdcBalance : manualBalance
-
-    // Check if balance data exists (excluding undefined/null, but allowing 0n)
-    if (effectiveBalance === undefined || effectiveBalance === null) {
-      console.log('⚠️ hasSufficientBalance: balance is undefined or null', {
-        usdcBalance,
-        manualBalance
-      })
-      return false
-    }
-
-    const requiredAmount = parseUnits(GENERATION_FEE_USDC, 6) // 2.5 USDC = 2500000
-    const hasEnough = BigInt(effectiveBalance) >= BigInt(requiredAmount)
-
-    console.log('💵 Balance check:', {
-      usdcBalanceFromWagmi: usdcBalance !== undefined && usdcBalance !== null ? usdcBalance.toString() : 'null',
-      manualBalanceFromPublicClient: manualBalance !== undefined && manualBalance !== null ? manualBalance.toString() : 'null',
-      effectiveBalance: effectiveBalance.toString(),
-      requiredAmount: requiredAmount.toString(),
-      hasEnough,
-      effectiveBalanceFormatted: `${Number(effectiveBalance) / 1_000_000} USDC`,
-      requiredFormatted: `${Number(requiredAmount) / 1_000_000} USDC`
-    })
-
-    return hasEnough
-  }
-
-  /**
-   * Reset error state
-   */
-  const clearError = () => {
-    setError(null)
-    setStatus('idle')
-  }
-
-  // Debug logging
-  if (isConnected && address) {
-    console.log('🔍 useGenerationPayment state:', {
-      address,
-      chainId,
-      chainIdType: typeof chainId,
-      expectedChainId: base.id,
-      expectedChainIdType: typeof base.id,
-      isCorrectChain: chainId == base.id,
-      strictCheck: chainId === base.id,
-      looseCheck: chainId == base.id,
-      usdcBalanceFromWagmi: usdcBalance !== undefined && usdcBalance !== null ? usdcBalance.toString() : `${usdcBalance}`,
-      manualBalanceFromPublicClient: manualBalance !== undefined && manualBalance !== null ? manualBalance.toString() : `${manualBalance}`,
-      usdcBalanceRaw: usdcBalance,
-      manualBalanceRaw: manualBalance,
-      usdcBalanceType: typeof usdcBalance,
-      manualBalanceType: typeof manualBalance,
-      isBalanceLoading,
-      balanceError: balanceError?.message,
-      balanceErrorFull: balanceError,
-      USDC_CONTRACT_ADDRESS,
-      queryEnabled: !!address && !!USDC_CONTRACT_ADDRESS && isConnected && chainId == base.id,
-      hasPublicClient: !!publicClient,
-    })
-  }
+    const balance = usdcBalance || manualBalance;
+    if (balance === undefined || balance === null) return false;
+    const required = parseUnits(GENERATION_FEE_USDC, 6);
+    return balance >= required;
+  };
 
   return {
     payForGeneration,
     checkActiveSession,
-    checkPaymentStatus,
-    getPaymentInfo,
+    getPaymentInfo: () => ({ fee: GENERATION_FEE_USDC }),
     hasSufficientBalance,
     isCorrectChain,
-    clearError,
+    clearError: () => {
+      setError(null);
+      setStatus("idle");
+    },
     refetchBalance,
     fetchBalanceManually,
     paymentSession,
@@ -345,11 +186,10 @@ export function useGenerationPayment() {
     manualBalance,
     status,
     error,
-    isLoading: ['paying', 'creating_session', 'verifying_payment'].includes(status),
     isBalanceLoading,
     balanceError,
     chainId,
-    expectedChainId: base.id,
+    expectedChainId: TARGET_CHAIN_ID,
     generationFeeUsdc: GENERATION_FEE_USDC,
-  }
+  };
 }

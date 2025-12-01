@@ -9,13 +9,11 @@ function PaymentModal({ onClose, onPaymentSuccess }) {
   const {
     payForGeneration,
     checkActiveSession,
-    getPaymentInfo,
     hasSufficientBalance,
     isCorrectChain,
     clearError,
     refetchBalance,
     fetchBalanceManually,
-    paymentSession,
     usdcBalance,
     manualBalance,
     status,
@@ -31,23 +29,17 @@ function PaymentModal({ onClose, onPaymentSuccess }) {
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
-    // Check for existing active session on mount
     const checkSession = async () => {
-      const session = await checkActiveSession();
-      setChecking(false);
-
-      if (session && session.generationsRemaining > 0) {
-        // User already has an active session, close modal and proceed
-        onPaymentSuccess(session);
-        onClose();
+      if (isConnected) {
+        const session = await checkActiveSession();
+        if (session && session.generationsRemaining > 0) {
+          onPaymentSuccess(session);
+          onClose();
+        }
       }
-    };
-
-    if (isConnected) {
-      checkSession();
-    } else {
       setChecking(false);
-    }
+    };
+    checkSession();
   }, [isConnected]);
 
   const handlePayment = async () => {
@@ -55,15 +47,12 @@ function PaymentModal({ onClose, onPaymentSuccess }) {
       clearError();
       const result = await payForGeneration();
       setTxHash(result.transactionHash);
-
-      // Payment verified - proceed
       onPaymentSuccess({
         id: result.sessionId,
         generationsRemaining: 3,
       });
     } catch (err) {
-      console.error("Payment error:", err);
-      // Error is handled by the hook, displayed below
+      // Error handled in hook/UI
     }
   };
 
@@ -72,7 +61,28 @@ function PaymentModal({ onClose, onPaymentSuccess }) {
     onClose();
   };
 
-  const paymentInfo = getPaymentInfo();
+  const formatUsdcBalance = () => {
+    if (isBalanceLoading && !manualBalance) return "Loading...";
+    if (balanceError && !manualBalance) return "Error";
+
+    const effectiveBalance = usdcBalance ?? manualBalance;
+
+    if (effectiveBalance === undefined || effectiveBalance === null)
+      return "0.00";
+
+    // Convert BigInt to string safely
+    return (Number(effectiveBalance) / 1_000_000).toFixed(2);
+  };
+
+  const formatAddress = (addr) => {
+    if (!addr) return "";
+    return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
+  };
+
+  const handleRefreshBalance = async () => {
+    await refetchBalance();
+    await fetchBalanceManually();
+  };
 
   const getStatusMessage = () => {
     switch (status) {
@@ -83,59 +93,11 @@ function PaymentModal({ onClose, onPaymentSuccess }) {
       case "verifying_payment":
         return "🔍 Verifying payment on-chain...";
       case "success":
-        return "🎉 Payment verified! Starting generation...";
+        return "🎉 Payment verified!";
       case "error":
         return "❌ Payment failed";
       default:
         return null;
-    }
-  };
-
-  const getStatusDescription = () => {
-    switch (status) {
-      case "paying":
-        return "Please confirm the transaction in your wallet";
-      case "creating_session":
-        return "Recording your payment...";
-      case "verifying_payment":
-        return "Checking transaction on Base network...";
-      case "success":
-        return "Your payment has been confirmed on the blockchain";
-      default:
-        return null;
-    }
-  };
-
-  const formatUsdcBalance = () => {
-    if (isBalanceLoading) return "Loading...";
-    if (balanceError && !manualBalance) return "Error";
-
-    // Use manualBalance as fallback if wagmi balance is not available
-    const effectiveBalance = usdcBalance !== undefined && usdcBalance !== null ? usdcBalance : manualBalance;
-
-    if (!effectiveBalance) return "0.00";
-    // USDC has 6 decimals
-    return (Number(effectiveBalance) / 1_000_000).toFixed(2);
-  };
-
-  const formatAddress = (addr) => {
-    if (!addr) return "";
-    return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
-  };
-
-  const handleRefreshBalance = async () => {
-    await Promise.all([
-      refetchBalance(),
-      fetchBalanceManually()
-    ]);
-  };
-
-  const getChainName = (id) => {
-    switch (id) {
-      case 8453: return "Base";
-      case 84532: return "Base Sepolia";
-      case 1: return "Ethereum";
-      default: return `Chain ${id}`;
     }
   };
 
@@ -160,10 +122,8 @@ function PaymentModal({ onClose, onPaymentSuccess }) {
           <>
             <div className="payment-info">
               <p className="info-text">
-                Generate your custom Pepe trading card with AI! Your payment
-                includes:
+                Generate your custom Pepe trading card with AI!
               </p>
-
               <ul className="features-list">
                 <li>
                   ✨ <strong>1 initial generation</strong>
@@ -172,21 +132,15 @@ function PaymentModal({ onClose, onPaymentSuccess }) {
                   🔄 <strong>2 re-rolls</strong> to curate the perfect card
                 </li>
                 <li>🎨 AI-generated artwork using Google Imagen</li>
-                <li>🃏 Unique stats, moves, and flavor text</li>
-                <li>⏱️ Session valid for 1 hour</li>
               </ul>
             </div>
 
             <div className="mint-summary">
               <div className="summary-row">
                 <span>Wallet:</span>
-                <span className="value" style={{fontSize: '0.9em', fontFamily: 'monospace'}}>
+                <span className="value" style={{ fontFamily: "monospace" }}>
                   {formatAddress(address)}
                 </span>
-              </div>
-              <div className="summary-row">
-                <span>Generation package:</span>
-                <span className="value">3 attempts</span>
               </div>
               <div className="summary-row">
                 <span>Your USDC balance:</span>
@@ -195,13 +149,10 @@ function PaymentModal({ onClose, onPaymentSuccess }) {
                   <button
                     onClick={handleRefreshBalance}
                     style={{
-                      marginLeft: '8px',
-                      padding: '2px 8px',
-                      fontSize: '0.8em',
-                      cursor: 'pointer',
-                      background: '#f0f0f0',
-                      border: '1px solid #ddd',
-                      borderRadius: '4px'
+                      marginLeft: "8px",
+                      cursor: "pointer",
+                      border: "none",
+                      background: "none",
                     }}
                     title="Refresh balance"
                   >
@@ -218,36 +169,13 @@ function PaymentModal({ onClose, onPaymentSuccess }) {
             {getStatusMessage() && (
               <div className={`status-message ${status}`}>
                 <div className="status-title">{getStatusMessage()}</div>
-                {getStatusDescription() && (
-                  <div className="status-description">
-                    {getStatusDescription()}
-                  </div>
-                )}
               </div>
             )}
 
             {isConnected && !isCorrectChain() && (
               <div className="error-message">
                 <strong>⚠️ Wrong Network</strong>
-                <p>
-                  You're connected to {getChainName(chainId)}. Please switch to{" "}
-                  {getChainName(expectedChainId)} to continue.
-                </p>
-                <p className="help-text">
-                  Your wallet should prompt you to switch networks automatically.
-                </p>
-              </div>
-            )}
-
-            {balanceError && isCorrectChain() && (
-              <div className="error-message">
-                <strong>⚠️ Balance Error</strong>
-                <p>
-                  Unable to read USDC balance: {balanceError.message || "Unknown error"}
-                </p>
-                <p className="help-text">
-                  Check your wallet connection and try again.
-                </p>
+                <p>Please switch to Base (Chain ID: {expectedChainId})</p>
               </div>
             )}
 
@@ -257,35 +185,16 @@ function PaymentModal({ onClose, onPaymentSuccess }) {
               </div>
             )}
 
-            {txHash && (
-              <div className="tx-hash">
-                <a
-                  href={`https://basescan.org/tx/${txHash}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  View transaction on BaseScan ↗
-                </a>
-              </div>
-            )}
-
             <div className="modal-actions">
               {!isConnected ? (
                 <ConnectButton />
               ) : !isCorrectChain() ? (
-                <div className="insufficient-balance">
-                  <p>⚠️ Switch to Base Network</p>
-                  <p className="help-text">
-                    This app requires Base network. Please switch in your wallet.
-                  </p>
-                </div>
+                <button className="btn-secondary" disabled>
+                  Switch Network in Wallet
+                </button>
               ) : !hasSufficientBalance() ? (
                 <div className="insufficient-balance">
                   <p>⚠️ Insufficient USDC balance</p>
-                  <p className="help-text">
-                    You need {generationFeeUsdc} USDC to generate cards. Bridge
-                    USDC to Base network to continue.
-                  </p>
                   <a
                     href="https://bridge.base.org"
                     target="_blank"
@@ -296,49 +205,20 @@ function PaymentModal({ onClose, onPaymentSuccess }) {
                   </a>
                 </div>
               ) : (
-                <>
-                  <button
-                    className="btn-primary"
-                    onClick={handlePayment}
-                    disabled={
-                      !isCorrectChain() ||
-                      isBalanceLoading ||
-                      status === "paying" ||
-                      status === "creating_session" ||
-                      status === "verifying_payment"
-                    }
-                  >
-                    {isBalanceLoading
-                      ? "Loading Balance..."
-                      : status === "paying"
-                      ? "Confirm in Wallet..."
-                      : status === "creating_session"
-                      ? "Creating Session..."
-                      : status === "verifying_payment"
-                      ? "Verifying On-Chain..."
-                      : `Pay ${generationFeeUsdc} USDC`}
-                  </button>
-                  <button
-                    className="btn-secondary"
-                    onClick={handleClose}
-                    disabled={
-                      status === "paying" ||
-                      status === "creating_session" ||
-                      status === "verifying_payment"
-                    }
-                  >
-                    Cancel
-                  </button>
-                </>
+                <button
+                  className="btn-primary"
+                  onClick={handlePayment}
+                  disabled={status !== "idle" && status !== "error"}
+                >
+                  {status === "paying"
+                    ? "Confirm in Wallet..."
+                    : status === "creating_session"
+                    ? "Creating Session..."
+                    : status === "verifying_payment"
+                    ? "Verifying..."
+                    : `Pay ${generationFeeUsdc} USDC`}
+                </button>
               )}
-            </div>
-
-            <div className="payment-disclaimer">
-              <small>
-                💡 Payment is processed on Base L2 network. Transaction fees are
-                ~$0.01. Your payment is <strong>verified on-chain</strong>{" "}
-                before session activation.
-              </small>
             </div>
           </>
         )}
