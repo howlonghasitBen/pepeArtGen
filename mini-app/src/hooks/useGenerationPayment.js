@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { useAccount, useWriteContract, useReadContract, useChainId } from 'wagmi'
+import { useState, useEffect } from 'react'
+import { useAccount, useWriteContract, useReadContract, useChainId, usePublicClient } from 'wagmi'
 import { parseUnits, erc20Abi } from 'viem'
 import { base } from 'wagmi/chains'
 
@@ -10,9 +10,11 @@ export function useGenerationPayment() {
   const [status, setStatus] = useState('idle')
   const [error, setError] = useState(null)
   const [paymentSession, setPaymentSession] = useState(null)
+  const [manualBalance, setManualBalance] = useState(null)
   const { address, isConnected } = useAccount()
   const { writeContractAsync } = useWriteContract()
   const chainId = useChainId()
+  const publicClient = usePublicClient()
 
   const USDC_CONTRACT_ADDRESS = import.meta.env.VITE_USDC_CONTRACT_ADDRESS
   const TREASURY_ADDRESS = import.meta.env.VITE_TREASURY_ADDRESS
@@ -22,6 +24,9 @@ export function useGenerationPayment() {
     USDC_CONTRACT_ADDRESS,
     TREASURY_ADDRESS,
     baseChainId: base.id,
+    address,
+    chainId,
+    isConnected,
   })
 
   // Read USDC balance - only when connected to Base chain
@@ -37,6 +42,48 @@ export function useGenerationPayment() {
       enabled: !!address && !!USDC_CONTRACT_ADDRESS && isConnected && chainId == base.id,
     },
   })
+
+  /**
+   * Manual balance fetch using publicClient (fallback method)
+   */
+  const fetchBalanceManually = async () => {
+    if (!publicClient || !address || !USDC_CONTRACT_ADDRESS || chainId != base.id) {
+      console.log('⚠️ Cannot fetch balance manually - missing requirements')
+      return
+    }
+
+    try {
+      console.log('🔄 Fetching USDC balance manually using publicClient...')
+      console.log('📍 Address:', address)
+      console.log('📍 USDC Contract:', USDC_CONTRACT_ADDRESS)
+      console.log('📍 ChainId:', chainId)
+
+      const balance = await publicClient.readContract({
+        address: USDC_CONTRACT_ADDRESS,
+        abi: erc20Abi,
+        functionName: 'balanceOf',
+        args: [address],
+      })
+
+      console.log('✅ Manual balance fetch successful:', {
+        balanceRaw: balance,
+        balanceFormatted: `${Number(balance) / 1_000_000} USDC`
+      })
+
+      setManualBalance(balance)
+      return balance
+    } catch (err) {
+      console.error('❌ Manual balance fetch failed:', err)
+      return null
+    }
+  }
+
+  // Auto-fetch balance manually when connected
+  useEffect(() => {
+    if (isConnected && address && chainId == base.id && publicClient) {
+      fetchBalanceManually()
+    }
+  }, [isConnected, address, chainId, publicClient])
 
   /**
    * Check if user has an active payment session
@@ -221,20 +268,28 @@ export function useGenerationPayment() {
    * Check if user has sufficient USDC
    */
   const hasSufficientBalance = () => {
+    // Use manualBalance as fallback if wagmi balance is not available
+    const effectiveBalance = usdcBalance !== undefined && usdcBalance !== null ? usdcBalance : manualBalance
+
     // Check if balance data exists (excluding undefined/null, but allowing 0n)
-    if (usdcBalance === undefined || usdcBalance === null) {
-      console.log('⚠️ hasSufficientBalance: balance is undefined or null')
+    if (effectiveBalance === undefined || effectiveBalance === null) {
+      console.log('⚠️ hasSufficientBalance: balance is undefined or null', {
+        usdcBalance,
+        manualBalance
+      })
       return false
     }
 
     const requiredAmount = parseUnits(GENERATION_FEE_USDC, 6) // 2.5 USDC = 2500000
-    const hasEnough = BigInt(usdcBalance) >= BigInt(requiredAmount)
+    const hasEnough = BigInt(effectiveBalance) >= BigInt(requiredAmount)
 
     console.log('💵 Balance check:', {
-      usdcBalance: usdcBalance.toString(),
+      usdcBalanceFromWagmi: usdcBalance !== undefined && usdcBalance !== null ? usdcBalance.toString() : 'null',
+      manualBalanceFromPublicClient: manualBalance !== undefined && manualBalance !== null ? manualBalance.toString() : 'null',
+      effectiveBalance: effectiveBalance.toString(),
       requiredAmount: requiredAmount.toString(),
       hasEnough,
-      usdcBalanceFormatted: `${Number(usdcBalance) / 1_000_000} USDC`,
+      effectiveBalanceFormatted: `${Number(effectiveBalance) / 1_000_000} USDC`,
       requiredFormatted: `${Number(requiredAmount) / 1_000_000} USDC`
     })
 
@@ -260,14 +315,18 @@ export function useGenerationPayment() {
       isCorrectChain: chainId == base.id,
       strictCheck: chainId === base.id,
       looseCheck: chainId == base.id,
-      usdcBalance: usdcBalance !== undefined && usdcBalance !== null ? usdcBalance.toString() : `${usdcBalance}`,
+      usdcBalanceFromWagmi: usdcBalance !== undefined && usdcBalance !== null ? usdcBalance.toString() : `${usdcBalance}`,
+      manualBalanceFromPublicClient: manualBalance !== undefined && manualBalance !== null ? manualBalance.toString() : `${manualBalance}`,
       usdcBalanceRaw: usdcBalance,
+      manualBalanceRaw: manualBalance,
       usdcBalanceType: typeof usdcBalance,
+      manualBalanceType: typeof manualBalance,
       isBalanceLoading,
       balanceError: balanceError?.message,
       balanceErrorFull: balanceError,
       USDC_CONTRACT_ADDRESS,
       queryEnabled: !!address && !!USDC_CONTRACT_ADDRESS && isConnected && chainId == base.id,
+      hasPublicClient: !!publicClient,
     })
   }
 
@@ -280,8 +339,10 @@ export function useGenerationPayment() {
     isCorrectChain,
     clearError,
     refetchBalance,
+    fetchBalanceManually,
     paymentSession,
     usdcBalance,
+    manualBalance,
     status,
     error,
     isLoading: ['paying', 'creating_session', 'verifying_payment'].includes(status),
