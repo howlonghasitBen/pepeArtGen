@@ -245,9 +245,12 @@ export function useGenerationPayment() {
       isCorrectChain: chainId == base.id,
       strictCheck: chainId === base.id,
       looseCheck: chainId == base.id,
-      usdcBalance: usdcBalance ? usdcBalance.toString() : 'null',
+      usdcBalance: usdcBalance !== undefined && usdcBalance !== null ? usdcBalance.toString() : `${usdcBalance}`,
+      usdcBalanceRaw: usdcBalance,
+      usdcBalanceType: typeof usdcBalance,
       isBalanceLoading,
       balanceError: balanceError?.message,
+      balanceErrorFull: balanceError,
       USDC_CONTRACT_ADDRESS,
       queryEnabled: !!address && !!USDC_CONTRACT_ADDRESS && isConnected && chainId == base.id,
     })
