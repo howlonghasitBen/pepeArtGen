@@ -22,6 +22,9 @@ export function useGenerationPayment() {
     abi: USDC_ABI.abi,
     functionName: 'balanceOf',
     args: [address],
+    query: {
+      enabled: !!address && !!USDC_CONTRACT_ADDRESS,
+    },
   })
 
   /**
