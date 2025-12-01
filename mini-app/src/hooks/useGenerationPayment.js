@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { useAccount, useWriteContract, useReadContract } from 'wagmi'
+import { useAccount, useWriteContract, useReadContract, useChainId } from 'wagmi'
 import { parseUnits } from 'viem'
+import { base } from 'wagmi/chains'
 import USDC_ABI from '../contracts/USDC.json'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001'
@@ -10,20 +11,22 @@ export function useGenerationPayment() {
   const [status, setStatus] = useState('idle')
   const [error, setError] = useState(null)
   const [paymentSession, setPaymentSession] = useState(null)
-  const { address } = useAccount()
+  const { address, isConnected } = useAccount()
   const { writeContractAsync } = useWriteContract()
+  const chainId = useChainId()
 
   const USDC_CONTRACT_ADDRESS = import.meta.env.VITE_USDC_CONTRACT_ADDRESS
   const TREASURY_ADDRESS = import.meta.env.VITE_TREASURY_ADDRESS
 
-  // Read USDC balance
-  const { data: usdcBalance, refetch: refetchBalance } = useReadContract({
+  // Read USDC balance - explicitly specify Base chain
+  const { data: usdcBalance, refetch: refetchBalance, isLoading: isBalanceLoading, error: balanceError } = useReadContract({
     address: USDC_CONTRACT_ADDRESS,
     abi: USDC_ABI.abi,
     functionName: 'balanceOf',
     args: [address],
+    chainId: base.id, // Explicitly query Base mainnet
     query: {
-      enabled: !!address && !!USDC_CONTRACT_ADDRESS,
+      enabled: !!address && !!USDC_CONTRACT_ADDRESS && isConnected,
     },
   })
 
@@ -199,6 +202,13 @@ export function useGenerationPayment() {
   }
 
   /**
+   * Check if user is on the correct chain (Base mainnet)
+   */
+  const isCorrectChain = () => {
+    return chainId === base.id
+  }
+
+  /**
    * Check if user has sufficient USDC
    */
   const hasSufficientBalance = () => {
@@ -215,18 +225,37 @@ export function useGenerationPayment() {
     setStatus('idle')
   }
 
+  // Debug logging
+  if (isConnected && address) {
+    console.log('🔍 useGenerationPayment state:', {
+      address,
+      chainId,
+      expectedChainId: base.id,
+      isCorrectChain: chainId === base.id,
+      usdcBalance: usdcBalance ? usdcBalance.toString() : 'null',
+      isBalanceLoading,
+      balanceError: balanceError?.message,
+      USDC_CONTRACT_ADDRESS,
+    })
+  }
+
   return {
     payForGeneration,
     checkActiveSession,
     checkPaymentStatus,
     getPaymentInfo,
     hasSufficientBalance,
+    isCorrectChain,
     clearError,
     paymentSession,
     usdcBalance,
     status,
     error,
     isLoading: ['paying', 'creating_session', 'verifying_payment'].includes(status),
+    isBalanceLoading,
+    balanceError,
+    chainId,
+    expectedChainId: base.id,
     generationFeeUsdc: GENERATION_FEE_USDC,
   }
 }
