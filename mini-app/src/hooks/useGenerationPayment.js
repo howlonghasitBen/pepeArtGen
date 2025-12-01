@@ -18,15 +18,16 @@ export function useGenerationPayment() {
   const USDC_CONTRACT_ADDRESS = import.meta.env.VITE_USDC_CONTRACT_ADDRESS
   const TREASURY_ADDRESS = import.meta.env.VITE_TREASURY_ADDRESS
 
-  // Read USDC balance - explicitly specify Base chain
+  // Read USDC balance - only when connected to Base chain
+  // Mobile wallets don't support cross-chain reads, so we read from current chain
+  // and rely on isCorrectChain() to verify user is on Base
   const { data: usdcBalance, refetch: refetchBalance, isLoading: isBalanceLoading, error: balanceError } = useReadContract({
     address: USDC_CONTRACT_ADDRESS,
     abi: USDC_ABI.abi,
     functionName: 'balanceOf',
     args: [address],
-    chainId: base.id, // Explicitly query Base mainnet
     query: {
-      enabled: !!address && !!USDC_CONTRACT_ADDRESS && isConnected,
+      enabled: !!address && !!USDC_CONTRACT_ADDRESS && isConnected && chainId === base.id,
     },
   })
 
