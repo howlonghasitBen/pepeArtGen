@@ -110,6 +110,13 @@ npm run dev
 
 ## ⚡ Troubleshooting
 
+### "WalletConnect Not Configured" warning
+- **CRITICAL**: WalletConnect requires a valid project ID to function
+- Get a free project ID from [WalletConnect Cloud](https://cloud.walletconnect.com/)
+- Add to `.env`: `VITE_WALLETCONNECT_PROJECT_ID=your_project_id`
+- Restart dev server after adding the ID
+- Without this, wallet connections will NOT work
+
 ### "API_KEY not found"
 - Make sure `.env` exists
 - Check `GOOGLE_GENERATIVE_AI_API_KEY` is set

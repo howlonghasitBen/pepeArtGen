@@ -19,10 +19,19 @@ import openseaLogo from "./images/opensea-logo.svg";
 import "./App.css";
 
 // Get WalletConnect Project ID from env
-// IMPORTANT: "demo-project-id" will NOT work with mobile wallets in production!
+// IMPORTANT: A valid project ID is REQUIRED for WalletConnect to function!
 // Get a free project ID from: https://cloud.walletconnect.com/
-const projectId =
-  import.meta.env.VITE_WALLETCONNECT_PROJECT_ID || "demo-project-id";
+const projectId = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID;
+
+// Warn if project ID is missing or using demo value
+if (!projectId) {
+  console.error(
+    "❌ CRITICAL: VITE_WALLETCONNECT_PROJECT_ID is not set!\n" +
+    "WalletConnect will NOT function without a valid project ID.\n" +
+    "Get a free project ID from: https://cloud.walletconnect.com/\n" +
+    "Add it to your .env file as: VITE_WALLETCONNECT_PROJECT_ID=your_project_id"
+  );
+}
 
 // Configure multiple RPC endpoints with fallback for reliability
 // Base public RPCs can be unreliable, so we use multiple providers
@@ -41,9 +50,10 @@ const baseSepoliaTransport = fallback([
 ]);
 
 // Configure Wagmi with custom transports for better reliability
+// Note: projectId is required for WalletConnect functionality
 const config = getDefaultConfig({
   appName: "wavesTCG Community Creations",
-  projectId,
+  projectId: projectId || "INVALID_PROJECT_ID", // Fallback to prevent crashes, but won't work
   chains: [base, baseSepolia],
   transports: {
     [base.id]: baseTransport,
@@ -70,6 +80,23 @@ function AppContent() {
 
   return (
     <div className="app">
+      {/* WalletConnect Configuration Warning */}
+      {!projectId && (
+        <div style={{
+          background: "linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%)",
+          color: "white",
+          padding: "12px 20px",
+          textAlign: "center",
+          fontWeight: "600",
+          fontSize: "14px",
+          boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
+          zIndex: 1000,
+          position: "relative"
+        }}>
+          ⚠️ WalletConnect Not Configured: Set VITE_WALLETCONNECT_PROJECT_ID in .env file
+        </div>
+      )}
+
       {/* Hero Section - only on generate screen */}
       {showHero && (
         <header className="hero-section">
