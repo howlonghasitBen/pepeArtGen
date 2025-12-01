@@ -221,9 +221,24 @@ export function useGenerationPayment() {
    * Check if user has sufficient USDC
    */
   const hasSufficientBalance = () => {
-    if (!usdcBalance) return false
-    const requiredAmount = parseUnits(GENERATION_FEE_USDC, 6)
-    return BigInt(usdcBalance) >= BigInt(requiredAmount)
+    // Check if balance data exists (excluding undefined/null, but allowing 0n)
+    if (usdcBalance === undefined || usdcBalance === null) {
+      console.log('⚠️ hasSufficientBalance: balance is undefined or null')
+      return false
+    }
+
+    const requiredAmount = parseUnits(GENERATION_FEE_USDC, 6) // 2.5 USDC = 2500000
+    const hasEnough = BigInt(usdcBalance) >= BigInt(requiredAmount)
+
+    console.log('💵 Balance check:', {
+      usdcBalance: usdcBalance.toString(),
+      requiredAmount: requiredAmount.toString(),
+      hasEnough,
+      usdcBalanceFormatted: `${Number(usdcBalance) / 1_000_000} USDC`,
+      requiredFormatted: `${Number(requiredAmount) / 1_000_000} USDC`
+    })
+
+    return hasEnough
   }
 
   /**
@@ -264,6 +279,7 @@ export function useGenerationPayment() {
     hasSufficientBalance,
     isCorrectChain,
     clearError,
+    refetchBalance,
     paymentSession,
     usdcBalance,
     status,
