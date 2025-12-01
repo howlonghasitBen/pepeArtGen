@@ -1,8 +1,7 @@
 import { useState } from 'react'
 import { useAccount, useWriteContract, useReadContract, useChainId } from 'wagmi'
-import { parseUnits } from 'viem'
+import { parseUnits, erc20Abi } from 'viem'
 import { base } from 'wagmi/chains'
-import USDC_ABI from '../contracts/USDC.json'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001'
 const GENERATION_FEE_USDC = '2.50' // $2.50 USDC for 1 gen + 2 re-rolls
@@ -30,7 +29,7 @@ export function useGenerationPayment() {
   // and rely on isCorrectChain() to verify user is on Base
   const { data: usdcBalance, refetch: refetchBalance, isLoading: isBalanceLoading, error: balanceError } = useReadContract({
     address: USDC_CONTRACT_ADDRESS,
-    abi: USDC_ABI.abi,
+    abi: erc20Abi,
     functionName: 'balanceOf',
     args: [address],
     query: {
@@ -99,7 +98,7 @@ export function useGenerationPayment() {
 
       const hash = await writeContractAsync({
         address: USDC_CONTRACT_ADDRESS,
-        abi: USDC_ABI.abi,
+        abi: erc20Abi,
         functionName: 'transfer',
         args: [TREASURY_ADDRESS, usdcAmount],
       })
