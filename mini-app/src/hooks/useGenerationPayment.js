@@ -18,6 +18,13 @@ export function useGenerationPayment() {
   const USDC_CONTRACT_ADDRESS = import.meta.env.VITE_USDC_CONTRACT_ADDRESS
   const TREASURY_ADDRESS = import.meta.env.VITE_TREASURY_ADDRESS
 
+  // Debug: Log config on mount
+  console.log('💰 useGenerationPayment config:', {
+    USDC_CONTRACT_ADDRESS,
+    TREASURY_ADDRESS,
+    baseChainId: base.id,
+  })
+
   // Read USDC balance - only when connected to Base chain
   // Mobile wallets don't support cross-chain reads, so we read from current chain
   // and rely on isCorrectChain() to verify user is on Base
@@ -27,7 +34,8 @@ export function useGenerationPayment() {
     functionName: 'balanceOf',
     args: [address],
     query: {
-      enabled: !!address && !!USDC_CONTRACT_ADDRESS && isConnected && chainId === base.id,
+      // Use loose equality to handle both number and string chainId
+      enabled: !!address && !!USDC_CONTRACT_ADDRESS && isConnected && chainId == base.id,
     },
   })
 
@@ -206,7 +214,8 @@ export function useGenerationPayment() {
    * Check if user is on the correct chain (Base mainnet)
    */
   const isCorrectChain = () => {
-    return chainId === base.id
+    // Use loose equality to handle both number and string chainId
+    return chainId == base.id
   }
 
   /**
@@ -231,12 +240,17 @@ export function useGenerationPayment() {
     console.log('🔍 useGenerationPayment state:', {
       address,
       chainId,
+      chainIdType: typeof chainId,
       expectedChainId: base.id,
-      isCorrectChain: chainId === base.id,
+      expectedChainIdType: typeof base.id,
+      isCorrectChain: chainId == base.id,
+      strictCheck: chainId === base.id,
+      looseCheck: chainId == base.id,
       usdcBalance: usdcBalance ? usdcBalance.toString() : 'null',
       isBalanceLoading,
       balanceError: balanceError?.message,
       USDC_CONTRACT_ADDRESS,
+      queryEnabled: !!address && !!USDC_CONTRACT_ADDRESS && isConnected && chainId == base.id,
     })
   }
 

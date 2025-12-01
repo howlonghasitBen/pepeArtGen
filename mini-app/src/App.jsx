@@ -18,7 +18,9 @@ import wavesLogo from "./images/waves-collection-logo.png";
 import openseaLogo from "./images/opensea-logo.svg";
 import "./App.css";
 
-// Get WalletConnect Project ID from env (optional for now)
+// Get WalletConnect Project ID from env
+// IMPORTANT: "demo-project-id" will NOT work with mobile wallets in production!
+// Get a free project ID from: https://cloud.walletconnect.com/
 const projectId =
   import.meta.env.VITE_WALLETCONNECT_PROJECT_ID || "demo-project-id";
 
