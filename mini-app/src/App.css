@@ -210,72 +210,70 @@
 }
 
 .wallet-container {
-  flex: 1;
+  flex: 0;
   display: flex;
   align-items: center;
-  min-width: 0; /* Allow flex shrinking */
-  max-width: 100%;
+  justify-content: flex-start;
+  min-width: auto;
+  max-width: none;
   overflow: visible; /* Allow connected details to be visible */
 }
 
-/* Style AppKit button - ensure it can display connected details */
-.wallet-container appkit-button {
-  width: 100%;
-  max-width: 100%;
-  display: block;
-  min-width: 120px; /* Minimum width for connected state */
-  overflow: visible; /* Don't clip connected details */
+/* Custom wallet button styles (React wrapper using AppKit) */
+.wallet-container .connect-btn,
+.wallet-container .wallet-connected-btn {
+  width: auto;
+  max-width: 260px;
+  min-width: 140px;
+  border-radius: 12px;
+  padding: 10px 16px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.3s ease;
 }
 
-/* Style the button when not connected - use more specific selector */
-.wallet-container appkit-button:not([connected]) button,
-.wallet-container appkit-button:not(:has([data-connected])) button {
-  background: var(--base-blue) !important;
-  box-shadow: 0 0 20px var(--base-blue-glow) !important;
-  border-radius: 12px !important;
-  font-weight: 600 !important;
-  transition: all 0.3s ease !important;
-  border: none !important;
-  color: white !important;
-  padding: 10px 16px !important;
+.wallet-container .connect-btn {
+  background: var(--base-blue);
+  color: white;
+  box-shadow: 0 0 20px var(--base-blue-glow);
 }
 
-.wallet-container appkit-button:not([connected]) button:hover,
-.wallet-container appkit-button:not(:has([data-connected])) button:hover {
-  transform: translateY(-1px) !important;
-  box-shadow: 0 4px 20px var(--base-blue-glow) !important;
+.wallet-container .connect-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 20px var(--base-blue-glow);
 }
 
-/* Ensure connected state displays properly - let appkit-button handle its own styling */
-.wallet-container appkit-button[connected],
-.wallet-container appkit-button:has([data-connected]) {
-  width: 100%;
-  min-width: 160px; /* More space for address/balance display */
+.wallet-container .wallet-connected-btn {
+  background: var(--glass-bg-strong);
+  color: var(--text-primary);
+  border: 1px solid var(--glass-border);
 }
 
-/* Don't interfere with appkit-button's internal connected state styling */
-.wallet-container appkit-button[connected] *,
-.wallet-container appkit-button:has([data-connected]) * {
-  /* Let appkit-button handle its own display */
+.wallet-container .wallet-connected-btn:hover {
+  background: var(--base-blue-light);
+  border-color: var(--base-blue);
+  color: var(--base-blue);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 20px var(--base-blue-glow);
 }
 
-/* Ensure appkit-button updates when connection state changes */
-.wallet-container appkit-button {
-  /* Force web component to update by ensuring it's visible */
-  opacity: 1 !important;
-  visibility: visible !important;
+.wallet-container .wallet-connected-btn .wallet-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #22c55e;
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.8);
+  flex-shrink: 0;
 }
 
-/* Fallback for any direct button elements inside wallet-container (not from appkit-button) */
-.wallet-container > button:not(appkit-button button) {
-  border-radius: 12px !important;
-  font-weight: 600 !important;
-  transition: all 0.3s ease !important;
-}
-
-.wallet-container > button:not(appkit-button button):hover {
-  transform: translateY(-1px) !important;
-  box-shadow: 0 4px 20px var(--base-blue-glow) !important;
+.wallet-container .wallet-connected-btn .wallet-balance {
+  font-size: 0.85rem;
+  opacity: 0.8;
 }
 
 /* Bottom Bar Action Buttons */

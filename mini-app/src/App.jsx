@@ -1,12 +1,13 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { WagmiProvider, useAccount, useConnect } from "wagmi";
+import { reconnect } from "@wagmi/core";
 import { base, baseSepolia } from "wagmi/chains";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { createAppKit } from "@reown/appkit/react";
+import { createAppKit, useAppKitState } from "@reown/appkit/react";
 import { WagmiAdapter } from "@reown/appkit-adapter-wagmi";
 
-// Import the Web3Provider
-import { Web3Provider } from "./context/Web3Context";
+// Import the Web3Provider and hook for USDC balance
+import { Web3Provider, useWeb3 } from "./context/Web3Context";
 
 // Images
 import wavesLogo from "./public/waves-collection-logo.png";
@@ -61,6 +62,43 @@ const queryClient = new QueryClient({
 });
 
 /**
+ * 🔄 Wallet session reconnection using wagmi.recentConnectorId
+ * Runs once after AppKit is initialized, no UI.
+ */
+function WalletSessionManager() {
+  const { status, isReconnecting } = useAccount();
+  const { initialized } = useAppKitState();
+  const reconnectAttempted = useRef(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!initialized) return;
+    if (reconnectAttempted.current) return;
+
+    // Only attempt when fully disconnected and not already reconnecting
+    if (status !== "disconnected" || isReconnecting) return;
+
+    const recentId =
+      window.localStorage.getItem("wagmi.recentConnectorId") ||
+      window.localStorage.getItem("wagmi.recent.ConnectorId");
+
+    if (!recentId) {
+      reconnectAttempted.current = true;
+      return;
+    }
+
+    reconnectAttempted.current = true;
+
+    console.log("🔄 Attempting wagmi reconnect from storage...", { recentId });
+    reconnect(wagmiAdapter.wagmiConfig).catch((err) => {
+      console.warn("⚠️ Wallet reconnect failed:", err);
+    });
+  }, [initialized, status, isReconnecting]);
+
+  return null;
+}
+
+/**
  * 🛠️ FIX FOR BASE APP / COINBASE WALLET
  * Only attempts auto-connect if we are strictly on a Mobile device inside Coinbase Wallet.
  * This prevents it from breaking Desktop auto-connect.
@@ -98,34 +136,57 @@ function AutoConnectBaseApp() {
   return null;
 }
 
-// Wrapper component to handle button hydration
+// Wrapper component: custom React button + hidden appkit-button trigger
 function WalletButtonWrapper() {
-  const { isReconnecting, isConnected, address } = useAccount();
+  const { isConnected, address } = useAccount();
+  const { usdcBalanceFormatted, isBalanceLoading, balanceError } = useWeb3();
   const [mounted, setMounted] = useState(false);
+  const hiddenButtonRef = useRef(null);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Hydration fix
+  // Simple hydration guard to avoid SSR/CSR mismatch
   if (!mounted) return <div style={{ height: "40px", width: "150px" }} />;
 
-  // While Wagmi is actively restoring the session, show a loading state
-  // This prevents the "Connect" button from flashing before the auto-connect finishes
-  if (isReconnecting) {
-    return (
-      <button
-        className="connect-btn"
-        disabled
-        style={{ opacity: 0.7, cursor: "wait" }}
-      >
-        Loading...
-      </button>
-    );
-  }
+  const handleClick = () => {
+    if (hiddenButtonRef.current) {
+      hiddenButtonRef.current.click();
+    }
+  };
 
-  // Once stable, render the button. balance="show" ensures it updates UI immediately.
-  return <appkit-button balance="show" />;
+  const shortAddress =
+    isConnected && address
+      ? `${address.slice(0, 6)}...${address.slice(-4)}`
+      : null;
+
+  const balanceLabel = isBalanceLoading
+    ? "USDC: ..."
+    : balanceError
+    ? "USDC: error"
+    : `USDC: ${usdcBalanceFormatted}`;
+
+  return (
+    <>
+      <button
+        className={isConnected ? "wallet-connected-btn" : "connect-btn"}
+        onClick={handleClick}
+      >
+        {isConnected && shortAddress ? (
+          <>
+            <span className="wallet-dot" />
+            <span>{shortAddress}</span>
+            <span className="wallet-balance">{balanceLabel}</span>
+          </>
+        ) : (
+          "Connect Wallet"
+        )}
+      </button>
+      {/* Hidden AppKit button to trigger the modal and underlying logic */}
+      <appkit-button ref={hiddenButtonRef} style={{ display: "none" }} />
+    </>
+  );
 }
 
 function AppContent() {
@@ -246,6 +307,8 @@ function App() {
     <WagmiProvider config={wagmiAdapter.wagmiConfig}>
       <QueryClientProvider client={queryClient}>
         <Web3Provider>
+          {/* One-time session restore from wagmi.recentConnectorId */}
+          <WalletSessionManager />
           {/* Handles Mobile Base App Auto-Connect */}
           <AutoConnectBaseApp />
           <AppContent />
