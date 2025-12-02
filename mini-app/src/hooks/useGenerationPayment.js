@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAccount, useWriteContract, useReadContract } from "wagmi";
 import { parseUnits, erc20Abi } from "viem";
 
@@ -20,6 +20,13 @@ export function useGenerationPayment() {
   const USDC_CONTRACT_ADDRESS = import.meta.env.VITE_USDC_CONTRACT_ADDRESS;
   const TREASURY_ADDRESS = import.meta.env.VITE_TREASURY_ADDRESS;
 
+  // Debug configuration issues
+  useEffect(() => {
+    if (!USDC_CONTRACT_ADDRESS)
+      console.warn("⚠️ VITE_USDC_CONTRACT_ADDRESS is missing");
+    if (!TREASURY_ADDRESS) console.warn("⚠️ VITE_TREASURY_ADDRESS is missing");
+  }, [USDC_CONTRACT_ADDRESS, TREASURY_ADDRESS]);
+
   // --- Read USDC Balance using standard ERC20 ABI ---
   const {
     data: usdcBalance,
@@ -28,16 +35,25 @@ export function useGenerationPayment() {
     isLoading: isBalanceLoading,
   } = useReadContract({
     address: USDC_CONTRACT_ADDRESS,
-    abi: erc20Abi, // <--- Using standard ABI from viem
+    abi: erc20Abi,
     functionName: "balanceOf",
-    args: [address],
-    chainId: TARGET_CHAIN_ID, // Force read from correct chain
+    // Safely handle undefined address
+    args: address ? [address] : undefined,
+    chainId: TARGET_CHAIN_ID,
     query: {
-      enabled: !!address && !!USDC_CONTRACT_ADDRESS,
-      refetchInterval: 10000, // Refresh every 10s
+      // Only run query if we have both addresses
+      enabled: Boolean(address && USDC_CONTRACT_ADDRESS),
+      refetchInterval: 10000,
       retry: 2,
     },
   });
+
+  // Log specific balance errors for debugging
+  useEffect(() => {
+    if (balanceError) {
+      console.error("❌ Balance fetch failed:", balanceError);
+    }
+  }, [balanceError]);
 
   // --- Helper: Check if on correct chain ---
   const isCorrectChain = () => {
@@ -49,7 +65,7 @@ export function useGenerationPayment() {
   const fetchBalanceManually = async () => {
     try {
       const result = await refetchBalance();
-      if (result.data) {
+      if (result.data !== undefined) {
         setManualBalance(result.data);
       }
       return result.data;
@@ -90,10 +106,10 @@ export function useGenerationPayment() {
         throw new Error("USDC contract not configured");
 
       const usdcAmount = parseUnits(GENERATION_FEE_USDC, 6);
-      const currentBalance = usdcBalance || manualBalance;
+      // Use Wagmi balance, fall back to manual, default to 0n if neither exists yet
+      const currentBalance = usdcBalance ?? manualBalance ?? 0n;
 
-      // Check balance (if loaded)
-      if (currentBalance !== undefined && currentBalance < usdcAmount) {
+      if (currentBalance < usdcAmount) {
         throw new Error(
           `Insufficient USDC balance. Need ${GENERATION_FEE_USDC} USDC`
         );
@@ -105,7 +121,7 @@ export function useGenerationPayment() {
       // 1. Send TX using standard ERC20 ABI
       const hash = await writeContractAsync({
         address: USDC_CONTRACT_ADDRESS,
-        abi: erc20Abi, // <--- Using standard ABI from viem
+        abi: erc20Abi,
         functionName: "transfer",
         args: [TREASURY_ADDRESS, usdcAmount],
       });
@@ -155,7 +171,9 @@ export function useGenerationPayment() {
   };
 
   const hasSufficientBalance = () => {
-    const balance = usdcBalance || manualBalance;
+    // If balance is undefined/loading, don't block (UI handles loading state)
+    // but strict check requires knowing balance.
+    const balance = usdcBalance ?? manualBalance;
     if (balance === undefined || balance === null) return false;
     const required = parseUnits(GENERATION_FEE_USDC, 6);
     return balance >= required;
