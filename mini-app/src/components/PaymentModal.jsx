@@ -12,7 +12,7 @@ function PaymentModal({ onClose, onPaymentSuccess }) {
     isBalanceLoading,
     balanceError,
     refetchUsdcBalance,
-    isLoadingSession,
+    // Removed isLoadingSession from destructuring as we won't use it for UI blocking
     switchToCorrectChain,
     isSwitchingChain,
     config,
@@ -20,6 +20,7 @@ function PaymentModal({ onClose, onPaymentSuccess }) {
 
   const {
     payForGeneration,
+    retryVerification,
     checkActiveSession,
     hasSufficientBalance,
     clearError,
@@ -31,20 +32,42 @@ function PaymentModal({ onClose, onPaymentSuccess }) {
 
   const [checking, setChecking] = useState(true);
 
-  // Check for existing session on mount
+  // Check for existing session on mount with timeout and cleanup
   useEffect(() => {
+    let mounted = true;
+
     const checkSession = async () => {
       if (isConnected) {
-        const session = await checkActiveSession();
-        if (session && session.generationsRemaining > 0) {
-          onPaymentSuccess(session);
-          onClose();
-          return;
+        try {
+          // Race the session check against a 5-second timeout
+          // This prevents infinite loading on bad mobile connections
+          const sessionPromise = checkActiveSession();
+          const timeoutPromise = new Promise((resolve) =>
+            setTimeout(() => resolve(null), 5000)
+          );
+
+          const session = await Promise.race([sessionPromise, timeoutPromise]);
+
+          if (mounted && session && session.generationsRemaining > 0) {
+            onPaymentSuccess(session);
+            onClose();
+            return;
+          }
+        } catch (err) {
+          console.warn("Session check failed or timed out:", err);
         }
       }
-      setChecking(false);
+
+      if (mounted) {
+        setChecking(false);
+      }
     };
+
     checkSession();
+
+    return () => {
+      mounted = false;
+    };
   }, [isConnected, checkActiveSession, onPaymentSuccess, onClose]);
 
   const handlePayment = async () => {
@@ -58,6 +81,19 @@ function PaymentModal({ onClose, onPaymentSuccess }) {
     } catch (err) {
       // Error is handled in the hook and displayed in UI
       console.error("Payment failed:", err);
+    }
+  };
+
+  const handleRetryVerification = async () => {
+    if (!txHash) return;
+    try {
+      const result = await retryVerification(txHash);
+      onPaymentSuccess({
+        id: result.sessionId,
+        generationsRemaining: result.generationsRemaining,
+      });
+    } catch (err) {
+      console.error("Retry verification failed:", err);
     }
   };
 
@@ -134,7 +170,7 @@ function PaymentModal({ onClose, onPaymentSuccess }) {
 
         <h2>💰 Pay for Card Generation</h2>
 
-        {checking || isLoadingSession ? (
+        {checking ? (
           <div className="checking-session">
             <div className="spinner"></div>
             <p>Checking for active session...</p>
@@ -256,6 +292,13 @@ function PaymentModal({ onClose, onPaymentSuccess }) {
                     Bridge to Base ↗
                   </a>
                 </div>
+              ) : status === "error" && txHash ? (
+                <button
+                  className="btn-primary"
+                  onClick={handleRetryVerification}
+                >
+                  Retry Verification
+                </button>
               ) : (
                 <button
                   className="btn-primary"
@@ -272,7 +315,7 @@ function PaymentModal({ onClose, onPaymentSuccess }) {
                 </button>
               )}
 
-              {status === "error" && (
+              {status === "error" && !txHash && (
                 <button className="btn-secondary" onClick={clearError}>
                   Try Again
                 </button>

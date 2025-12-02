@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useWeb3 } from "../context/Web3Context";
 import PaymentModal from "./PaymentModal";
 import MintedCardsCarousel from "./MintedCardsCarousel";
@@ -22,10 +22,15 @@ function GeneratorScreen({ onCardsGenerated }) {
 
   const { cards: allMintedCards } = useAllCards();
 
-  const handlePaymentSuccess = (session) => {
-    // Session is now managed by Web3Context
+  // FIX: Wrap handlers in useCallback to prevent infinite useEffect loops in PaymentModal
+  const handlePaymentSuccess = useCallback((session) => {
+    // Session is now managed by Web3Context, just close modal
     setShowPaymentModal(false);
-  };
+  }, []);
+
+  const handlePaymentModalClose = useCallback(() => {
+    setShowPaymentModal(false);
+  }, []);
 
   const handleGenerate = async (isReroll = false) => {
     setError("");
@@ -109,7 +114,7 @@ function GeneratorScreen({ onCardsGenerated }) {
     <div className="generator-screen">
       {showPaymentModal && (
         <PaymentModal
-          onClose={() => setShowPaymentModal(false)}
+          onClose={handlePaymentModalClose}
           onPaymentSuccess={handlePaymentSuccess}
         />
       )}
@@ -142,7 +147,10 @@ function GeneratorScreen({ onCardsGenerated }) {
           value={monsterName}
           onChange={(e) => setMonsterName(e.target.value)}
           onKeyPress={(e) =>
-            e.key === "Enter" && !loading && handleGenerate(false)
+            e.key === "Enter" &&
+            !loading &&
+            isConnected &&
+            handleGenerate(false)
           }
           disabled={loading}
           className="monster-input"
@@ -177,17 +185,19 @@ function GeneratorScreen({ onCardsGenerated }) {
         </div>
       )}
 
-      <button
-        className="generate-btn"
-        onClick={() => handleGenerate(false)}
-        disabled={loading || !isConnected}
-      >
-        {loading
-          ? "Generating..."
-          : !isConnected
-          ? "Connect Wallet to Generate"
-          : "Generate Card"}
-      </button>
+      {!isConnected ? (
+        <div className="connect-wallet-container">
+          <appkit-button label="Connect Wallet to Generate" balance="hide" />
+        </div>
+      ) : (
+        <button
+          className="generate-btn"
+          onClick={() => handleGenerate(false)}
+          disabled={loading}
+        >
+          {loading ? "Generating..." : "Generate Card"}
+        </button>
+      )}
 
       {hasActiveSession && rerollsRemaining > 0 && (
         <div className="reroll-info">

@@ -10,8 +10,8 @@ import { Web3Provider } from "./context/Web3Context";
 
 // Images should be in the /public folder
 // These paths reference files in public/ which Vite serves at root
-const wavesLogo = "/waves-collection-logo.png"; // or .svg if using SVG
-const openseaLogo = "/opensea-logo.svg";
+import wavesLogo from "./public/waves-collection-logo.png"; // or .svg if using SVG
+import openseaLogo from "./public/opensea-logo.svg";
 
 // Components
 import GeneratorScreen from "./components/GeneratorScreen";

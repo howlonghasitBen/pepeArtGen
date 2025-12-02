@@ -379,3 +379,23 @@
     text-align: center;
   }
 }
+/* ... existing styles ... */
+
+/* Connect Wallet Container */
+.connect-wallet-container {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin-bottom: 15px;
+  padding: 5px;
+}
+
+/* Ensure generate button disabled state is clear */
+.generate-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #666;
+  box-shadow: var(--glass-shadow);
+}
+
+/* ... existing styles ... */
