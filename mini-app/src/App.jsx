@@ -85,7 +85,7 @@ function AppContent() {
         <div className="hero-content">
           <div className="logo-container">
             <div className="logo-icon">
-              <img src="/logo.png" alt="SURF" />
+              <img src="./src/images/waves-collection-logo.png" alt="SURF" />
             </div>
             <div className="logo-rings">
               <div className="ring ring-1" />
@@ -144,7 +144,7 @@ function AppContent() {
             className="opensea-btn"
             title="View on OpenSea"
           >
-            <img src="/opensea.svg" alt="OpenSea" />
+            <img src="/src/images/opensea-logo.svg" alt="OpenSea" />
           </a>
           <button
             className="info-btn"
