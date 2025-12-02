@@ -1,146 +1,171 @@
-import { useState, useEffect } from "react";
-// --- REOWN IMPORTS ---
+import { useState } from "react";
+import { WagmiProvider, createConfig, http } from "wagmi";
+import { base, baseSepolia } from "wagmi/chains";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createAppKit } from "@reown/appkit/react";
 import { WagmiAdapter } from "@reown/appkit-adapter-wagmi";
-import { base, baseSepolia } from "@reown/appkit/networks";
 
-// --- WAGMI IMPORTS ---
-import { WagmiProvider, http, fallback, useAccount } from "wagmi";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+// Import the new Web3Provider
+import { Web3Provider } from "./context/Web3Context";
 
-// --- COMPONENTS ---
+// Components
 import GeneratorScreen from "./components/GeneratorScreen";
 import CurationScreen from "./components/CurationScreen";
 import MyCardsScreen from "./components/MyCardsScreen";
 import InfoModal from "./components/InfoModal";
-import wavesLogo from "./images/waves-collection-logo.png";
-import openseaLogo from "./images/opensea-logo.svg";
 import "./App.css";
 
-// 1. Get Project ID from .env
-const projectId = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID;
+// Configuration
+const projectId =
+  import.meta.env.VITE_WALLETCONNECT_PROJECT_ID || "YOUR_PROJECT_ID";
 
-if (!projectId) {
-  throw new Error("VITE_WALLETCONNECT_PROJECT_ID is not set");
-}
+const metadata = {
+  name: "SURF Waves TCG",
+  description: "Generate AI-powered trading cards on Base",
+  url: "https://surf.works",
+  icons: ["https://surf.works/logo.png"],
+};
 
-// 2. Configure Networks
-export const networks = [base, baseSepolia];
+// Determine which chain to use based on environment
+const targetChainId = Number(import.meta.env.VITE_TARGET_CHAIN_ID || 8453);
+const chains = targetChainId === 84532 ? [baseSepolia] : [base];
 
-// 3. Set up Wagmi Adapter
+// Create Wagmi adapter
 const wagmiAdapter = new WagmiAdapter({
   projectId,
-  networks,
-  transports: {
-    [base.id]: fallback([
-      http("https://base.llamarpc.com"),
-      http("https://base.meowrpc.com"),
-      http("https://mainnet.base.org"),
-    ]),
-    [baseSepolia.id]: http("https://sepolia.base.org"),
-  },
+  networks: chains,
+  ssr: false,
 });
 
-// 4. Initialize Reown AppKit
+// Create AppKit
 createAppKit({
   adapters: [wagmiAdapter],
-  networks,
   projectId,
-  metadata: {
-    name: "wavesTCG Community Creations",
-    description: "AI Generated Trading Cards on Base",
-    url: "https://wavestcg.xyz",
-    icons: ["https://avatars.githubusercontent.com/u/179229932"],
-  },
+  networks: chains,
+  metadata,
   features: {
     analytics: true,
   },
 });
 
-const queryClient = new QueryClient();
+// Query client for React Query
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5000,
+      retry: 2,
+    },
+  },
+});
 
 function AppContent() {
-  const [screen, setScreen] = useState("generate");
+  const [screen, setScreen] = useState("generator"); // 'generator', 'curation', 'mycards'
   const [generatedCards, setGeneratedCards] = useState([]);
   const [showInfoModal, setShowInfoModal] = useState(false);
-  const { isConnected } = useAccount();
 
   const handleCardsGenerated = (cards) => {
-    setGeneratedCards(cards.filter((card) => !card.error));
-    setScreen("curate");
+    setGeneratedCards(cards);
+    setScreen("curation");
   };
 
-  const showHero = screen === "generate";
+  const handleBackToGenerator = () => {
+    setScreen("generator");
+    setGeneratedCards([]);
+  };
+
+  const handleShowMyCards = () => {
+    setScreen(screen === "mycards" ? "generator" : "mycards");
+  };
 
   return (
     <div className="app">
       {/* Hero Section */}
-      {showHero && (
-        <header className="hero-section">
-          {/* ... Your existing hero HTML ... */}
-          <h1 className="hero-title">wavesTCG Community Creations</h1>
-          {/* ... */}
-        </header>
-      )}
+      <header className="hero-section">
+        <div className="hero-glow" />
+        <div className="hero-content">
+          <div className="logo-container">
+            <div className="logo-icon">
+              <img src="/logo.png" alt="SURF" />
+            </div>
+            <div className="logo-rings">
+              <div className="ring ring-1" />
+              <div className="ring ring-2" />
+              <div className="ring ring-3" />
+            </div>
+          </div>
+          <h1 className="hero-title">SURF Waves TCG</h1>
+          <p className="hero-subtitle">AI-Powered Trading Cards on Base</p>
+        </div>
+      </header>
 
       {/* Main Content */}
       <main className="main-content">
-        {screen === "generate" && (
+        {screen === "generator" && (
           <GeneratorScreen onCardsGenerated={handleCardsGenerated} />
         )}
-        {screen === "curate" && (
+        {screen === "curation" && (
           <CurationScreen
             cards={generatedCards}
-            onBack={() => setScreen("generate")}
+            onBack={handleBackToGenerator}
           />
         )}
         {screen === "mycards" && (
-          <MyCardsScreen onBack={() => setScreen("generate")} />
+          <MyCardsScreen onBack={handleBackToGenerator} />
         )}
       </main>
 
-      {/* Bottom Fixed Bar */}
+      {/* Bottom Bar */}
       <div className="bottom-bar">
         <div className="wallet-container">
-          {/* REPLACE RAINBOWKIT BUTTON WITH REOWN BUTTON */}
           <appkit-button />
         </div>
-
         <div className="bottom-bar-actions">
           <button
             className={`my-cards-btn ${screen === "mycards" ? "active" : ""}`}
-            onClick={() =>
-              setScreen(screen === "mycards" ? "generate" : "mycards")
-            }
-            aria-label="My Cards"
+            onClick={handleShowMyCards}
+            title="My Cards"
           >
-            <svg viewBox="0 0 512 512" fill="currentColor">
-              <path d="M0 96C0 60.7 28.7 32 64 32H448c35.3 0 64 28.7 64 64V416c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V96zM323.8 202.5c-4.5-6.6-11.9-10.5-19.8-10.5s-15.4 3.9-19.8 10.5l-87 127.6L170.7 297c-4.6-5.7-11.5-9-18.7-9s-14.2 3.3-18.7 9l-64 80c-5.8 7.2-6.9 17.1-2.9 25.4s12.4 13.6 21.6 13.6h96 32H424c8.9 0 17.1-4.9 21.2-12.8s3.6-17.4-1.4-24.7l-120-176zM112 192a48 48 0 1 0 0-96 48 48 0 1 0 0 96z" />
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <rect x="3" y="3" width="7" height="7" rx="1" />
+              <rect x="14" y="3" width="7" height="7" rx="1" />
+              <rect x="3" y="14" width="7" height="7" rx="1" />
+              <rect x="14" y="14" width="7" height="7" rx="1" />
             </svg>
           </button>
-
           <a
             href="https://opensea.io/collection/surf-waves-cards"
             target="_blank"
             rel="noopener noreferrer"
             className="opensea-btn"
-            aria-label="View on OpenSea"
+            title="View on OpenSea"
           >
-            <img src={openseaLogo} alt="opensea" viewBox="0 0 90 90" />
+            <img src="/opensea.svg" alt="OpenSea" />
           </a>
-
           <button
             className="info-btn"
             onClick={() => setShowInfoModal(true)}
-            aria-label="How it works"
+            title="How it works"
           >
-            <svg viewBox="0 0 512 512" fill="currentColor">
-              <path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM216 336h24V272H216c-13.3 0-24-10.7-24-24s10.7-24 24-24h48c13.3 0 24 10.7 24 24v88h8c13.3 0 24 10.7 24 24s-10.7 24-24 24H216c-13.3 0-24-10.7-24-24s10.7-24 24-24zm40-208a32 32 0 1 1 0 64 32 32 0 1 1 0-64z" />
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <path d="M12 16v-4" />
+              <path d="M12 8h.01" />
             </svg>
           </button>
         </div>
       </div>
 
+      {/* Info Modal */}
       {showInfoModal && <InfoModal onClose={() => setShowInfoModal(false)} />}
     </div>
   );
@@ -148,11 +173,12 @@ function AppContent() {
 
 function App() {
   return (
-    // Use the Adapter's wagmiConfig
     <WagmiProvider config={wagmiAdapter.wagmiConfig}>
       <QueryClientProvider client={queryClient}>
-        {/* RainbowKitProvider is removed */}
-        <AppContent />
+        {/* Web3Provider wraps all components that need Web3 state */}
+        <Web3Provider>
+          <AppContent />
+        </Web3Provider>
       </QueryClientProvider>
     </WagmiProvider>
   );

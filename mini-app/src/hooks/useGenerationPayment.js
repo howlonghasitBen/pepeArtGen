@@ -1,136 +1,92 @@
-import { useState, useEffect } from "react";
-import { useAccount, useWriteContract, useBalance } from "wagmi";
+import { useState, useCallback } from "react";
+import { useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { parseUnits, erc20Abi } from "viem";
+import { useWeb3 } from "../context/Web3Context";
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:3001";
 const GENERATION_FEE_USDC = "2.50"; // $2.50 USDC
-// Default to Base (8453) if not specified in env
-const TARGET_CHAIN_ID = Number(import.meta.env.VITE_TARGET_CHAIN_ID || 8453);
+const GENERATION_FEE_RAW = parseUnits(GENERATION_FEE_USDC, 6);
 
 export function useGenerationPayment() {
   const [status, setStatus] = useState("idle");
   const [error, setError] = useState(null);
-  const [paymentSession, setPaymentSession] = useState(null);
-  const [manualBalance, setManualBalance] = useState(null);
+  const [txHash, setTxHash] = useState(null);
 
-  const { address, isConnected, chainId } = useAccount();
+  const {
+    address,
+    isConnected,
+    isCorrectChain,
+    usdcBalance,
+    usdcBalanceFormatted,
+    isBalanceLoading,
+    balanceError,
+    refetchUsdcBalance,
+    paymentSession,
+    checkActiveSession,
+    updateSession,
+    config,
+  } = useWeb3();
+
   const { writeContractAsync } = useWriteContract();
 
-  const USDC_CONTRACT_ADDRESS = import.meta.env.VITE_USDC_CONTRACT_ADDRESS;
-  const TREASURY_ADDRESS = import.meta.env.VITE_TREASURY_ADDRESS;
+  // Check if user has sufficient balance
+  const hasSufficientBalance = useCallback(() => {
+    if (usdcBalance === undefined || usdcBalance === null) return false;
+    return usdcBalance >= GENERATION_FEE_RAW;
+  }, [usdcBalance]);
 
-  // Debug configuration issues
-  useEffect(() => {
-    if (!USDC_CONTRACT_ADDRESS)
-      console.warn("⚠️ VITE_USDC_CONTRACT_ADDRESS is missing");
-    if (!TREASURY_ADDRESS) console.warn("⚠️ VITE_TREASURY_ADDRESS is missing");
-  }, [USDC_CONTRACT_ADDRESS, TREASURY_ADDRESS]);
-
-  // --- FIX: Use useBalance (Native Wagmi Hook) ---
-  // This replaces useReadContract and automatically handles the ABI and decimals
-  const {
-    data: balanceData,
-    refetch: refetchBalance,
-    error: balanceError,
-    isLoading: isBalanceLoading,
-  } = useBalance({
-    address: address,
-    token: USDC_CONTRACT_ADDRESS, // Providing a token address makes it fetch ERC20
-    chainId: TARGET_CHAIN_ID,
-    query: {
-      enabled: !!address && !!USDC_CONTRACT_ADDRESS,
-      refetchInterval: 10000,
-      retry: 2,
-    },
-  });
-
-  // Extract the raw BigInt value from the balance object
-  const usdcBalance = balanceData?.value;
-
-  // Log specific balance errors for debugging
-  useEffect(() => {
-    if (balanceError) {
-      console.error("❌ Balance fetch failed:", balanceError);
+  // Main payment function with improved error handling
+  const payForGeneration = useCallback(async () => {
+    // Pre-flight checks
+    if (!address) {
+      throw new Error("Wallet not connected");
     }
-  }, [balanceError]);
 
-  // --- Helper: Check if on correct chain ---
-  const isCorrectChain = () => {
-    if (!chainId) return false;
-    return chainId === TARGET_CHAIN_ID;
-  };
-
-  // --- Helper: Manual fallback for balance ---
-  const fetchBalanceManually = async () => {
-    try {
-      const result = await refetchBalance();
-      if (result.data?.value !== undefined) {
-        setManualBalance(result.data.value);
-      }
-      return result.data?.value;
-    } catch (e) {
-      console.error("Manual fetch failed", e);
-      return null;
-    }
-  };
-
-  const checkActiveSession = async () => {
-    try {
-      if (!address) return null;
-      const response = await fetch(
-        `${API_BASE_URL}/api/payment/session/${address}`
+    if (!isCorrectChain) {
+      throw new Error(
+        `Please switch to Base network (Chain ID: ${config.targetChainId})`
       );
-      if (!response.ok) throw new Error("Failed to check payment session");
-
-      const data = await response.json();
-      if (data.hasActiveSession) {
-        setPaymentSession(data.session);
-        return data.session;
-      }
-      return null;
-    } catch (err) {
-      console.error("Error checking active session:", err);
-      return null;
     }
-  };
 
-  const payForGeneration = async () => {
+    if (!config.usdcContractAddress) {
+      throw new Error("USDC contract not configured");
+    }
+
+    if (!config.treasuryAddress) {
+      throw new Error("Treasury address not configured");
+    }
+
+    if (!hasSufficientBalance()) {
+      throw new Error(
+        `Insufficient USDC balance. Need ${GENERATION_FEE_USDC} USDC, have ${usdcBalanceFormatted}`
+      );
+    }
+
+    setStatus("paying");
+    setError(null);
+    setTxHash(null);
+
     try {
-      if (!address) throw new Error("Wallet not connected");
-      if (!isCorrectChain())
-        throw new Error(
-          `Please switch to Base network (Chain ID: ${TARGET_CHAIN_ID})`
-        );
-      if (!USDC_CONTRACT_ADDRESS)
-        throw new Error("USDC contract not configured");
+      // Step 1: Send USDC transfer transaction
+      console.log("💰 Sending USDC payment...");
+      console.log(`   Amount: ${GENERATION_FEE_USDC} USDC`);
+      console.log(`   To: ${config.treasuryAddress}`);
 
-      const usdcAmount = parseUnits(GENERATION_FEE_USDC, 6);
-
-      // Use Wagmi balance value, fall back to manual, default to 0n
-      const currentBalance = usdcBalance ?? manualBalance ?? 0n;
-
-      if (currentBalance < usdcAmount) {
-        throw new Error(
-          `Insufficient USDC balance. Need ${GENERATION_FEE_USDC} USDC`
-        );
-      }
-
-      setStatus("paying");
-      setError(null);
-
-      // 1. Send TX using standard ERC20 ABI from viem
       const hash = await writeContractAsync({
-        address: USDC_CONTRACT_ADDRESS,
+        address: config.usdcContractAddress,
         abi: erc20Abi,
         functionName: "transfer",
-        args: [TREASURY_ADDRESS, usdcAmount],
+        args: [config.treasuryAddress, GENERATION_FEE_RAW],
       });
 
-      // 2. Register Session
+      setTxHash(hash);
+      console.log("✅ Transaction submitted:", hash);
+
+      // Step 2: Register payment session with backend
       setStatus("creating_session");
+      console.log("📝 Creating payment session...");
+
       const sessionResponse = await fetch(
-        `${API_BASE_URL}/api/payment/initiate`,
+        `${config.apiBaseUrl}/api/payment/initiate`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -142,63 +98,185 @@ export function useGenerationPayment() {
         }
       );
 
-      if (!sessionResponse.ok) throw new Error("Failed to initiate session");
+      if (!sessionResponse.ok) {
+        const errorData = await sessionResponse.json().catch(() => ({}));
 
-      // 3. Verify
+        // Special handling for duplicate transaction
+        if (sessionResponse.status === 409) {
+          console.warn(
+            "⚠️ Transaction already used, checking for existing session..."
+          );
+          const existingSession = await checkActiveSession();
+          if (existingSession) {
+            setStatus("success");
+            return { sessionId: existingSession.id, transactionHash: hash };
+          }
+        }
+
+        throw new Error(
+          errorData.message || errorData.error || "Failed to initiate session"
+        );
+      }
+
+      const sessionData = await sessionResponse.json();
+      console.log("✅ Session created:", sessionData.sessionId);
+
+      // Step 3: Verify payment on-chain (this waits for confirmation)
       setStatus("verifying_payment");
-      const verifyResponse = await fetch(`${API_BASE_URL}/api/payment/verify`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ transactionHash: hash, walletAddress: address }),
-      });
+      console.log("🔍 Verifying payment on-chain...");
 
-      if (!verifyResponse.ok) throw new Error("Payment verification failed");
+      const verifyResponse = await fetch(
+        `${config.apiBaseUrl}/api/payment/verify`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            transactionHash: hash,
+            walletAddress: address,
+          }),
+        }
+      );
+
+      if (!verifyResponse.ok) {
+        const errorData = await verifyResponse.json().catch(() => ({}));
+        throw new Error(
+          errorData.message || errorData.error || "Payment verification failed"
+        );
+      }
+
       const verifyData = await verifyResponse.json();
+      console.log("✅ Payment verified!");
 
-      setPaymentSession({
+      // Update local session state
+      const newSession = {
         id: verifyData.sessionId,
         generationsRemaining: verifyData.generationsRemaining,
-      });
+        confirmedAt: verifyData.confirmedAt,
+      };
+      updateSession(newSession);
+
+      // Refresh USDC balance
+      await refetchUsdcBalance();
 
       setStatus("success");
-      refetchBalance();
-      return { sessionId: verifyData.sessionId, transactionHash: hash };
+      return {
+        sessionId: verifyData.sessionId,
+        transactionHash: hash,
+        generationsRemaining: verifyData.generationsRemaining,
+      };
     } catch (err) {
-      console.error("Payment failed:", err);
-      setError(err.message || "Payment failed");
-      setStatus("error");
-      throw err;
-    }
-  };
+      console.error("❌ Payment failed:", err);
 
-  const hasSufficientBalance = () => {
-    const balance = usdcBalance ?? manualBalance;
-    if (balance === undefined || balance === null) return false;
-    const required = parseUnits(GENERATION_FEE_USDC, 6);
-    return balance >= required;
-  };
+      // Parse common wallet errors
+      let errorMessage = err.message || "Payment failed";
+
+      if (
+        err.message?.includes("User rejected") ||
+        err.message?.includes("user rejected")
+      ) {
+        errorMessage = "Transaction cancelled by user";
+      } else if (err.message?.includes("insufficient funds")) {
+        errorMessage = "Insufficient ETH for gas fees";
+      } else if (err.message?.includes("nonce")) {
+        errorMessage = "Transaction nonce error. Please try again.";
+      }
+
+      setError(errorMessage);
+      setStatus("error");
+      throw new Error(errorMessage);
+    }
+  }, [
+    address,
+    isCorrectChain,
+    config,
+    hasSufficientBalance,
+    usdcBalanceFormatted,
+    writeContractAsync,
+    checkActiveSession,
+    updateSession,
+    refetchUsdcBalance,
+  ]);
+
+  // Retry verification for a pending transaction
+  const retryVerification = useCallback(
+    async (transactionHash) => {
+      if (!transactionHash || !address) {
+        throw new Error("Missing transaction hash or wallet address");
+      }
+
+      setStatus("verifying_payment");
+      setError(null);
+
+      try {
+        const response = await fetch(
+          `${config.apiBaseUrl}/api/payment/retry-verify`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              transactionHash,
+              walletAddress: address,
+            }),
+          }
+        );
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || "Verification retry failed");
+        }
+
+        const data = await response.json();
+
+        if (data.sessionId) {
+          updateSession({
+            id: data.sessionId,
+            generationsRemaining: data.generationsRemaining,
+          });
+        }
+
+        setStatus("success");
+        return data;
+      } catch (err) {
+        setError(err.message);
+        setStatus("error");
+        throw err;
+      }
+    },
+    [address, config.apiBaseUrl, updateSession]
+  );
+
+  // Clear error and reset status
+  const clearError = useCallback(() => {
+    setError(null);
+    setStatus("idle");
+    setTxHash(null);
+  }, []);
 
   return {
+    // Actions
     payForGeneration,
+    retryVerification,
     checkActiveSession,
-    getPaymentInfo: () => ({ fee: GENERATION_FEE_USDC }),
-    hasSufficientBalance,
-    isCorrectChain,
-    clearError: () => {
-      setError(null);
-      setStatus("idle");
-    },
-    refetchBalance,
-    fetchBalanceManually,
-    paymentSession,
-    usdcBalance, // This is now a BigInt directly
-    manualBalance,
+    clearError,
+    refetchBalance: refetchUsdcBalance,
+
+    // State
     status,
     error,
+    txHash,
+    isProcessing:
+      status !== "idle" && status !== "error" && status !== "success",
+
+    // From context (re-exported for convenience)
+    paymentSession,
+    usdcBalance,
+    usdcBalanceFormatted,
     isBalanceLoading,
     balanceError,
-    chainId,
-    expectedChainId: TARGET_CHAIN_ID,
+    hasSufficientBalance,
+    isCorrectChain: () => isCorrectChain,
+    chainId: config.targetChainId,
+    expectedChainId: config.targetChainId,
     generationFeeUsdc: GENERATION_FEE_USDC,
   };
 }

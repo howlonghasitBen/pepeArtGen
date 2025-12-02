@@ -1,9 +1,8 @@
-import { useState, useEffect } from "react";
-import { useAccount } from "wagmi";
+import { useState } from "react";
+import { useWeb3 } from "../context/Web3Context";
 import PaymentModal from "./PaymentModal";
-import { useGenerationPayment } from "../hooks/useGenerationPayment";
-import { useAllCards } from "../hooks/useAllCards";
 import MintedCardsCarousel from "./MintedCardsCarousel";
+import { useAllCards } from "../hooks/useAllCards";
 import "./GeneratorScreen.css";
 
 function GeneratorScreen({ onCardsGenerated }) {
@@ -11,107 +10,76 @@ function GeneratorScreen({ onCardsGenerated }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [paymentSession, setPaymentSession] = useState(null);
-  const [rerollsUsed, setRerollsUsed] = useState(0);
 
-  const { isConnected, address } = useAccount();
-  const { checkActiveSession } = useGenerationPayment();
+  const {
+    address,
+    isConnected,
+    hasActiveSession,
+    paymentSession,
+    useGeneration,
+    config,
+  } = useWeb3();
+
   const { cards: allMintedCards } = useAllCards();
 
-  // Check for active session on mount and when wallet connects
-  useEffect(() => {
-    if (isConnected && address) {
-      loadActiveSession();
-    } else {
-      setPaymentSession(null);
-    }
-  }, [isConnected, address]);
-
-  const loadActiveSession = async () => {
-    const session = await checkActiveSession();
-    if (session && session.generationsRemaining > 0) {
-      setPaymentSession(session);
-      // Calculate re-rolls used (3 - remaining)
-      const used = 3 - session.generationsRemaining;
-      setRerollsUsed(used);
-    }
-  };
-
   const handlePaymentSuccess = (session) => {
-    setPaymentSession(session);
-    setRerollsUsed(0);
+    // Session is now managed by Web3Context
     setShowPaymentModal(false);
   };
 
   const handleGenerate = async (isReroll = false) => {
     setError("");
+
+    if (!monsterName.trim()) {
+      setError("Please enter a monster name");
+      return;
+    }
+
+    // Check if user needs to pay first
+    if (!hasActiveSession) {
+      setShowPaymentModal(true);
+      return;
+    }
+
     setLoading(true);
 
     try {
-      if (!monsterName.trim()) {
-        setError("Please enter a monster name");
-        setLoading(false);
-        return;
-      }
-
-      // Check if user needs to pay first
-      if (!paymentSession || paymentSession.generationsRemaining <= 0) {
-        setShowPaymentModal(true);
-        setLoading(false);
-        return;
-      }
-
       const monsterNames = [monsterName.trim()];
 
       // Call API to generate card with Imagen
-      const API_BASE_URL =
-        import.meta.env.VITE_API_BASE_URL || "http://localhost:3001";
-      const response = await fetch(`${API_BASE_URL}/api/generate`, {
+      const response = await fetch(`${config.apiBaseUrl}/api/generate`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
           monsterNames,
-          sessionId: paymentSession.id,
+          sessionId: paymentSession?.id,
           walletAddress: address,
         }),
       });
 
-      if (!response.ok) {
-        const data = await response.json();
+      const data = await response.json();
 
+      if (!response.ok) {
         // Handle specific errors
         if (data.error === "No generations remaining") {
           setError("No generations remaining. Please make a new payment.");
-          setPaymentSession(null);
-          setLoading(false);
           return;
         }
-
-        throw new Error(data.error || "Generation failed");
+        throw new Error(data.error || data.message || "Generation failed");
       }
-
-      const data = await response.json();
 
       if (data.success && data.cards.length > 0) {
-        // Increment re-rolls used if this is a re-roll
-        if (isReroll) {
-          setRerollsUsed((prev) => prev + 1);
-        }
-
-        // Update session generations remaining
-        setPaymentSession((prev) => ({
-          ...prev,
-          generationsRemaining: prev.generationsRemaining - 1,
-        }));
-
+        // Update local session state (decrement generations)
+        useGeneration();
         onCardsGenerated(data.cards);
       } else {
-        setError("Generation failed");
+        setError("Generation failed - no cards returned");
       }
     } catch (err) {
-      setError(err.message);
+      console.error("Generation error:", err);
+      setError(err.message || "Generation failed");
     } finally {
       setLoading(false);
     }
@@ -133,12 +101,9 @@ function GeneratorScreen({ onCardsGenerated }) {
     setMonsterName(name);
   };
 
-  const rerollsRemaining = paymentSession
-    ? paymentSession.generationsRemaining - 1
-    : 0;
+  const generationsRemaining = paymentSession?.generationsRemaining ?? 0;
+  const rerollsRemaining = Math.max(0, generationsRemaining - 1);
   const canReroll = rerollsRemaining > 0;
-  const hasActiveSession =
-    paymentSession && paymentSession.generationsRemaining > 0;
 
   return (
     <div className="generator-screen">
@@ -154,8 +119,8 @@ function GeneratorScreen({ onCardsGenerated }) {
           <div className="active-session">
             <span className="session-badge">✓ Active Session</span>
             <span className="generations-info">
-              {paymentSession.generationsRemaining} generation
-              {paymentSession.generationsRemaining !== 1 ? "s" : ""} remaining
+              {generationsRemaining} generation
+              {generationsRemaining !== 1 ? "s" : ""} remaining
             </span>
           </div>
         ) : (
