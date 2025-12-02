@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useAccount, useWriteContract, useReadContract } from "wagmi";
+import { useAccount, useWriteContract, useBalance } from "wagmi";
 import { parseUnits, erc20Abi } from "viem";
 
 const API_BASE_URL =
@@ -27,26 +27,26 @@ export function useGenerationPayment() {
     if (!TREASURY_ADDRESS) console.warn("⚠️ VITE_TREASURY_ADDRESS is missing");
   }, [USDC_CONTRACT_ADDRESS, TREASURY_ADDRESS]);
 
-  // --- Read USDC Balance using standard ERC20 ABI ---
+  // --- FIX: Use useBalance (Native Wagmi Hook) ---
+  // This replaces useReadContract and automatically handles the ABI and decimals
   const {
-    data: usdcBalance,
+    data: balanceData,
     refetch: refetchBalance,
     error: balanceError,
     isLoading: isBalanceLoading,
-  } = useReadContract({
-    address: USDC_CONTRACT_ADDRESS,
-    abi: erc20Abi,
-    functionName: "balanceOf",
-    // Safely handle undefined address
-    args: address ? [address] : undefined,
+  } = useBalance({
+    address: address,
+    token: USDC_CONTRACT_ADDRESS, // Providing a token address makes it fetch ERC20
     chainId: TARGET_CHAIN_ID,
     query: {
-      // Only run query if we have both addresses
-      enabled: Boolean(address && USDC_CONTRACT_ADDRESS),
+      enabled: !!address && !!USDC_CONTRACT_ADDRESS,
       refetchInterval: 10000,
       retry: 2,
     },
   });
+
+  // Extract the raw BigInt value from the balance object
+  const usdcBalance = balanceData?.value;
 
   // Log specific balance errors for debugging
   useEffect(() => {
@@ -65,10 +65,10 @@ export function useGenerationPayment() {
   const fetchBalanceManually = async () => {
     try {
       const result = await refetchBalance();
-      if (result.data !== undefined) {
-        setManualBalance(result.data);
+      if (result.data?.value !== undefined) {
+        setManualBalance(result.data.value);
       }
-      return result.data;
+      return result.data?.value;
     } catch (e) {
       console.error("Manual fetch failed", e);
       return null;
@@ -106,7 +106,8 @@ export function useGenerationPayment() {
         throw new Error("USDC contract not configured");
 
       const usdcAmount = parseUnits(GENERATION_FEE_USDC, 6);
-      // Use Wagmi balance, fall back to manual, default to 0n if neither exists yet
+
+      // Use Wagmi balance value, fall back to manual, default to 0n
       const currentBalance = usdcBalance ?? manualBalance ?? 0n;
 
       if (currentBalance < usdcAmount) {
@@ -118,7 +119,7 @@ export function useGenerationPayment() {
       setStatus("paying");
       setError(null);
 
-      // 1. Send TX using standard ERC20 ABI
+      // 1. Send TX using standard ERC20 ABI from viem
       const hash = await writeContractAsync({
         address: USDC_CONTRACT_ADDRESS,
         abi: erc20Abi,
@@ -171,8 +172,6 @@ export function useGenerationPayment() {
   };
 
   const hasSufficientBalance = () => {
-    // If balance is undefined/loading, don't block (UI handles loading state)
-    // but strict check requires knowing balance.
     const balance = usdcBalance ?? manualBalance;
     if (balance === undefined || balance === null) return false;
     const required = parseUnits(GENERATION_FEE_USDC, 6);
@@ -192,7 +191,7 @@ export function useGenerationPayment() {
     refetchBalance,
     fetchBalanceManually,
     paymentSession,
-    usdcBalance,
+    usdcBalance, // This is now a BigInt directly
     manualBalance,
     status,
     error,
