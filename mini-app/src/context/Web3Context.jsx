@@ -60,10 +60,12 @@ export function Web3Provider({ children }) {
   // Check for active payment session
   const checkActiveSession = useCallback(async () => {
     if (!address || !isConnected) {
+      console.log("🔍 Session check skipped - wallet not connected");
       setPaymentSession(null);
       return null;
     }
 
+    console.log(`🔍 Checking active session for ${address}...`);
     setIsLoadingSession(true);
     try {
       const response = await fetch(
@@ -75,14 +77,19 @@ export function Web3Provider({ children }) {
 
       const data = await response.json();
       if (data.hasActiveSession && data.session) {
+        console.log("✅ Active session found:", {
+          id: data.session.id,
+          generationsRemaining: data.session.generationsRemaining,
+        });
         setPaymentSession(data.session);
         return data.session;
       } else {
+        console.log("ℹ️ No active session found");
         setPaymentSession(null);
         return null;
       }
     } catch (err) {
-      console.error("Error checking active session:", err);
+      console.error("❌ Error checking active session:", err);
       setPaymentSession(null);
       return null;
     } finally {
@@ -135,6 +142,31 @@ export function Web3Provider({ children }) {
     } else {
       setPaymentSession(null);
     }
+  }, [isConnected, address, checkActiveSession]);
+
+  // Periodic session check - refresh every 20 seconds when connected
+  useEffect(() => {
+    if (!isConnected || !address) return;
+
+    const intervalId = setInterval(() => {
+      console.log("🔄 Auto-checking for active session...");
+      checkActiveSession();
+    }, 20000); // Check every 20 seconds
+
+    return () => clearInterval(intervalId);
+  }, [isConnected, address, checkActiveSession]);
+
+  // Auto-refresh session when window regains focus (user might have paid in another tab)
+  useEffect(() => {
+    const handleFocus = () => {
+      if (isConnected && address) {
+        console.log("👁️ Window focused - checking for session updates...");
+        checkActiveSession();
+      }
+    };
+
+    window.addEventListener("focus", handleFocus);
+    return () => window.removeEventListener("focus", handleFocus);
   }, [isConnected, address, checkActiveSession]);
 
   // Log config issues in development

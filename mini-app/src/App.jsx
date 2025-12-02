@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { WagmiProvider, createConfig, http } from "wagmi";
 import { base, baseSepolia } from "wagmi/chains";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createAppKit } from "@reown/appkit/react";
 import { WagmiAdapter } from "@reown/appkit-adapter-wagmi";
+import { useAccount } from "wagmi";
 
 // Import the new Web3Provider
 import { Web3Provider } from "./context/Web3Context";
@@ -67,6 +68,20 @@ function AppContent() {
   const [screen, setScreen] = useState("generator"); // 'generator', 'curation', 'mycards'
   const [generatedCards, setGeneratedCards] = useState([]);
   const [showInfoModal, setShowInfoModal] = useState(false);
+  const [walletKey, setWalletKey] = useState(0);
+
+  // Get connection state to force appkit-button to update
+  const { address, isConnected } = useAccount();
+
+  // Log connection state changes for debugging and force button update
+  useEffect(() => {
+    console.log("🔌 Wallet connection state changed:", {
+      isConnected,
+      address: address || "none",
+    });
+    // Force appkit-button to re-render by updating key
+    setWalletKey((prev) => prev + 1);
+  }, [isConnected, address]);
 
   const handleCardsGenerated = (cards) => {
     setGeneratedCards(cards);
@@ -122,7 +137,12 @@ function AppContent() {
       {/* Bottom Bar */}
       <div className="bottom-bar">
         <div className="wallet-container">
-          <appkit-button />
+          {/* Use key prop to force re-render when connection state changes */}
+          <appkit-button
+            key={`wallet-${walletKey}-${
+              isConnected ? address || "connected" : "disconnected"
+            }`}
+          />
         </div>
         <div className="bottom-bar-actions">
           <button

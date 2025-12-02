@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useWeb3 } from "../context/Web3Context";
 import PaymentModal from "./PaymentModal";
 import MintedCardsCarousel from "./MintedCardsCarousel";
@@ -17,20 +17,45 @@ function GeneratorScreen({ onCardsGenerated }) {
     hasActiveSession,
     paymentSession,
     useGeneration,
+    checkActiveSession,
+    isLoadingSession,
     config,
   } = useWeb3();
 
   const { cards: allMintedCards } = useAllCards();
 
   // FIX: Wrap handlers in useCallback to prevent infinite useEffect loops in PaymentModal
-  const handlePaymentSuccess = useCallback((session) => {
-    // Session is now managed by Web3Context, just close modal
-    setShowPaymentModal(false);
-  }, []);
+  const handlePaymentSuccess = useCallback(
+    (session) => {
+      // Session is now managed by Web3Context, but refresh to ensure sync
+      console.log("✅ Payment successful - refreshing session...", session);
+      checkActiveSession().then(() => {
+        console.log("✅ Session refreshed after payment");
+      });
+      setShowPaymentModal(false);
+    },
+    [checkActiveSession]
+  );
 
   const handlePaymentModalClose = useCallback(() => {
     setShowPaymentModal(false);
   }, []);
+
+  // Auto-check for active session when wallet connects or when component mounts
+  useEffect(() => {
+    if (isConnected && address) {
+      console.log("🔍 GeneratorScreen: Checking for active session...");
+      checkActiveSession();
+    }
+  }, [isConnected, address, checkActiveSession]);
+
+  // Auto-close payment modal if session becomes active
+  useEffect(() => {
+    if (hasActiveSession && showPaymentModal) {
+      console.log("✅ Active session detected - closing payment modal");
+      setShowPaymentModal(false);
+    }
+  }, [hasActiveSession, showPaymentModal]);
 
   const handleGenerate = async (isReroll = false) => {
     setError("");
@@ -120,7 +145,12 @@ function GeneratorScreen({ onCardsGenerated }) {
       )}
 
       <div className="session-status">
-        {hasActiveSession ? (
+        {isLoadingSession ? (
+          <div className="active-session">
+            <span className="session-badge">🔄 Checking session...</span>
+            <span className="generations-info">Please wait</span>
+          </div>
+        ) : hasActiveSession ? (
           <div className="active-session">
             <span className="session-badge">✓ Active Session</span>
             <span className="generations-info">
@@ -187,7 +217,7 @@ function GeneratorScreen({ onCardsGenerated }) {
 
       {!isConnected ? (
         <div className="connect-wallet-container">
-          <appkit-button label="Connect Wallet to Generate" balance="hide" />
+          <appkit-button label="Connect Wallet to Generate" />
         </div>
       ) : (
         <button

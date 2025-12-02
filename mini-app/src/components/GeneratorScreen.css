@@ -390,6 +390,25 @@
   padding: 5px;
 }
 
+.connect-wallet-container appkit-button {
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Wallet Info Container for connected state */
+.wallet-info-container {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin-top: 10px;
+  padding: 5px;
+}
+
+.wallet-info-container appkit-button {
+  width: 100%;
+  max-width: 100%;
+}
+
 /* Ensure generate button disabled state is clear */
 .generate-btn:disabled {
   opacity: 0.5;

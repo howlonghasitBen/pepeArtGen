@@ -213,21 +213,67 @@
   flex: 1;
   display: flex;
   align-items: center;
+  min-width: 0; /* Allow flex shrinking */
+  max-width: 100%;
+  overflow: visible; /* Allow connected details to be visible */
 }
 
-/* Override RainbowKit button styles for Base blue accent */
-.wallet-container [data-testid="rk-connect-button"] {
+/* Style AppKit button - ensure it can display connected details */
+.wallet-container appkit-button {
+  width: 100%;
+  max-width: 100%;
+  display: block;
+  min-width: 120px; /* Minimum width for connected state */
+  overflow: visible; /* Don't clip connected details */
+}
+
+/* Style the button when not connected - use more specific selector */
+.wallet-container appkit-button:not([connected]) button,
+.wallet-container appkit-button:not(:has([data-connected])) button {
   background: var(--base-blue) !important;
   box-shadow: 0 0 20px var(--base-blue-glow) !important;
+  border-radius: 12px !important;
+  font-weight: 600 !important;
+  transition: all 0.3s ease !important;
+  border: none !important;
+  color: white !important;
+  padding: 10px 16px !important;
 }
 
-.wallet-container button {
+.wallet-container appkit-button:not([connected]) button:hover,
+.wallet-container appkit-button:not(:has([data-connected])) button:hover {
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 20px var(--base-blue-glow) !important;
+}
+
+/* Ensure connected state displays properly - let appkit-button handle its own styling */
+.wallet-container appkit-button[connected],
+.wallet-container appkit-button:has([data-connected]) {
+  width: 100%;
+  min-width: 160px; /* More space for address/balance display */
+}
+
+/* Don't interfere with appkit-button's internal connected state styling */
+.wallet-container appkit-button[connected] *,
+.wallet-container appkit-button:has([data-connected]) * {
+  /* Let appkit-button handle its own display */
+}
+
+/* Ensure appkit-button updates when connection state changes */
+.wallet-container appkit-button {
+  /* Force web component to update by ensuring it's visible */
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+/* Fallback for any direct button elements inside wallet-container (not from appkit-button) */
+.wallet-container > button:not(appkit-button button) {
   border-radius: 12px !important;
   font-weight: 600 !important;
   transition: all 0.3s ease !important;
 }
 
-.wallet-container button:hover {
+.wallet-container > button:not(appkit-button button):hover {
   transform: translateY(-1px) !important;
   box-shadow: 0 4px 20px var(--base-blue-glow) !important;
 }
