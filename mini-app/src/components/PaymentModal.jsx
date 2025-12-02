@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useAccount } from "wagmi";
-import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useGenerationPayment } from "../hooks/useGenerationPayment";
 import "./PaymentModal.css";
 
@@ -187,7 +186,7 @@ function PaymentModal({ onClose, onPaymentSuccess }) {
 
             <div className="modal-actions">
               {!isConnected ? (
-                <ConnectButton />
+                <appkit-button />
               ) : !isCorrectChain() ? (
                 <button className="btn-secondary" disabled>
                   Switch Network in Wallet

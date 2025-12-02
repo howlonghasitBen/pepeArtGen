@@ -1,22 +1,22 @@
-import { useState } from 'react'
-import { useAccount } from 'wagmi'
-import { ConnectButton } from '@rainbow-me/rainbowkit'
-import { useMyCards } from '../hooks/useMyCards'
-import './MyCardsScreen.css'
+import { useState } from "react";
+import { useAccount } from "wagmi";
+// REMOVED: import { ConnectButton } from '@rainbow-me/rainbowkit'
+import { useMyCards } from "../hooks/useMyCards";
+import "./MyCardsScreen.css";
 
 function MyCardsScreen({ onBack }) {
-  const { isConnected } = useAccount()
-  const { cards, loading, error, refetch, getOpenSeaUrl } = useMyCards()
-  const [selectedCard, setSelectedCard] = useState(null)
-  const [viewMode, setViewMode] = useState('grid') // 'grid' or 'detail'
+  const { isConnected } = useAccount();
+  const { cards, loading, error, refetch, getOpenSeaUrl } = useMyCards();
+  const [selectedCard, setSelectedCard] = useState(null);
+  const [viewMode, setViewMode] = useState("grid"); // 'grid' or 'detail'
 
-  const NFT_CONTRACT_ADDRESS = import.meta.env.VITE_NFT_CONTRACT_ADDRESS
-  const NETWORK = import.meta.env.VITE_NETWORK || 'base'
+  const NFT_CONTRACT_ADDRESS = import.meta.env.VITE_NFT_CONTRACT_ADDRESS;
+  const NETWORK = import.meta.env.VITE_NETWORK || "base";
 
   const getCollectionUrl = () => {
-    const network = NETWORK === 'baseSepolia' ? 'base-sepolia' : 'base'
-    return `https://opensea.io/assets/${network}/${NFT_CONTRACT_ADDRESS}`
-  }
+    const network = NETWORK === "baseSepolia" ? "base-sepolia" : "base";
+    return `https://opensea.io/assets/${network}/${NFT_CONTRACT_ADDRESS}`;
+  };
 
   // Not connected state
   if (!isConnected) {
@@ -35,11 +35,12 @@ function MyCardsScreen({ onBack }) {
           <h3>Connect Your Wallet</h3>
           <p>Connect your wallet to view your minted cards</p>
           <div className="connect-btn-wrapper">
-            <ConnectButton />
+            {/* UPDATED: Replaced ConnectButton with appkit-button */}
+            <appkit-button />
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   // Loading state
@@ -59,7 +60,7 @@ function MyCardsScreen({ onBack }) {
           <p>Loading your collection...</p>
         </div>
       </div>
-    )
+    );
   }
 
   // Error state
@@ -83,7 +84,7 @@ function MyCardsScreen({ onBack }) {
           </button>
         </div>
       </div>
-    )
+    );
   }
 
   // Empty state
@@ -107,11 +108,11 @@ function MyCardsScreen({ onBack }) {
           </button>
         </div>
       </div>
-    )
+    );
   }
 
   // Detail view for selected card
-  if (selectedCard && viewMode === 'detail') {
+  if (selectedCard && viewMode === "detail") {
     return (
       <div className="my-cards-screen">
         <div className="screen-header">
@@ -123,7 +124,6 @@ function MyCardsScreen({ onBack }) {
         </div>
 
         <div className="card-detail-view">
-          {/* Display the IPFS image directly (already a full card screenshot) */}
           <div className="nft-image-container">
             <img
               src={selectedCard.image || selectedCard.imageData}
@@ -146,9 +146,15 @@ function MyCardsScreen({ onBack }) {
                   className="opensea-btn-large"
                 >
                   <svg className="opensea-logo" viewBox="0 0 90 90" fill="none">
-                    <circle cx="45" cy="45" r="45" fill="#2081E2"/>
-                    <path d="M22.216 46.653 22.4 46.3l13.098-20.435c.18-.282.61-.203.681.125a35.184 35.184 0 0 0 2.768 7.726c.467 1.063.998 2.096 1.588 3.092.1.169.085.38-.041.53l-16.05 9.242a.378.378 0 0 1-.525-.097.384.384 0 0 1-.036-.102l-.666-1.728z" fill="white"/>
-                    <path d="M66.21 50.578h-6.573a.35.35 0 0 1-.308-.184l-3.228-5.59a.35.35 0 0 0-.308-.184h-8.645a.35.35 0 0 0-.308.184l-3.227 5.59a.35.35 0 0 1-.308.184h-6.574a.35.35 0 0 1-.308-.525l9.927-17.2a.35.35 0 0 1 .308-.184h9.927a.35.35 0 0 1 .308.184l9.927 17.2a.35.35 0 0 1-.308.525z" fill="white"/>
+                    <circle cx="45" cy="45" r="45" fill="#2081E2" />
+                    <path
+                      d="M22.216 46.653 22.4 46.3l13.098-20.435c.18-.282.61-.203.681.125a35.184 35.184 0 0 0 2.768 7.726c.467 1.063.998 2.096 1.588 3.092.1.169.085.38-.041.53l-16.05 9.242a.378.378 0 0 1-.525-.097.384.384 0 0 1-.036-.102l-.666-1.728z"
+                      fill="white"
+                    />
+                    <path
+                      d="M66.21 50.578h-6.573a.35.35 0 0 1-.308-.184l-3.228-5.59a.35.35 0 0 0-.308-.184h-8.645a.35.35 0 0 0-.308.184l-3.227 5.59a.35.35 0 0 1-.308.184h-6.574a.35.35 0 0 1-.308-.525l9.927-17.2a.35.35 0 0 1 .308-.184h9.927a.35.35 0 0 1 .308.184l9.927 17.2a.35.35 0 0 1-.308.525z"
+                      fill="white"
+                    />
                   </svg>
                   View on OpenSea
                 </a>
@@ -174,7 +180,7 @@ function MyCardsScreen({ onBack }) {
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   // Grid view (main collection)
@@ -195,9 +201,9 @@ function MyCardsScreen({ onBack }) {
           <span className="stat-number">{cards.length}</span>
           <span className="stat-label">Cards</span>
         </div>
-        <a 
-          href={getCollectionUrl()} 
-          target="_blank" 
+        <a
+          href={getCollectionUrl()}
+          target="_blank"
           rel="noopener noreferrer"
           className="opensea-collection-link"
         >
@@ -207,18 +213,18 @@ function MyCardsScreen({ onBack }) {
 
       <div className="cards-grid">
         {cards.map((card, index) => (
-          <div 
-            key={card.id || index} 
+          <div
+            key={card.id || index}
             className="card-grid-item"
             onClick={() => {
-              setSelectedCard(card)
-              setViewMode('detail')
+              setSelectedCard(card);
+              setViewMode("detail");
             }}
           >
             <div className="card-image-wrapper">
               {card.image || card.imageData ? (
-                <img 
-                  src={card.image || card.imageData} 
+                <img
+                  src={card.image || card.imageData}
                   alt={card.name}
                   className="card-grid-image"
                 />
@@ -226,7 +232,9 @@ function MyCardsScreen({ onBack }) {
                 <div className="card-placeholder">🃏</div>
               )}
               {card.rarity && (
-                <span className={`rarity-badge rarity-${card.rarity.toLowerCase()}`}>
+                <span
+                  className={`rarity-badge rarity-${card.rarity.toLowerCase()}`}
+                >
                   {card.rarity}
                 </span>
               )}
@@ -241,7 +249,7 @@ function MyCardsScreen({ onBack }) {
         ))}
       </div>
     </div>
-  )
+  );
 }
 
-export default MyCardsScreen
+export default MyCardsScreen;

@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useAccount } from "wagmi";
-import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useMintCard } from "../hooks/useMintCard";
 import "./MintingModal.css";
 
@@ -95,7 +94,7 @@ function MintingModal({ cards, onClose, onSuccess }) {
         {!isConnected ? (
           <div className="connect-section">
             <p>Connect your wallet to mint</p>
-            <ConnectButton />
+            <appkit-button />
           </div>
         ) : status === "idle" || status === "error" ? (
           <button className="mint-btn" onClick={handleMint}>

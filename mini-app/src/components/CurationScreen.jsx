@@ -1,71 +1,71 @@
-import { useState } from 'react'
-import { useAccount } from 'wagmi'
-import { ConnectButton } from '@rainbow-me/rainbowkit'
-import SwipeableCard from './SwipeableCard'
-import MintingModal from './MintingModal'
-import MintSuccessModal from './MintSuccessModal'
-import './CurationScreen.css'
+import { useState } from "react";
+import { useAccount } from "wagmi";
+
+import SwipeableCard from "./SwipeableCard";
+import MintingModal from "./MintingModal";
+import MintSuccessModal from "./MintSuccessModal";
+import "./CurationScreen.css";
 
 function CurationScreen({ cards, onBack }) {
-  const [currentIndex, setCurrentIndex] = useState(0)
-  const [discarded, setDiscarded] = useState([])
-  const [toMint, setToMint] = useState([])
-  const [showMintModal, setShowMintModal] = useState(false)
-  const [showMintingModal, setShowMintingModal] = useState(false)
-  const [showSuccessModal, setShowSuccessModal] = useState(false)
-  const [mintData, setMintData] = useState(null)
-  const { isConnected } = useAccount()
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [discarded, setDiscarded] = useState([]);
+  const [toMint, setToMint] = useState([]);
+  const [showMintModal, setShowMintModal] = useState(false);
+  const [showMintingModal, setShowMintingModal] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [mintData, setMintData] = useState(null);
+  const { isConnected } = useAccount();
 
-  const currentCard = cards[currentIndex]
-  const isLastCard = currentIndex >= cards.length - 1
+  const currentCard = cards[currentIndex];
+  const isLastCard = currentIndex >= cards.length - 1;
 
   const handleSwipeLeft = () => {
-    setDiscarded([...discarded, currentCard.id])
-    nextCard()
-  }
+    setDiscarded([...discarded, currentCard.id]);
+    nextCard();
+  };
 
   const handleSwipeRight = () => {
-    setToMint([...toMint, currentCard])
-    nextCard()
-  }
+    setToMint([...toMint, currentCard]);
+    nextCard();
+  };
 
   const nextCard = () => {
     if (currentIndex < cards.length - 1) {
-      setCurrentIndex(currentIndex + 1)
+      setCurrentIndex(currentIndex + 1);
     } else {
       // Show minting summary
-      setShowMintModal(true)
+      setShowMintModal(true);
     }
-  }
+  };
 
   const handleUndo = () => {
     if (currentIndex > 0) {
-      const prevIndex = currentIndex - 1
-      const prevCard = cards[prevIndex]
+      const prevIndex = currentIndex - 1;
+      const prevCard = cards[prevIndex];
 
       // Remove from discarded or toMint
-      setDiscarded(discarded.filter(id => id !== prevCard.id))
-      setToMint(toMint.filter(card => card.id !== prevCard.id))
+      setDiscarded(discarded.filter((id) => id !== prevCard.id));
+      setToMint(toMint.filter((card) => card.id !== prevCard.id));
 
-      setCurrentIndex(prevIndex)
+      setCurrentIndex(prevIndex);
     }
-  }
+  };
 
   const handleMintAll = () => {
-    setShowMintingModal(true)
-  }
+    setShowMintingModal(true);
+  };
 
   const handleMintSuccess = (data) => {
-    console.log('Minted successfully!', data)
-    setMintData(data)
-    setShowMintingModal(false)
-    setShowSuccessModal(true)
-  }
+    console.log("Minted successfully!", data);
+    setMintData(data);
+    setShowMintingModal(false);
+    setShowSuccessModal(true);
+  };
 
   const handleCloseSuccess = () => {
-    setShowSuccessModal(false)
-    setMintData(null)
-  }
+    setShowSuccessModal(false);
+    setMintData(null);
+  };
 
   if (cards.length === 0) {
     return (
@@ -75,7 +75,7 @@ function CurationScreen({ cards, onBack }) {
           ← Back to Generator
         </button>
       </div>
-    )
+    );
   }
 
   if (showMintModal) {
@@ -124,17 +124,20 @@ function CurationScreen({ cards, onBack }) {
                     <span>~$0.01</span>
                   </div>
                 </div>
-                <p className="payment-note">✅ You already paid $2.50 USDC for generation</p>
+                <p className="payment-note">
+                  ✅ You already paid $2.50 USDC for generation
+                </p>
               </div>
 
               {!isConnected ? (
                 <div className="connect-wallet-section">
                   <p>Connect your wallet to mint on BASE</p>
-                  <ConnectButton />
+                  <appkit-button />
                 </div>
               ) : (
                 <button className="mint-btn" onClick={handleMintAll}>
-                  🪙 Mint {toMint.length} Card{toMint.length > 1 ? 's' : ''} (FREE)
+                  🪙 Mint {toMint.length} Card{toMint.length > 1 ? "s" : ""}{" "}
+                  (FREE)
                 </button>
               )}
             </>
@@ -154,13 +157,10 @@ function CurationScreen({ cards, onBack }) {
         )}
 
         {showSuccessModal && mintData && (
-          <MintSuccessModal
-            mintData={mintData}
-            onClose={handleCloseSuccess}
-          />
+          <MintSuccessModal mintData={mintData} onClose={handleCloseSuccess} />
         )}
       </div>
-    )
+    );
   }
 
   return (
@@ -228,7 +228,7 @@ function CurationScreen({ cards, onBack }) {
         </button>
       </div>
     </div>
-  )
+  );
 }
 
-export default CurationScreen
+export default CurationScreen;
