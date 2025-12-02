@@ -1,17 +1,15 @@
 import { useState, useEffect } from "react";
-import { WagmiProvider, createConfig, http } from "wagmi";
+import { WagmiProvider, useAccount } from "wagmi";
 import { base, baseSepolia } from "wagmi/chains";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createAppKit } from "@reown/appkit/react";
 import { WagmiAdapter } from "@reown/appkit-adapter-wagmi";
-import { useAccount } from "wagmi";
 
-// Import the new Web3Provider
+// Import the Web3Provider
 import { Web3Provider } from "./context/Web3Context";
 
-// Images should be in the /public folder
-// These paths reference files in public/ which Vite serves at root
-import wavesLogo from "./public/waves-collection-logo.png"; // or .svg if using SVG
+// Images
+import wavesLogo from "./public/waves-collection-logo.png";
 import openseaLogo from "./public/opensea-logo.svg";
 
 // Components
@@ -64,24 +62,40 @@ const queryClient = new QueryClient({
   },
 });
 
+// Wrapper component to handle button hydration
+function WalletButtonWrapper() {
+  const { isReconnecting, isConnected } = useAccount();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // 1. Don't render server-side (hydration fix)
+  if (!mounted) return <div style={{ height: "40px", width: "150px" }} />;
+
+  // 2. Don't render while Wagmi is checking for existing sessions (prevents "Connect" flash)
+  if (isReconnecting) {
+    return (
+      <button
+        className="connect-btn"
+        disabled
+        style={{ opacity: 0.7, cursor: "wait" }}
+      >
+        Loading...
+      </button>
+    );
+  }
+
+  // 3. Once stable, render the standard AppKit button
+  // We do NOT use a dynamic 'key' here, so connection flow on mobile remains stable
+  return <appkit-button balance="show" />;
+}
+
 function AppContent() {
-  const [screen, setScreen] = useState("generator"); // 'generator', 'curation', 'mycards'
+  const [screen, setScreen] = useState("generator");
   const [generatedCards, setGeneratedCards] = useState([]);
   const [showInfoModal, setShowInfoModal] = useState(false);
-  const [walletKey, setWalletKey] = useState(0);
-
-  // Get connection state to force appkit-button to update
-  const { address, isConnected } = useAccount();
-
-  // Log connection state changes for debugging and force button update
-  useEffect(() => {
-    console.log("🔌 Wallet connection state changed:", {
-      isConnected,
-      address: address || "none",
-    });
-    // Force appkit-button to re-render by updating key
-    setWalletKey((prev) => prev + 1);
-  }, [isConnected, address]);
 
   const handleCardsGenerated = (cards) => {
     setGeneratedCards(cards);
@@ -137,12 +151,8 @@ function AppContent() {
       {/* Bottom Bar */}
       <div className="bottom-bar">
         <div className="wallet-container">
-          {/* Use key prop to force re-render when connection state changes */}
-          <appkit-button
-            key={`wallet-${walletKey}-${
-              isConnected ? address || "connected" : "disconnected"
-            }`}
-          />
+          {/* Use the wrapper to handle hydration logic safely */}
+          <WalletButtonWrapper />
         </div>
         <div className="bottom-bar-actions">
           <button
