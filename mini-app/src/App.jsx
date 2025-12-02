@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { WagmiProvider, useAccount } from "wagmi";
+import { WagmiProvider, useAccount, useConnect } from "wagmi";
 import { base, baseSepolia } from "wagmi/chains";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createAppKit } from "@reown/appkit/react";
@@ -30,7 +30,6 @@ const metadata = {
   icons: ["https://surf.works/logo.png"],
 };
 
-// Determine which chain to use based on environment
 const targetChainId = Number(import.meta.env.VITE_TARGET_CHAIN_ID || 8453);
 const chains = targetChainId === 84532 ? [baseSepolia] : [base];
 
@@ -52,7 +51,6 @@ createAppKit({
   },
 });
 
-// Query client for React Query
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -62,19 +60,58 @@ const queryClient = new QueryClient({
   },
 });
 
+/**
+ * 🛠️ FIX FOR BASE APP / COINBASE WALLET
+ * Only attempts auto-connect if we are strictly on a Mobile device inside Coinbase Wallet.
+ * This prevents it from breaking Desktop auto-connect.
+ */
+function AutoConnectBaseApp() {
+  const { isConnected, isReconnecting } = useAccount();
+  const { connect, connectors } = useConnect();
+
+  useEffect(() => {
+    // 1. If connected or currently restoring session, do nothing.
+    if (isConnected || isReconnecting) return;
+
+    // 2. Strict Environment Check:
+    // Ensure we are in Coinbase Wallet AND on a Mobile device.
+    // This prevents the logic from firing on Desktop with the Coinbase Extension installed.
+    const isCoinbaseBrowser =
+      window.ethereum && window.ethereum.isCoinbaseWallet;
+    const isMobile = /Mobile|Android|iPhone|iPad/i.test(navigator.userAgent);
+
+    if (isCoinbaseBrowser && isMobile) {
+      console.log(
+        "📱 Detected Base App (Mobile) - Attempting auto-connection..."
+      );
+
+      const coinbaseConnector = connectors.find(
+        (c) => c.id === "coinbaseWalletSDK" || c.name === "Coinbase Wallet"
+      );
+
+      if (coinbaseConnector) {
+        connect({ connector: coinbaseConnector });
+      }
+    }
+  }, [isConnected, isReconnecting, connect, connectors]);
+
+  return null;
+}
+
 // Wrapper component to handle button hydration
 function WalletButtonWrapper() {
-  const { isReconnecting, isConnected } = useAccount();
+  const { isReconnecting, isConnected, address } = useAccount();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // 1. Don't render server-side (hydration fix)
+  // Hydration fix
   if (!mounted) return <div style={{ height: "40px", width: "150px" }} />;
 
-  // 2. Don't render while Wagmi is checking for existing sessions (prevents "Connect" flash)
+  // While Wagmi is actively restoring the session, show a loading state
+  // This prevents the "Connect" button from flashing before the auto-connect finishes
   if (isReconnecting) {
     return (
       <button
@@ -87,8 +124,7 @@ function WalletButtonWrapper() {
     );
   }
 
-  // 3. Once stable, render the standard AppKit button
-  // We do NOT use a dynamic 'key' here, so connection flow on mobile remains stable
+  // Once stable, render the button. balance="show" ensures it updates UI immediately.
   return <appkit-button balance="show" />;
 }
 
@@ -151,7 +187,6 @@ function AppContent() {
       {/* Bottom Bar */}
       <div className="bottom-bar">
         <div className="wallet-container">
-          {/* Use the wrapper to handle hydration logic safely */}
           <WalletButtonWrapper />
         </div>
         <div className="bottom-bar-actions">
@@ -210,8 +245,9 @@ function App() {
   return (
     <WagmiProvider config={wagmiAdapter.wagmiConfig}>
       <QueryClientProvider client={queryClient}>
-        {/* Web3Provider wraps all components that need Web3 state */}
         <Web3Provider>
+          {/* Handles Mobile Base App Auto-Connect */}
+          <AutoConnectBaseApp />
           <AppContent />
         </Web3Provider>
       </QueryClientProvider>
