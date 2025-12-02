@@ -8,29 +8,52 @@ function MintSuccessModal({ mintData, onClose }) {
 
   const NFT_CONTRACT_ADDRESS = import.meta.env.VITE_NFT_CONTRACT_ADDRESS;
   const NETWORK = import.meta.env.VITE_NETWORK || "base";
+  const API_BASE_URL =
+    import.meta.env.VITE_API_BASE_URL || "http://localhost:3001";
 
   const currentCard = cards[currentCardIndex];
   const currentTokenId = tokenIds[currentCardIndex];
 
+  // Use card.image directly - this is the full rendered card from NFT metadata
+  // Same approach as MintedCardsCarousel
+  const getCardImage = (card) => {
+    return card.image || card.imageData;
+  };
+
   /**
-   * Download card art directly from the image URL (IPFS)
+   * Download card art from IPFS
    */
   const downloadCardArt = async (card, index) => {
     try {
       setDownloading((prev) => ({ ...prev, [index]: true }));
 
-      const imageUrl = card.image || card.imageData;
-
-      if (!imageUrl) {
-        throw new Error("No image URL found for this card");
+      const response = await fetch(`${API_BASE_URL}/api/cards/${card.id}`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch card IPFS links");
       }
 
-      // Fetch the image as a blob
-      const imageResponse = await fetch(imageUrl);
+      const cardData = await response.json();
+
+      // For download, get the styled_card (full render) or fall back to raw_image
+      const styledCardLink = cardData.ipfsLinks?.find(
+        (link) => link.type === "styled_card"
+      );
+
+      if (!styledCardLink) {
+        const rawImageLink = cardData.ipfsLinks?.find(
+          (link) => link.type === "raw_image"
+        );
+        if (rawImageLink) {
+          window.open(rawImageLink.gateway_url, "_blank");
+          return;
+        }
+        throw new Error("No card image found in IPFS");
+      }
+
+      const imageResponse = await fetch(styledCardLink.gateway_url);
       const blob = await imageResponse.blob();
       const url = window.URL.createObjectURL(blob);
 
-      // Create temporary link to trigger download
       const a = document.createElement("a");
       a.href = url;
       a.download = `${card.name.replace(/\s+/g, "_")}_NFT.png`;
@@ -64,6 +87,8 @@ function MintSuccessModal({ mintData, onClose }) {
     setCurrentCardIndex((prev) => (prev < cards.length - 1 ? prev + 1 : 0));
   };
 
+  const currentImageUrl = getCardImage(currentCard);
+
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div
@@ -82,7 +107,7 @@ function MintSuccessModal({ mintData, onClose }) {
           )}
         </div>
 
-        {/* Full Card Display */}
+        {/* Full Card Display - uses card.image like carousel */}
         <div className="full-card-container">
           {cards.length > 1 && (
             <button className="card-nav-btn prev" onClick={handlePrevCard}>
@@ -90,23 +115,16 @@ function MintSuccessModal({ mintData, onClose }) {
             </button>
           )}
 
-          <div className="minted-card-display-wrapper">
-            {currentCard.image || currentCard.imageData ? (
+          <div className="success-card-wrapper">
+            {currentImageUrl ? (
               <img
-                src={currentCard.image || currentCard.imageData}
+                src={currentImageUrl}
                 alt={currentCard.name || `Card #${currentTokenId}`}
-                className="minted-card-image"
-                style={{
-                  maxWidth: "100%",
-                  maxHeight: "60vh",
-                  borderRadius: "12px",
-                  boxShadow: "0 8px 30px rgba(0,0,0,0.3)",
-                  objectFit: "contain",
-                }}
+                className="success-card-image"
               />
             ) : (
               <div className="card-placeholder">
-                <p>Loading card image...</p>
+                <p>Loading card...</p>
               </div>
             )}
           </div>
@@ -133,7 +151,22 @@ function MintSuccessModal({ mintData, onClose }) {
             rel="noopener noreferrer"
             className="opensea-link-prominent"
           >
-            <img src={openseaLogo} alt="OpenSea" />
+            <svg
+              className="opensea-logo"
+              viewBox="0 0 90 90"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <circle cx="45" cy="45" r="45" fill="#2081E2" />
+              <path
+                d="M22.216 46.653 22.4 46.3l13.098-20.435c.18-.282.61-.203.681.125a35.184 35.184 0 0 0 2.768 7.726c.467 1.063.998 2.096 1.588 3.092.1.169.085.38-.041.53l-16.05 9.242a.378.378 0 0 1-.525-.097.384.384 0 0 1-.036-.102l-.666-1.728z"
+                fill="white"
+              />
+              <path
+                d="M66.21 50.578h-6.573a.35.35 0 0 1-.308-.184l-3.228-5.59a.35.35 0 0 0-.308-.184h-8.645a.35.35 0 0 0-.308.184l-3.227 5.59a.35.35 0 0 1-.308.184h-6.574a.35.35 0 0 1-.308-.525l9.927-17.2a.35.35 0 0 1 .308-.184h9.927a.35.35 0 0 1 .308.184l9.927 17.2a.35.35 0 0 1-.308.525z"
+                fill="white"
+              />
+            </svg>
             View on OpenSea
           </a>
         )}

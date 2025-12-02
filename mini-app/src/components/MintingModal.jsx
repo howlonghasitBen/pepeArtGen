@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAccount } from "wagmi";
 import { useMintCard } from "../hooks/useMintCard";
 import "./MintingModal.css";
@@ -17,13 +17,17 @@ function MintingModal({ cards, onClose, onSuccess }) {
     }
   };
 
-  // Call onSuccess when minting completes and we have mint data
-  const handleSuccess = () => {
-    if (mintData) {
-      onSuccess(mintData);
+  // Auto-transition to success modal when minting completes
+  // This eliminates the intermediate "success" state in MintingModal
+  useEffect(() => {
+    if (status === "success" && mintData) {
+      // Small delay for UX - shows "confirming" briefly before transitioning
+      const timer = setTimeout(() => {
+        onSuccess(mintData);
+      }, 500);
+      return () => clearTimeout(timer);
     }
-    onClose();
-  };
+  }, [status, mintData, onSuccess]);
 
   const gasCost = "~$0.01"; // Approximate gas cost on Base L2
 
@@ -36,7 +40,7 @@ function MintingModal({ cards, onClose, onSuccess }) {
       case "confirming":
         return "⏳ Confirming transaction...";
       case "success":
-        return "🎉 Minted successfully!";
+        return "✨ Finalizing...";
       case "error":
         return "❌ Minting failed";
       default:
@@ -44,12 +48,23 @@ function MintingModal({ cards, onClose, onSuccess }) {
     }
   };
 
+  // Don't allow closing while processing (except on error)
+  const canClose = status === "idle" || status === "error";
+
+  const handleOverlayClick = () => {
+    if (canClose) {
+      onClose();
+    }
+  };
+
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div className="modal-overlay" onClick={handleOverlayClick}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-        <button className="modal-close" onClick={onClose}>
-          ✕
-        </button>
+        {canClose && (
+          <button className="modal-close" onClick={onClose}>
+            ✕
+          </button>
+        )}
 
         <h2>🪙 Mint NFTs on BASE</h2>
 
@@ -96,17 +111,23 @@ function MintingModal({ cards, onClose, onSuccess }) {
             <p>Connect your wallet to mint</p>
             <appkit-button />
           </div>
-        ) : status === "idle" || status === "error" ? (
+        ) : status === "idle" ? (
           <button className="mint-btn" onClick={handleMint}>
             🪙 Mint {cards.length} Card{cards.length > 1 ? "s" : ""} (FREE)
           </button>
-        ) : status === "success" ? (
-          <button className="success-btn" onClick={handleSuccess}>
-            ✅ Done
-          </button>
+        ) : status === "error" ? (
+          <>
+            <button className="mint-btn" onClick={handleMint}>
+              🔄 Try Again
+            </button>
+            <button className="secondary-btn" onClick={onClose}>
+              Cancel
+            </button>
+          </>
         ) : (
+          // Processing states - show disabled button
           <button className="mint-btn" disabled>
-            Processing...
+            {status === "success" ? "Redirecting..." : "Processing..."}
           </button>
         )}
       </div>
