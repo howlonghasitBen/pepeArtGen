@@ -58,6 +58,62 @@
   padding: 0 40px;
 }
 
+/* Success Card Wrapper - displays full rendered card like carousel */
+.success-card-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  max-width: 280px;
+  width: 100%;
+}
+
+.success-card-image {
+  width: 100%;
+  height: auto;
+  max-height: 400px;
+  object-fit: contain;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4), 0 0 60px rgba(102, 126, 234, 0.2);
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.card-placeholder {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  min-height: 300px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  color: rgba(0, 0, 0, 0.5);
+  gap: 12px;
+}
+
+.card-placeholder .spinner {
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #667eea;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.card-placeholder p {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
 .card-nav-btn {
   position: absolute;
   top: 50%;
@@ -107,7 +163,7 @@
   gap: 10px;
   width: 100%;
   padding: 14px 20px;
-  background: #2081E2;
+  background: #2081e2;
   color: white;
   text-decoration: none;
   border-radius: 14px;
@@ -202,6 +258,14 @@
 
   .full-card-container {
     padding: 0 32px;
+  }
+
+  .success-card-wrapper {
+    max-width: 240px;
+  }
+
+  .success-card-image {
+    max-height: 340px;
   }
 
   .card-nav-btn {

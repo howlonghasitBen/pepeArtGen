@@ -1,89 +1,75 @@
-import { useState } from 'react'
-import MintedCardDisplay from './MintedCardDisplay'
-import './MintSuccessModal.css'
+import { useState } from "react";
+import "./MintSuccessModal.css";
 
 function MintSuccessModal({ mintData, onClose }) {
-  const { cards, tokenIds, transactionHash } = mintData
-  const [currentCardIndex, setCurrentCardIndex] = useState(0)
-  const [downloading, setDownloading] = useState({})
+  const { cards, tokenIds, transactionHash } = mintData;
+  const [currentCardIndex, setCurrentCardIndex] = useState(0);
+  const [downloading, setDownloading] = useState({});
 
-  const NFT_CONTRACT_ADDRESS = import.meta.env.VITE_NFT_CONTRACT_ADDRESS
-  const NETWORK = import.meta.env.VITE_NETWORK || 'base'
+  const NFT_CONTRACT_ADDRESS = import.meta.env.VITE_NFT_CONTRACT_ADDRESS;
+  const NETWORK = import.meta.env.VITE_NETWORK || "base";
 
-  const currentCard = cards[currentCardIndex]
-  const currentTokenId = tokenIds[currentCardIndex]
+  const currentCard = cards[currentCardIndex];
+  const currentTokenId = tokenIds[currentCardIndex];
 
   /**
-   * Download card art from IPFS
+   * Download card art directly from the image URL (IPFS)
    */
   const downloadCardArt = async (card, index) => {
     try {
-      setDownloading((prev) => ({ ...prev, [index]: true }))
+      setDownloading((prev) => ({ ...prev, [index]: true }));
 
-      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001'
+      const imageUrl = card.image || card.imageData;
 
-      const response = await fetch(`${API_BASE_URL}/api/cards/${card.id}`)
-      if (!response.ok) {
-        throw new Error('Failed to fetch card IPFS links')
+      if (!imageUrl) {
+        throw new Error("No image URL found for this card");
       }
 
-      const cardData = await response.json()
+      // Fetch the image as a blob
+      const imageResponse = await fetch(imageUrl);
+      const blob = await imageResponse.blob();
+      const url = window.URL.createObjectURL(blob);
 
-      const styledCardLink = cardData.ipfsLinks?.find(
-        (link) => link.type === 'styled_card'
-      )
+      // Create temporary link to trigger download
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${card.name.replace(/\s+/g, "_")}_NFT.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
 
-      if (!styledCardLink) {
-        const rawImageLink = cardData.ipfsLinks?.find(
-          (link) => link.type === 'raw_image'
-        )
-        if (rawImageLink) {
-          window.open(rawImageLink.gateway_url, '_blank')
-          return
-        }
-        throw new Error('No card image found in IPFS')
-      }
-
-      const imageResponse = await fetch(styledCardLink.gateway_url)
-      const blob = await imageResponse.blob()
-      const url = window.URL.createObjectURL(blob)
-
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `${card.name.replace(/\s+/g, '_')}_NFT.png`
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-      window.URL.revokeObjectURL(url)
-
-      console.log('✅ Card art downloaded:', card.name)
+      console.log("✅ Card art downloaded:", card.name);
     } catch (err) {
-      console.error('Download failed:', err)
-      alert(`Failed to download card art: ${err.message}`)
+      console.error("Download failed:", err);
+      alert(`Failed to download card art: ${err.message}`);
     } finally {
-      setDownloading((prev) => ({ ...prev, [index]: false }))
+      setDownloading((prev) => ({ ...prev, [index]: false }));
     }
-  }
+  };
 
   /**
    * Get OpenSea URL for a token
    */
   const getOpenSeaUrl = (tokenId) => {
-    const network = NETWORK === 'baseSepolia' ? 'base-sepolia' : 'base'
-    return `https://opensea.io/assets/${network}/${NFT_CONTRACT_ADDRESS}/${tokenId}`
-  }
+    const network = NETWORK === "baseSepolia" ? "base-sepolia" : "base";
+    return `https://opensea.io/assets/${network}/${NFT_CONTRACT_ADDRESS}/${tokenId}`;
+  };
 
   const handlePrevCard = () => {
-    setCurrentCardIndex((prev) => (prev > 0 ? prev - 1 : cards.length - 1))
-  }
+    setCurrentCardIndex((prev) => (prev > 0 ? prev - 1 : cards.length - 1));
+  };
 
   const handleNextCard = () => {
-    setCurrentCardIndex((prev) => (prev < cards.length - 1 ? prev + 1 : 0))
-  }
+    setCurrentCardIndex((prev) => (prev < cards.length - 1 ? prev + 1 : 0));
+  };
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content success-modal" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="modal-content success-modal"
+        onClick={(e) => e.stopPropagation()}
+      >
         <button className="modal-close" onClick={onClose}>
           ✕
         </button>
@@ -103,9 +89,28 @@ function MintSuccessModal({ mintData, onClose }) {
               ‹
             </button>
           )}
-          
-          <MintedCardDisplay card={currentCard} />
-          
+
+          <div className="minted-card-display-wrapper">
+            {currentCard.image || currentCard.imageData ? (
+              <img
+                src={currentCard.image || currentCard.imageData}
+                alt={currentCard.name || `Card #${currentTokenId}`}
+                className="minted-card-image"
+                style={{
+                  maxWidth: "100%",
+                  maxHeight: "60vh",
+                  borderRadius: "12px",
+                  boxShadow: "0 8px 30px rgba(0,0,0,0.3)",
+                  objectFit: "contain",
+                }}
+              />
+            ) : (
+              <div className="card-placeholder">
+                <p>Loading card image...</p>
+              </div>
+            )}
+          </div>
+
           {cards.length > 1 && (
             <button className="card-nav-btn next" onClick={handleNextCard}>
               ›
@@ -128,11 +133,7 @@ function MintSuccessModal({ mintData, onClose }) {
             rel="noopener noreferrer"
             className="opensea-link-prominent"
           >
-            <svg className="opensea-logo" viewBox="0 0 90 90" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="45" cy="45" r="45" fill="#2081E2"/>
-              <path d="M22.216 46.653 22.4 46.3l13.098-20.435c.18-.282.61-.203.681.125a35.184 35.184 0 0 0 2.768 7.726c.467 1.063.998 2.096 1.588 3.092.1.169.085.38-.041.53l-16.05 9.242a.378.378 0 0 1-.525-.097.384.384 0 0 1-.036-.102l-.666-1.728z" fill="white"/>
-              <path d="M66.21 50.578h-6.573a.35.35 0 0 1-.308-.184l-3.228-5.59a.35.35 0 0 0-.308-.184h-8.645a.35.35 0 0 0-.308.184l-3.227 5.59a.35.35 0 0 1-.308.184h-6.574a.35.35 0 0 1-.308-.525l9.927-17.2a.35.35 0 0 1 .308-.184h9.927a.35.35 0 0 1 .308.184l9.927 17.2a.35.35 0 0 1-.308.525z" fill="white"/>
-            </svg>
+            <img src={openseaLogo} alt="OpenSea" />
             View on OpenSea
           </a>
         )}
@@ -152,7 +153,9 @@ function MintSuccessModal({ mintData, onClose }) {
             onClick={() => downloadCardArt(currentCard, currentCardIndex)}
             disabled={downloading[currentCardIndex]}
           >
-            {downloading[currentCardIndex] ? 'Downloading...' : '📥 Download Art'}
+            {downloading[currentCardIndex]
+              ? "Downloading..."
+              : "📥 Download Art"}
           </button>
         </div>
 
@@ -161,7 +164,7 @@ function MintSuccessModal({ mintData, onClose }) {
         </button>
       </div>
     </div>
-  )
+  );
 }
 
-export default MintSuccessModal
+export default MintSuccessModal;
