@@ -26,8 +26,8 @@ const projectId =
 const metadata = {
   name: "SURF Waves TCG",
   description: "Generate AI-powered trading cards on Base",
-  url: "https://surf.works",
-  icons: ["https://surf.works/logo.png"],
+  url: "https://wavestcg.xyz",
+  icons: ["https://wavestcg.xyz/public/favicon.ico"],
 };
 
 const targetChainId = Number(import.meta.env.VITE_TARGET_CHAIN_ID || 8453);
