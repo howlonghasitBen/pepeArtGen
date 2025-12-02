@@ -8,6 +8,11 @@ import { WagmiAdapter } from "@reown/appkit-adapter-wagmi";
 // Import the new Web3Provider
 import { Web3Provider } from "./context/Web3Context";
 
+// Images should be in the /public folder
+// These paths reference files in public/ which Vite serves at root
+const wavesLogo = "/waves-collection-logo.png"; // or .svg if using SVG
+const openseaLogo = "/opensea-logo.svg";
+
 // Components
 import GeneratorScreen from "./components/GeneratorScreen";
 import CurationScreen from "./components/CurationScreen";
@@ -85,7 +90,7 @@ function AppContent() {
         <div className="hero-content">
           <div className="logo-container">
             <div className="logo-icon">
-              <img src="./src/images/waves-collection-logo.png" alt="SURF" />
+              <img src={wavesLogo} alt="SURF" />
             </div>
             <div className="logo-rings">
               <div className="ring ring-1" />
@@ -144,7 +149,7 @@ function AppContent() {
             className="opensea-btn"
             title="View on OpenSea"
           >
-            <img src="/src/images/opensea-logo.svg" alt="OpenSea" />
+            <img src={openseaLogo} alt="OpenSea" />
           </a>
           <button
             className="info-btn"

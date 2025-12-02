@@ -5,6 +5,9 @@ import WAVES_TCG_NFT_ABI from "../contracts/WavesTCGNFT.json";
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:3001";
 
+// Max blocks per query (RPC free tier limit)
+const MAX_BLOCKS_PER_QUERY = 9999n;
+
 export function useMyCards() {
   const [cards, setCards] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -49,23 +52,41 @@ export function useMyCards() {
     ];
 
     let ipfsCID = null;
-    let url = tokenURI;
 
-    // Extract CID if it's an ipfs:// URI
-    if (tokenURI.startsWith("ipfs://")) {
-      ipfsCID = tokenURI.replace("ipfs://", "");
-    } else if (tokenURI.includes("/ipfs/")) {
-      // Extract CID from gateway URL
+    // Handle HTTPS gateway URLs directly
+    if (tokenURI.startsWith("https://")) {
+      try {
+        const response = await fetch(tokenURI, {
+          signal: AbortSignal.timeout(10000),
+        });
+        if (response.ok) {
+          return await response.json();
+        }
+      } catch (err) {
+        console.warn(`Direct fetch failed for: ${tokenURI}`, err.message);
+      }
+
+      // Extract CID from gateway URL for fallback
       const match = tokenURI.match(/\/ipfs\/([^/?]+)/);
       if (match) {
         ipfsCID = match[1];
       }
     }
 
+    // Extract CID if it's an ipfs:// URI
+    if (tokenURI.startsWith("ipfs://")) {
+      ipfsCID = tokenURI.replace("ipfs://", "");
+    }
+
+    if (!ipfsCID) {
+      console.error(`Could not extract IPFS CID from: ${tokenURI}`);
+      return null;
+    }
+
     // Try each gateway
     for (const gateway of gateways) {
       try {
-        const fetchUrl = ipfsCID ? `${gateway}${ipfsCID}` : url;
+        const fetchUrl = `${gateway}${ipfsCID}`;
         console.log(`    Trying gateway: ${fetchUrl}`);
 
         const response = await fetch(fetchUrl, {
@@ -96,6 +117,59 @@ export function useMyCards() {
   };
 
   /**
+   * Fetch events in chunks to respect RPC block limits
+   */
+  const fetchEventsInChunks = async (fromBlock, toBlock, minterAddress) => {
+    const allLogs = [];
+    let currentFrom = fromBlock;
+
+    console.log(
+      `📊 Fetching events from block ${fromBlock} to ${toBlock} in chunks...`
+    );
+
+    while (currentFrom < toBlock) {
+      const currentTo =
+        currentFrom + MAX_BLOCKS_PER_QUERY > toBlock
+          ? toBlock
+          : currentFrom + MAX_BLOCKS_PER_QUERY;
+
+      try {
+        console.log(`  📦 Querying blocks ${currentFrom} to ${currentTo}...`);
+
+        const logs = await publicClient.getContractEvents({
+          address: NFT_CONTRACT_ADDRESS,
+          abi: WAVES_TCG_NFT_ABI.abi,
+          eventName: "CardMinted",
+          args: {
+            minter: minterAddress,
+          },
+          fromBlock: currentFrom,
+          toBlock: currentTo,
+        });
+
+        if (logs && logs.length > 0) {
+          allLogs.push(...logs);
+          console.log(`  ✅ Found ${logs.length} events in this chunk`);
+        }
+      } catch (err) {
+        console.warn(
+          `  ⚠️ Failed to fetch chunk ${currentFrom}-${currentTo}:`,
+          err.message
+        );
+        // Continue to next chunk even if one fails
+      }
+
+      currentFrom = currentTo + 1n;
+
+      // Small delay to avoid rate limiting
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+
+    console.log(`📊 Total events found: ${allLogs.length}`);
+    return allLogs;
+  };
+
+  /**
    * Fetch cards from blockchain using CardMinted events
    */
   const fetchCardsFromBlockchain = async () => {
@@ -108,31 +182,16 @@ export function useMyCards() {
       console.log("🔍 Fetching NFTs from blockchain for address:", address);
       console.log("📝 Contract address:", NFT_CONTRACT_ADDRESS);
 
-      // Get current block to calculate a reasonable starting block
+      // Get current block
       const currentBlock = await publicClient.getBlockNumber();
 
-      // Query last ~3 months of blocks (assuming ~2 sec block time on Base)
-      // Base: ~15,768,000 blocks per year, so ~3.9M blocks in 3 months
-      // We'll query from 4M blocks ago or genesis, whichever is more recent
+      // Query last ~50,000 blocks in chunks
       const blocksToQuery = 50_000n;
       const fromBlock =
         currentBlock > blocksToQuery ? currentBlock - blocksToQuery : 0n;
 
-      console.log(
-        `📊 Querying events from block ${fromBlock} to ${currentBlock}`
-      );
-
-      // Query CardMinted events for this address using getContractEvents
-      const logs = await publicClient.getContractEvents({
-        address: NFT_CONTRACT_ADDRESS,
-        abi: WAVES_TCG_NFT_ABI.abi,
-        eventName: "CardMinted",
-        args: {
-          minter: address,
-        },
-        fromBlock,
-        toBlock: "latest",
-      });
+      // Fetch events in chunks to respect RPC limits
+      const logs = await fetchEventsInChunks(fromBlock, currentBlock, address);
 
       console.log(`📦 Found ${logs.length} CardMinted events`);
 
@@ -147,20 +206,12 @@ export function useMyCards() {
           const tokenURI = log.args.tokenURI;
 
           console.log(`  🎴 Processing token #${tokenId}`);
-          console.log(`  📍 Token URI: ${tokenURI}`);
 
           // Fetch metadata from IPFS
           const metadata = await fetchTokenMetadata(tokenURI);
 
           if (!metadata) {
             console.warn(`  ⚠️ Failed to fetch metadata for token #${tokenId}`);
-          } else {
-            console.log(
-              `  ✅ Metadata loaded for token #${tokenId}: ${metadata.name}`
-            );
-          }
-
-          if (!metadata) {
             return {
               id: `token-${tokenId}`,
               tokenId,
@@ -169,6 +220,10 @@ export function useMyCards() {
               openSeaUrl: getOpenSeaUrl(tokenId),
             };
           }
+
+          console.log(
+            `  ✅ Metadata loaded for token #${tokenId}: ${metadata.name}`
+          );
 
           // Extract attributes from metadata
           const getAttr = (traitType, defaultValue = "") => {
@@ -181,7 +236,10 @@ export function useMyCards() {
           // Process image URL
           let imageUrl = metadata.image;
           if (imageUrl?.startsWith("ipfs://")) {
-            imageUrl = imageUrl.replace("ipfs://", "https://ipfs.io/ipfs/");
+            imageUrl = imageUrl.replace(
+              "ipfs://",
+              "https://gateway.pinata.cloud/ipfs/"
+            );
           }
 
           // Build card object compatible with MintedCardDisplay
@@ -276,7 +334,7 @@ export function useMyCards() {
     } catch (err) {
       console.error("❌ Error fetching cards from blockchain:", err);
       console.error("Error details:", err.message, err.stack);
-      throw err; // Propagate error so it can be caught by fetchCards
+      throw err;
     }
   };
 
