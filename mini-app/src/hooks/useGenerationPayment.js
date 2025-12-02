@@ -1,12 +1,6 @@
-import { useState, useEffect } from "react";
-import {
-  useAccount,
-  useWriteContract,
-  useReadContract,
-  useChainId,
-} from "wagmi";
-import { parseUnits } from "viem";
-import USDC_ABI from "../contracts/USDC.json";
+import { useState } from "react";
+import { useAccount, useWriteContract, useReadContract } from "wagmi";
+import { parseUnits, erc20Abi } from "viem";
 
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:3001";
@@ -26,7 +20,7 @@ export function useGenerationPayment() {
   const USDC_CONTRACT_ADDRESS = import.meta.env.VITE_USDC_CONTRACT_ADDRESS;
   const TREASURY_ADDRESS = import.meta.env.VITE_TREASURY_ADDRESS;
 
-  // --- FIX: Robust Balance Reading ---
+  // --- Read USDC Balance using standard ERC20 ABI ---
   const {
     data: usdcBalance,
     refetch: refetchBalance,
@@ -34,8 +28,7 @@ export function useGenerationPayment() {
     isLoading: isBalanceLoading,
   } = useReadContract({
     address: USDC_CONTRACT_ADDRESS,
-    // Handle both ABI formats (array vs object)
-    abi: USDC_ABI.abi || USDC_ABI,
+    abi: erc20Abi, // <--- Using standard ABI from viem
     functionName: "balanceOf",
     args: [address],
     chainId: TARGET_CHAIN_ID, // Force read from correct chain
@@ -55,7 +48,6 @@ export function useGenerationPayment() {
   // --- Helper: Manual fallback for balance ---
   const fetchBalanceManually = async () => {
     try {
-      // Just alias to refetch for now, but could be extended
       const result = await refetchBalance();
       if (result.data) {
         setManualBalance(result.data);
@@ -110,10 +102,10 @@ export function useGenerationPayment() {
       setStatus("paying");
       setError(null);
 
-      // 1. Send TX
+      // 1. Send TX using standard ERC20 ABI
       const hash = await writeContractAsync({
         address: USDC_CONTRACT_ADDRESS,
-        abi: USDC_ABI.abi || USDC_ABI,
+        abi: erc20Abi, // <--- Using standard ABI from viem
         functionName: "transfer",
         args: [TREASURY_ADDRESS, usdcAmount],
       });
