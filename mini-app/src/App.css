@@ -22,7 +22,6 @@
   position: relative;
   text-align: center;
   padding: 40px 0 30px;
-  margin-bottom: 20px;
 }
 
 .hero-glow {
@@ -49,7 +48,6 @@
 .logo-container {
   position: relative;
   display: inline-block;
-  margin-bottom: 16px;
 }
 
 .logo-icon {
@@ -128,7 +126,6 @@
   font-size: 0.95rem;
   color: var(--text-primary);
   opacity: 0.8;
-  margin-bottom: 20px;
 }
 
 /* Hero Stats */
