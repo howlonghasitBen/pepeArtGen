@@ -82,34 +82,41 @@ function MintSuccessModal({ mintData, onClose }) {
   const currentImageUrl = getCardImage(currentCardIndex);
 
   /**
-   * Download card art from IPFS
+   * Download card art via server proxy (bypasses CORS)
    */
   const downloadCardArt = async (card, index) => {
     try {
       setDownloading((prev) => ({ ...prev, [index]: true }));
 
-      // Use the already-fetched styled_card URL if available
-      const imageUrl = cardImages[index];
+      const cardId = card.databaseId || card.id;
 
-      if (imageUrl) {
-        const imageResponse = await fetch(imageUrl);
-        const blob = await imageResponse.blob();
-        const url = window.URL.createObjectURL(blob);
-
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `${card.name.replace(/\s+/g, "_")}_NFT.png`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);
-
-        console.log("✅ Card art downloaded:", card.name);
+      if (!cardId) {
+        alert("Card ID not available for download.");
         return;
       }
 
-      // Fallback: open in new tab
-      alert("Image not available for download yet. Try again in a moment.");
+      // Use server proxy to download (bypasses CORS)
+      const downloadUrl = `${API_BASE_URL}/api/cards/${cardId}/download`;
+
+      const response = await fetch(downloadUrl);
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Download failed: ${response.status}`);
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${card.name.replace(/\s+/g, "_")}_NFT.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+
+      console.log("✅ Card art downloaded:", card.name);
     } catch (err) {
       console.error("Download failed:", err);
       alert(`Failed to download card art: ${err.message}`);

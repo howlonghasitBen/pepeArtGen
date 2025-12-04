@@ -543,6 +543,63 @@ app.get("/api/card/:id", (req, res) => {
   res.json(card);
 });
 
+// Download card image (proxy to bypass CORS)
+app.get("/api/cards/:id/download", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!isSupabaseConfigured()) {
+      return res.status(503).json({
+        error: "Database not configured",
+        message: "Please configure Supabase in your .env file",
+      });
+    }
+
+    // Get IPFS links for this card
+    const ipfsLinks = await ipfsService.getCardLinks(id);
+
+    if (!ipfsLinks || ipfsLinks.length === 0) {
+      return res.status(404).json({ error: "No IPFS links found for this card" });
+    }
+
+    // Find the styled_card (rendered card image)
+    const styledCardLink = ipfsLinks.find((l) => l.type === "styled_card");
+
+    if (!styledCardLink?.gateway_url) {
+      return res.status(404).json({ error: "Card image not available" });
+    }
+
+    console.log(`📥 Proxying download for card ${id}: ${styledCardLink.gateway_url}`);
+
+    // Fetch the image from IPFS gateway
+    const imageResponse = await fetch(styledCardLink.gateway_url);
+
+    if (!imageResponse.ok) {
+      throw new Error(`Failed to fetch image: ${imageResponse.status}`);
+    }
+
+    const imageBuffer = await imageResponse.arrayBuffer();
+
+    // Get the card name for the filename
+    const card = await cardService.getCard(id);
+    const filename = card?.name
+      ? `${card.name.replace(/\s+/g, "_")}_NFT.png`
+      : `card_${id}.png`;
+
+    // Set headers for download
+    res.set({
+      "Content-Type": "image/png",
+      "Content-Disposition": `attachment; filename="${filename}"`,
+      "Content-Length": imageBuffer.byteLength,
+    });
+
+    res.send(Buffer.from(imageBuffer));
+  } catch (error) {
+    console.error("Error downloading card image:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Get card by ID with IPFS links (from database)
 app.get("/api/cards/:id", async (req, res) => {
   try {
