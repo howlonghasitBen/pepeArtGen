@@ -52,6 +52,7 @@ function CurationScreen({ cards, onBack }) {
   };
 
   const handleMintAll = () => {
+    setShowMintModal(false); // Close Curation Complete screen to prevent duplicate mints
     setShowMintingModal(true);
   };
 
