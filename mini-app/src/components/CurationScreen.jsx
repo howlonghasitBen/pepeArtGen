@@ -68,6 +68,7 @@ function CurationScreen({ cards, onBack }) {
   const handleCloseSuccess = () => {
     setShowSuccessModal(false);
     setMintData(null);
+    onBack(); // Return to generation screen after successful mint
   };
 
   if (cards.length === 0) {
