@@ -1,10 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
 import { usePublicClient } from "wagmi";
 import WAVES_TCG_NFT_ABI from "../contracts/WavesTCGNFT.json";
-import { getContractDeploymentBlock } from "../utils/getContractDeploymentBlock";
 
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:3001";
+
+// Contract deployment block on Base mainnet
+const CONTRACT_DEPLOYMENT_BLOCK = 38740679n;
 
 export function useAllCards() {
   const [cards, setCards] = useState([]);
@@ -159,16 +161,13 @@ export function useAllCards() {
       console.log("🔍 Fetching ALL NFTs from blockchain");
       console.log("📝 Contract address:", NFT_CONTRACT_ADDRESS);
 
-      // Get contract deployment block and current block
-      const [deploymentBlock, currentBlock] = await Promise.all([
-        getContractDeploymentBlock(publicClient, NFT_CONTRACT_ADDRESS),
-        publicClient.getBlockNumber(),
-      ]);
+      // Get current block
+      const currentBlock = await publicClient.getBlockNumber();
 
-      console.log("📦 Querying from deployment block:", deploymentBlock.toString());
+      console.log("📦 Querying from deployment block:", CONTRACT_DEPLOYMENT_BLOCK.toString());
 
       // Fetch events in chunks from deployment block to current block
-      const logs = await fetchEventsInChunks(deploymentBlock, currentBlock);
+      const logs = await fetchEventsInChunks(CONTRACT_DEPLOYMENT_BLOCK, currentBlock);
 
       console.log(`📦 Found ${logs.length} total CardMinted events`);
 
