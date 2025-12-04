@@ -82,7 +82,7 @@ function MintSuccessModal({ mintData, onClose }) {
   const currentImageUrl = getCardImage(currentCardIndex);
 
   /**
-   * Check if running on iOS/mobile Safari
+   * Check if running on mobile device
    */
   const isMobile = () => {
     return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
@@ -90,7 +90,7 @@ function MintSuccessModal({ mintData, onClose }) {
 
   /**
    * Download card art via server proxy (bypasses CORS)
-   * On mobile: opens image in new tab for user to save
+   * On mobile/wallet apps: uses Web Share API or opens in new tab
    * On desktop: triggers automatic download
    */
   const downloadCardArt = async (card, index) => {
@@ -106,15 +106,9 @@ function MintSuccessModal({ mintData, onClose }) {
 
       // Use server proxy to download (bypasses CORS)
       const downloadUrl = `${API_BASE_URL}/api/cards/${cardId}/download`;
+      const filename = `${card.name.replace(/\s+/g, "_")}_NFT.png`;
 
-      // On mobile, open in new tab - user can long-press to save
-      if (isMobile()) {
-        window.open(downloadUrl, "_blank");
-        console.log("✅ Opened card image in new tab (mobile):", card.name);
-        return;
-      }
-
-      // Desktop: fetch and trigger download
+      // Fetch the image first
       const response = await fetch(downloadUrl);
 
       if (!response.ok) {
@@ -123,11 +117,45 @@ function MintSuccessModal({ mintData, onClose }) {
       }
 
       const blob = await response.blob();
+
+      // On mobile, try Web Share API first (works in wallet apps)
+      if (isMobile() && navigator.share && navigator.canShare) {
+        try {
+          const file = new File([blob], filename, { type: "image/png" });
+          if (navigator.canShare({ files: [file] })) {
+            await navigator.share({
+              files: [file],
+              title: card.name,
+              text: `${card.name} NFT Card`,
+            });
+            console.log("✅ Card shared via Web Share API:", card.name);
+            return;
+          }
+        } catch (shareErr) {
+          // User cancelled or share failed, fall through to other methods
+          if (shareErr.name !== "AbortError") {
+            console.warn("Share failed, trying fallback:", shareErr);
+          }
+        }
+      }
+
+      // Create blob URL for download/display
       const url = window.URL.createObjectURL(blob);
 
+      // On mobile, if share didn't work, open blob URL in new tab
+      if (isMobile()) {
+        // Open blob URL directly - this shows the image for saving
+        window.open(url, "_blank");
+        // Don't revoke immediately so the new tab can load it
+        setTimeout(() => window.URL.revokeObjectURL(url), 60000);
+        console.log("✅ Opened card image in new tab (mobile):", card.name);
+        return;
+      }
+
+      // Desktop: trigger download via anchor click
       const a = document.createElement("a");
       a.href = url;
-      a.download = `${card.name.replace(/\s+/g, "_")}_NFT.png`;
+      a.download = filename;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
