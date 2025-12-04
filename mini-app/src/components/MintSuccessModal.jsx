@@ -82,7 +82,16 @@ function MintSuccessModal({ mintData, onClose }) {
   const currentImageUrl = getCardImage(currentCardIndex);
 
   /**
+   * Check if running on iOS/mobile Safari
+   */
+  const isMobile = () => {
+    return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  };
+
+  /**
    * Download card art via server proxy (bypasses CORS)
+   * On mobile: opens image in new tab for user to save
+   * On desktop: triggers automatic download
    */
   const downloadCardArt = async (card, index) => {
     try {
@@ -98,6 +107,14 @@ function MintSuccessModal({ mintData, onClose }) {
       // Use server proxy to download (bypasses CORS)
       const downloadUrl = `${API_BASE_URL}/api/cards/${cardId}/download`;
 
+      // On mobile, open in new tab - user can long-press to save
+      if (isMobile()) {
+        window.open(downloadUrl, "_blank");
+        console.log("✅ Opened card image in new tab (mobile):", card.name);
+        return;
+      }
+
+      // Desktop: fetch and trigger download
       const response = await fetch(downloadUrl);
 
       if (!response.ok) {
