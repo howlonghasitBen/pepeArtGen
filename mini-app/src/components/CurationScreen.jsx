@@ -60,6 +60,8 @@ function CurationScreen({ cards, onBack }) {
     console.log("Minted successfully!", data);
     setMintData(data);
     setShowMintingModal(false);
+    setShowMintModal(false); // Close Curation Complete screen to prevent re-minting same cards
+    setToMint([]); // Clear minted cards from selection
     setShowSuccessModal(true);
   };
 
