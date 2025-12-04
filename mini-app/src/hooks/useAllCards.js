@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { usePublicClient } from "wagmi";
 import WAVES_TCG_NFT_ABI from "../contracts/WavesTCGNFT.json";
+import { getContractDeploymentBlock } from "../utils/getContractDeploymentBlock";
 
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:3001";
@@ -92,6 +93,59 @@ export function useAllCards() {
     return `https://opensea.io/assets/${network}/${NFT_CONTRACT_ADDRESS}/${tokenId}`;
   };
 
+  // Max blocks per query (RPC free tier limit)
+  const MAX_BLOCKS_PER_QUERY = 9999n;
+
+  /**
+   * Fetch events in chunks to respect RPC block limits
+   */
+  const fetchEventsInChunks = async (fromBlock, toBlock) => {
+    const allLogs = [];
+    let currentFrom = fromBlock;
+
+    console.log(
+      `📊 Fetching events from block ${fromBlock} to ${toBlock} in chunks...`
+    );
+
+    while (currentFrom < toBlock) {
+      const currentTo =
+        currentFrom + MAX_BLOCKS_PER_QUERY > toBlock
+          ? toBlock
+          : currentFrom + MAX_BLOCKS_PER_QUERY;
+
+      try {
+        console.log(`  📦 Querying blocks ${currentFrom} to ${currentTo}...`);
+
+        const logs = await publicClient.getContractEvents({
+          address: NFT_CONTRACT_ADDRESS,
+          abi: WAVES_TCG_NFT_ABI.abi,
+          eventName: "CardMinted",
+          fromBlock: currentFrom,
+          toBlock: currentTo,
+        });
+
+        if (logs && logs.length > 0) {
+          allLogs.push(...logs);
+          console.log(`  ✅ Found ${logs.length} events in this chunk`);
+        }
+      } catch (err) {
+        console.warn(
+          `  ⚠️ Failed to fetch chunk ${currentFrom}-${currentTo}:`,
+          err.message
+        );
+        // Continue to next chunk even if one fails
+      }
+
+      currentFrom = currentTo + 1n;
+
+      // Small delay to avoid rate limiting
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+
+    console.log(`📊 Total events found: ${allLogs.length}`);
+    return allLogs;
+  };
+
   /**
    * Fetch ALL cards from blockchain using CardMinted events (no address filter)
    */
@@ -105,28 +159,16 @@ export function useAllCards() {
       console.log("🔍 Fetching ALL NFTs from blockchain");
       console.log("📝 Contract address:", NFT_CONTRACT_ADDRESS);
 
-      // Get current block to calculate a reasonable starting block
-      const currentBlock = await publicClient.getBlockNumber();
+      // Get contract deployment block and current block
+      const [deploymentBlock, currentBlock] = await Promise.all([
+        getContractDeploymentBlock(publicClient, NFT_CONTRACT_ADDRESS),
+        publicClient.getBlockNumber(),
+      ]);
 
-      // Query last ~3 months of blocks (assuming ~2 sec block time on Base)
-      // Base: ~15,768,000 blocks per year, so ~3.9M blocks in 3 months
-      // We'll query from 4M blocks ago or genesis, whichever is more recent
-      const blocksToQuery = 50_000n;
-      const fromBlock =
-        currentBlock > blocksToQuery ? currentBlock - blocksToQuery : 0n;
+      console.log("📦 Querying from deployment block:", deploymentBlock.toString());
 
-      console.log(
-        `📊 Querying events from block ${fromBlock} to ${currentBlock}`
-      );
-
-      // Query ALL CardMinted events (no address filter)
-      const logs = await publicClient.getContractEvents({
-        address: NFT_CONTRACT_ADDRESS,
-        abi: WAVES_TCG_NFT_ABI.abi,
-        eventName: "CardMinted",
-        fromBlock,
-        toBlock: "latest",
-      });
+      // Fetch events in chunks from deployment block to current block
+      const logs = await fetchEventsInChunks(deploymentBlock, currentBlock);
 
       console.log(`📦 Found ${logs.length} total CardMinted events`);
 

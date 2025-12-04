@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useAccount, usePublicClient } from "wagmi";
 import WAVES_TCG_NFT_ABI from "../contracts/WavesTCGNFT.json";
+import { getContractDeploymentBlock } from "../utils/getContractDeploymentBlock";
 
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:3001";
@@ -182,13 +183,16 @@ export function useMyCards() {
       console.log("🔍 Fetching NFTs from blockchain for address:", address);
       console.log("📝 Contract address:", NFT_CONTRACT_ADDRESS);
 
-      // Get current block
-      const currentBlock = await publicClient.getBlockNumber();
+      // Get contract deployment block and current block
+      const [deploymentBlock, currentBlock] = await Promise.all([
+        getContractDeploymentBlock(publicClient, NFT_CONTRACT_ADDRESS),
+        publicClient.getBlockNumber(),
+      ]);
 
-      // Query last ~50,000 blocks in chunks
-      const blocksToQuery = 50_000n;
-      const fromBlock =
-        currentBlock > blocksToQuery ? currentBlock - blocksToQuery : 0n;
+      console.log("📦 Querying from deployment block:", deploymentBlock.toString());
+
+      // Query from contract deployment block to get all events
+      const fromBlock = deploymentBlock;
 
       // Fetch events in chunks to respect RPC limits
       const logs = await fetchEventsInChunks(fromBlock, currentBlock, address);
