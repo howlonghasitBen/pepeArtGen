@@ -4,7 +4,6 @@ import "./MintSuccessModal.css";
 function MintSuccessModal({ mintData, onClose }) {
   const { cards, tokenIds, transactionHash } = mintData;
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
-  const [downloading, setDownloading] = useState({});
   const [cardImages, setCardImages] = useState({});
   const [loadingImages, setLoadingImages] = useState(true);
 
@@ -80,95 +79,6 @@ function MintSuccessModal({ mintData, onClose }) {
   };
 
   const currentImageUrl = getCardImage(currentCardIndex);
-
-  /**
-   * Check if running on mobile device
-   */
-  const isMobile = () => {
-    return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-  };
-
-  /**
-   * Download card art via server proxy (bypasses CORS)
-   * On mobile/wallet apps: uses Web Share API or opens in new tab
-   * On desktop: triggers automatic download
-   */
-  const downloadCardArt = async (card, index) => {
-    try {
-      setDownloading((prev) => ({ ...prev, [index]: true }));
-
-      const cardId = card.databaseId || card.id;
-
-      if (!cardId) {
-        alert("Card ID not available for download.");
-        return;
-      }
-
-      // Use server proxy to download (bypasses CORS)
-      const downloadUrl = `${API_BASE_URL}/api/cards/${cardId}/download`;
-      const filename = `${card.name.replace(/\s+/g, "_")}_NFT.png`;
-
-      // Fetch the image first
-      const response = await fetch(downloadUrl);
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `Download failed: ${response.status}`);
-      }
-
-      const blob = await response.blob();
-
-      // On mobile, try Web Share API first (works in wallet apps)
-      if (isMobile() && navigator.share && navigator.canShare) {
-        try {
-          const file = new File([blob], filename, { type: "image/png" });
-          if (navigator.canShare({ files: [file] })) {
-            await navigator.share({
-              files: [file],
-              title: card.name,
-              text: `${card.name} NFT Card`,
-            });
-            console.log("✅ Card shared via Web Share API:", card.name);
-            return;
-          }
-        } catch (shareErr) {
-          // User cancelled or share failed, fall through to other methods
-          if (shareErr.name !== "AbortError") {
-            console.warn("Share failed, trying fallback:", shareErr);
-          }
-        }
-      }
-
-      // Create blob URL for download/display
-      const url = window.URL.createObjectURL(blob);
-
-      // On mobile, if share didn't work, open blob URL in new tab
-      if (isMobile()) {
-        // Open blob URL directly - this shows the image for saving
-        window.open(url, "_blank");
-        // Don't revoke immediately so the new tab can load it
-        setTimeout(() => window.URL.revokeObjectURL(url), 60000);
-        console.log("✅ Opened card image in new tab (mobile):", card.name);
-        return;
-      }
-
-      // Desktop: trigger download via anchor click
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
-
-      console.log("✅ Card art downloaded:", card.name);
-    } catch (err) {
-      console.error("Download failed:", err);
-      alert(`Failed to download card art: ${err.message}`);
-    } finally {
-      setDownloading((prev) => ({ ...prev, [index]: false }));
-    }
-  };
 
   /**
    * Get OpenSea URL for a token
@@ -283,15 +193,6 @@ function MintSuccessModal({ mintData, onClose }) {
           >
             View on BaseScan ↗
           </a>
-          <button
-            className="action-link"
-            onClick={() => downloadCardArt(currentCard, currentCardIndex)}
-            disabled={downloading[currentCardIndex] || loadingImages}
-          >
-            {downloading[currentCardIndex]
-              ? "Downloading..."
-              : "📥 Download Art"}
-          </button>
         </div>
 
         <button className="close-success-btn" onClick={onClose}>
