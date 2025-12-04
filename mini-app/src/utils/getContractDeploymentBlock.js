@@ -3,11 +3,17 @@
  * Uses binary search to efficiently find when contract code first appeared
  */
 
+// Known deployment blocks for contracts (used as primary source)
+const KNOWN_DEPLOYMENT_BLOCKS = {
+  // WavesTCG NFT contract on Base mainnet
+  "0x614027878dee08290fe498d13d0566c6f05ae0f3": 38740679n,
+};
+
 // Cache deployment blocks to avoid repeated queries
 const deploymentBlockCache = new Map();
 
 // Version for cache invalidation - increment when logic changes
-const CACHE_VERSION = "v2";
+const CACHE_VERSION = "v3";
 
 /**
  * Find the block at which a contract was deployed using binary search
@@ -19,7 +25,24 @@ export async function getContractDeploymentBlock(publicClient, contractAddress) 
   const cacheKey = contractAddress.toLowerCase();
   const localStorageKey = `deploymentBlock_${CACHE_VERSION}_${cacheKey}`;
 
-  // Check memory cache first
+  // Check known deployment blocks first (most reliable)
+  if (KNOWN_DEPLOYMENT_BLOCKS[cacheKey]) {
+    const knownBlock = KNOWN_DEPLOYMENT_BLOCKS[cacheKey];
+    console.log(`📦 Using known deployment block: ${knownBlock}`);
+    deploymentBlockCache.set(cacheKey, knownBlock);
+    return knownBlock;
+  }
+
+  // Check environment variable fallback
+  const envDeploymentBlock = import.meta.env.VITE_CONTRACT_DEPLOYMENT_BLOCK;
+  if (envDeploymentBlock && envDeploymentBlock !== "0") {
+    const envBlock = BigInt(envDeploymentBlock);
+    console.log(`📦 Using env deployment block: ${envBlock}`);
+    deploymentBlockCache.set(cacheKey, envBlock);
+    return envBlock;
+  }
+
+  // Check memory cache
   if (deploymentBlockCache.has(cacheKey)) {
     return deploymentBlockCache.get(cacheKey);
   }
