@@ -1,8 +1,13 @@
 .deck-builder {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100vh;
   padding: 20px;
-  min-height: 100vh;
-  background: linear-gradient(180deg, #1a1a1f 0%, #2D3047 100%);
+  background: transparent;
   color: #D5D6DA;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
 .deck-builder-header {
@@ -78,15 +83,19 @@
   display: grid;
   grid-template-columns: 220px 1fr 280px;
   gap: 20px;
-  min-height: calc(100vh - 140px);
+  flex: 1;
+  overflow: hidden;
 }
 
 /* Deck List Panel */
 .deck-list-panel {
+  display: flex;
+  flex-direction: column;
   background: rgba(0, 0, 0, 0.3);
   border-radius: 12px;
   padding: 16px;
   border: 1px solid rgba(255, 255, 255, 0.1);
+  overflow: hidden;
 }
 
 .deck-list-panel h3 {
@@ -117,6 +126,8 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+  flex: 1;
+  overflow-y: auto;
 }
 
 .deck-item {
@@ -175,10 +186,13 @@
 
 /* Deck Contents Panel */
 .deck-contents-panel {
+  display: flex;
+  flex-direction: column;
   background: rgba(0, 0, 0, 0.3);
   border-radius: 12px;
   padding: 20px;
   border: 1px solid rgba(255, 255, 255, 0.1);
+  overflow: hidden;
 }
 
 .deck-contents-header {
@@ -229,7 +243,7 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 12px;
-  max-height: calc(100vh - 340px);
+  flex: 1;
   overflow-y: auto;
 }
 
@@ -316,10 +330,13 @@
 
 /* Card Library Panel */
 .card-library-panel {
+  display: flex;
+  flex-direction: column;
   background: rgba(0, 0, 0, 0.3);
   border-radius: 12px;
   padding: 16px;
   border: 1px solid rgba(255, 255, 255, 0.1);
+  overflow: hidden;
 }
 
 .card-library-panel h3 {
@@ -361,7 +378,7 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  max-height: calc(100vh - 280px);
+  flex: 1;
   overflow-y: auto;
 }
 
