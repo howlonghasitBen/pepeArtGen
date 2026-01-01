@@ -3,6 +3,7 @@ import './PartEditor.css';
 
 function PartEditor({ part, partSchema, card, onUpdateField, onUpdateFields }) {
   const [imagePreview, setImagePreview] = useState(null);
+  const [isExtractingColors, setIsExtractingColors] = useState(false);
   const fileInputRef = useRef(null);
 
   if (!partSchema) {
@@ -48,6 +49,40 @@ function PartEditor({ part, partSchema, card, onUpdateField, onUpdateFields }) {
       onUpdateField('imageData', imageData);
     };
     reader.readAsDataURL(file);
+  };
+
+  const handleExtractColors = async () => {
+    const imageData = card.imageData || imagePreview;
+    if (!imageData) return;
+
+    setIsExtractingColors(true);
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_SERVER_URL || 'http://localhost:3001'}/api/extract-colors`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ imageData })
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to extract colors');
+      }
+
+      const data = await response.json();
+
+      // Update card with extracted colors and theme
+      onUpdateFields({
+        colors: data.colors,
+        theme: data.theme
+      });
+    } catch (error) {
+      console.error('Color extraction error:', error);
+      alert('Failed to extract colors: ' + error.message);
+    } finally {
+      setIsExtractingColors(false);
+    }
   };
 
   const handleRandomize = (fieldKey, fieldSchema) => {
@@ -232,15 +267,13 @@ function PartEditor({ part, partSchema, card, onUpdateField, onUpdateFields }) {
                 </div>
               )}
             </div>
-            {card.imageData && !card.colors && (
+            {(card.imageData || imagePreview) && (
               <button
                 className="extract-colors-btn"
-                onClick={() => {
-                  // TODO: Call color extraction API
-                  console.log('Extract colors from image');
-                }}
+                onClick={handleExtractColors}
+                disabled={isExtractingColors}
               >
-                🎨 Extract Colors
+                {isExtractingColors ? '⏳ Extracting...' : '🎨 Extract Colors'}
               </button>
             )}
           </div>
