@@ -13,6 +13,44 @@ export function useMintCard() {
   const { writeContractAsync } = useWriteContract();
 
   /**
+   * Capture screenshot of minted card for gallery
+   */
+  const captureScreenshot = useCallback(
+    async (card, mintId) => {
+      try {
+        console.log("📸 Capturing screenshot for:", card.name);
+
+        const response = await fetch(`${config.apiBaseUrl}/api/screenshots/capture`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            cardId: card.id || card.databaseId,
+            cardData: card,
+            ownerAddress: address,
+            mintId: mintId,
+          }),
+        });
+
+        if (!response.ok) {
+          console.warn("Screenshot capture failed:", await response.text());
+          return null;
+        }
+
+        const data = await response.json();
+        console.log("✅ Screenshot captured:", data.screenshotUrl);
+        return data;
+      } catch (err) {
+        console.warn("❌ Screenshot capture error:", err.message);
+        // Don't throw - screenshot failure shouldn't fail the mint
+        return null;
+      }
+    },
+    [address, config.apiBaseUrl]
+  );
+
+  /**
    * Record mint to backend database
    */
   const recordMint = useCallback(
@@ -123,7 +161,11 @@ export function useMintCard() {
       // Step 4: Record mint to database
       const recordedMint = await recordMint([card.id], hash, [metadataURI]);
 
-      // Step 5: Store mint data for success modal
+      // Step 5: Capture screenshot for gallery (async, non-blocking)
+      const mintId = recordedMint?.mintIds?.[0] || null;
+      captureScreenshot(card, mintId).catch(() => {});
+
+      // Step 6: Store mint data for success modal
       setMintData({
         cards: [card],
         tokenIds: recordedMint?.tokenIds || [],
@@ -139,6 +181,7 @@ export function useMintCard() {
       publicClient,
       uploadToIPFS,
       recordMint,
+      captureScreenshot,
       writeContractAsync,
     ]
   );
@@ -197,7 +240,13 @@ export function useMintCard() {
       const cardIds = cards.map((card) => card.id);
       const recordedMint = await recordMint(cardIds, hash, metadataURIs);
 
-      // Step 5: Store mint data for success modal
+      // Step 5: Capture screenshots for gallery (async, non-blocking)
+      cards.forEach((card, index) => {
+        const mintId = recordedMint?.mintIds?.[index] || null;
+        captureScreenshot(card, mintId).catch(() => {});
+      });
+
+      // Step 6: Store mint data for success modal
       setMintData({
         cards: cards,
         tokenIds: recordedMint?.tokenIds || [],
@@ -213,6 +262,7 @@ export function useMintCard() {
       publicClient,
       uploadToIPFS,
       recordMint,
+      captureScreenshot,
       writeContractAsync,
     ]
   );

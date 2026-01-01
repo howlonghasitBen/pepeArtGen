@@ -1,0 +1,190 @@
+import React from 'react';
+import './LiveCardPreview.css';
+
+function LiveCardPreview({ card }) {
+  const theme = card.theme || {};
+
+  // Helper for orb tooltips
+  const getOrbTooltip = (type) => {
+    const tooltips = {
+      hp: 'Health Points',
+      mana: 'Mana Cost to Play',
+      terrain: 'Terrain Alignment'
+    };
+    return tooltips[type] || type;
+  };
+
+  return (
+    <div className="live-preview-container">
+      <div className="preview-label">Live Preview</div>
+
+      <div
+        className="preview-card"
+        style={{
+          background: theme.background || 'linear-gradient(145deg, #2a2a2a, #1a1a1a)'
+        }}
+      >
+        {/* Header */}
+        <div
+          className="preview-header"
+          style={{
+            background: theme.header?.background,
+            color: theme.header?.color,
+            textShadow: theme.header?.textShadow,
+            boxShadow: theme.header?.boxShadow
+          }}
+        >
+          <div>
+            <div className="preview-mana-cost">
+              {card.manaCost?.map((mana, idx) => (
+                <div
+                  key={idx}
+                  className="preview-mana-orb"
+                  style={{
+                    background: mana.color,
+                    color: mana.textColor || '#fff'
+                  }}
+                  title={getOrbTooltip(mana.type)}
+                >
+                  <div className="orb-value">{mana.value}</div>
+                </div>
+              ))}
+            </div>
+            <div className="preview-title">
+              {card.name} {card.subtitle}
+            </div>
+          </div>
+          <div
+            className="preview-level"
+            style={{
+              background: theme.stat?.background,
+              color: theme.stat?.color,
+              boxShadow: theme.stat?.boxShadow,
+              border: theme.stat?.border
+            }}
+          >
+            LVL {card.level}
+          </div>
+        </div>
+
+        {/* Image Area */}
+        <div
+          className="preview-image-area"
+          style={{
+            background: theme.imageArea?.background,
+            border: theme.imageArea?.border,
+            boxShadow: theme.imageArea?.boxShadow
+          }}
+        >
+          {card.imageData ? (
+            <img src={card.imageData} alt={card.name} className="preview-image" />
+          ) : (
+            <div className="preview-image-placeholder">
+              <span>🖼️</span>
+              <span>No Image</span>
+            </div>
+          )}
+        </div>
+
+        {/* Type and Power Section */}
+        <div
+          className="preview-type-section"
+          style={{
+            background: theme.typeSection?.background,
+            color: theme.typeSection?.color,
+            textShadow: theme.typeSection?.textShadow,
+            boxShadow: theme.typeSection?.boxShadow
+          }}
+        >
+          <div>{card.type || 'Creature'}</div>
+          <div className="preview-power-stats">
+            <div
+              className="preview-stat"
+              style={{
+                background: theme.stat?.background,
+                border: theme.stat?.border,
+                color: theme.stat?.color,
+                boxShadow: theme.stat?.boxShadow
+              }}
+            >
+              ATK: {card.stats?.attack || 0}
+            </div>
+            <div
+              className="preview-stat"
+              style={{
+                background: theme.stat?.background,
+                border: theme.stat?.border,
+                color: theme.stat?.color,
+                boxShadow: theme.stat?.boxShadow
+              }}
+            >
+              DEF: {card.stats?.defense || 0}
+            </div>
+          </div>
+        </div>
+
+        {/* Flavor Text */}
+        <div
+          className="preview-flavor-text"
+          style={{
+            background: theme.flavorText?.background,
+            color: theme.flavorText?.color,
+            borderBottom: theme.flavorText?.border
+          }}
+        >
+          <div className="preview-flavor-content">
+            {card.moveName && (
+              <div className="preview-move-name">{card.moveName}</div>
+            )}
+            {card.flavorText || 'No flavor text yet...'}
+          </div>
+        </div>
+
+        {/* Bottom Section */}
+        <div
+          className="preview-bottom"
+          style={{ background: theme.bottomSection?.background }}
+        >
+          <div
+            className="preview-artist"
+            style={{ color: theme.flavorText?.color }}
+          >
+            ◆ {card.artist || 'Waves TCG'} ◆
+          </div>
+          <div
+            className="preview-rarity"
+            style={{
+              background: theme.rarity?.background,
+              color: theme.rarity?.color,
+              border: theme.rarity?.border,
+              boxShadow: theme.rarity?.boxShadow
+            }}
+          >
+            ★ {card.rarity || '1/1'} ★
+          </div>
+        </div>
+      </div>
+
+      <div className="preview-stats-summary">
+        <div className="stat-pill">
+          <span className="stat-icon">❤️</span>
+          <span>{card.stats?.hp || 0}</span>
+        </div>
+        <div className="stat-pill">
+          <span className="stat-icon">⚔️</span>
+          <span>{card.stats?.attack || 0}</span>
+        </div>
+        <div className="stat-pill">
+          <span className="stat-icon">🛡️</span>
+          <span>{card.stats?.defense || 0}</span>
+        </div>
+        <div className="stat-pill">
+          <span className="stat-icon">💎</span>
+          <span>{card.stats?.mana || 0}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default LiveCardPreview;

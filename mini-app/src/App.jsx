@@ -18,6 +18,8 @@ import GeneratorScreen from "./components/GeneratorScreen";
 import CurationScreen from "./components/CurationScreen";
 import MyCardsScreen from "./components/MyCardsScreen";
 import InfoModal from "./components/InfoModal";
+import CardEditorScreen from "./components/editor/CardEditorScreen";
+import DeckBuilder from "./components/deck/DeckBuilder";
 import "./App.css";
 
 // Configuration
@@ -193,6 +195,7 @@ function AppContent() {
   const [screen, setScreen] = useState("generator");
   const [generatedCards, setGeneratedCards] = useState([]);
   const [showInfoModal, setShowInfoModal] = useState(false);
+  const [cardToEdit, setCardToEdit] = useState(null);
 
   const handleCardsGenerated = (cards) => {
     setGeneratedCards(cards);
@@ -202,10 +205,26 @@ function AppContent() {
   const handleBackToGenerator = () => {
     setScreen("generator");
     setGeneratedCards([]);
+    setCardToEdit(null);
   };
 
   const handleShowMyCards = () => {
     setScreen(screen === "mycards" ? "generator" : "mycards");
+  };
+
+  const handleOpenEditor = (card = null) => {
+    setCardToEdit(card);
+    setScreen("editor");
+  };
+
+  const handleOpenDeckBuilder = () => {
+    setScreen("deckbuilder");
+  };
+
+  const handleEditorSave = (card) => {
+    // Card saved, return to generator
+    setCardToEdit(null);
+    setScreen("generator");
   };
 
   return (
@@ -238,10 +257,21 @@ function AppContent() {
           <CurationScreen
             cards={generatedCards}
             onBack={handleBackToGenerator}
+            onEditCard={handleOpenEditor}
           />
         )}
         {screen === "mycards" && (
           <MyCardsScreen onBack={handleBackToGenerator} />
+        )}
+        {screen === "editor" && (
+          <CardEditorScreen
+            initialCard={cardToEdit}
+            onSave={handleEditorSave}
+            onBack={handleBackToGenerator}
+          />
+        )}
+        {screen === "deckbuilder" && (
+          <DeckBuilder onBack={handleBackToGenerator} />
         )}
       </main>
 
@@ -252,7 +282,38 @@ function AppContent() {
         </div>
         <div className="bottom-bar-actions">
           <button
-            className={`my-cards-btn ${screen === "mycards" ? "active" : ""}`}
+            className={`nav-btn ${screen === "editor" ? "active" : ""}`}
+            onClick={() => handleOpenEditor()}
+            title="Card Editor"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+            </svg>
+          </button>
+          <button
+            className={`nav-btn ${screen === "deckbuilder" ? "active" : ""}`}
+            onClick={handleOpenDeckBuilder}
+            title="Deck Builder"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <rect x="2" y="7" width="20" height="14" rx="2" />
+              <path d="M16 3h4a2 2 0 0 1 2 2v2H2V5a2 2 0 0 1 2-2h4" />
+              <path d="M12 3v4" />
+            </svg>
+          </button>
+          <button
+            className={`nav-btn ${screen === "mycards" ? "active" : ""}`}
             onClick={handleShowMyCards}
             title="My Cards"
           >

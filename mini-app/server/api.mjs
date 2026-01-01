@@ -26,6 +26,9 @@ import {
 } from "./supabaseClient.mjs";
 import paymentRoutes from "./paymentRoutes.mjs";
 import mintRoutes from "./mintRoutes.mjs";
+import screenshotRoutes from "./screenshotRoutes.mjs";
+import draftRoutes from "./draftRoutes.mjs";
+import deckRoutes from "./deckRoutes.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -59,6 +62,15 @@ app.use("/api/payment", paymentRoutes);
 
 // Mount mint recording routes
 app.use("/api/mint", mintRoutes);
+
+// Mount screenshot routes
+app.use("/api/screenshots", screenshotRoutes);
+
+// Mount draft routes
+app.use("/api/drafts", draftRoutes);
+
+// Mount deck routes
+app.use("/api/decks", deckRoutes);
 
 // In-memory storage for demo (use Redis/DB in production)
 const generatedCards = new Map();

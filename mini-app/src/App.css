@@ -280,7 +280,8 @@
   gap: 10px;
 }
 
-/* My Cards Button */
+/* Navigation Buttons */
+.nav-btn,
 .my-cards-btn {
   width: 44px;
   height: 44px;
@@ -296,11 +297,13 @@
   flex-shrink: 0;
 }
 
+.nav-btn svg,
 .my-cards-btn svg {
   width: 20px;
   height: 20px;
 }
 
+.nav-btn:hover,
 .my-cards-btn:hover {
   background: var(--base-blue-light);
   border-color: var(--base-blue);
@@ -309,6 +312,7 @@
   box-shadow: 0 4px 15px var(--base-blue-light);
 }
 
+.nav-btn.active,
 .my-cards-btn.active {
   background: var(--base-blue);
   color: white;
@@ -438,6 +442,7 @@
     padding: 10px 12px;
   }
 
+  .nav-btn,
   .my-cards-btn,
   .opensea-btn,
   .info-btn {
@@ -445,11 +450,12 @@
     height: 40px;
   }
 
+  .nav-btn svg,
   .my-cards-btn svg,
   .opensea-btn svg,
   .info-btn svg {
-    width: 20px;
-    height: 20px;
+    width: 18px;
+    height: 18px;
   }
 }
 
