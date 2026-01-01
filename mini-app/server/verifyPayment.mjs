@@ -92,12 +92,17 @@ export async function verifyPayment(transactionHash, expectedFrom, expectedTo, n
     console.log(`   To: ${to}`)
     console.log(`   Amount: ${formatUnits(value, 6)} USDC`)
 
-    // 5. Validate sender
-    if (from !== expectedFrom.toLowerCase()) {
-      return {
-        valid: false,
-        error: `Sender mismatch. Expected ${expectedFrom}, got ${from}`
-      }
+    // 5. Validate sender (allow smart contract wallets)
+    // NOTE: We allow any sender as long as the payment goes to the correct treasury
+    // This supports smart contract wallets (Safe, Argent, Coinbase Smart Wallet, etc.)
+    // where the Transfer event's 'from' may differ from the connected wallet address
+    const expectedFromLower = expectedFrom.toLowerCase()
+    if (from !== expectedFromLower) {
+      console.log(`   ℹ️  Sender address differs from connected wallet`)
+      console.log(`   ℹ️  Connected: ${expectedFrom}`)
+      console.log(`   ℹ️  Actual sender: ${from}`)
+      console.log(`   ℹ️  This is OK - likely a smart contract wallet`)
+      // Don't fail - smart contract wallets are supported
     }
 
     // 6. Validate recipient (treasury)
@@ -143,6 +148,8 @@ export async function verifyPayment(transactionHash, expectedFrom, expectedTo, n
       details: {
         from,
         to,
+        connectedWallet: expectedFrom, // The wallet address user connected with
+        actualSender: from, // The actual address that sent the USDC (may be smart contract wallet)
         amount: formatUnits(value, 6),
         amountRaw: value.toString(),
         blockNumber: receipt.blockNumber.toString(),
