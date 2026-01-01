@@ -1,115 +1,17 @@
 import { useState, useEffect, useCallback } from "react";
-import { useAccount, usePublicClient } from "wagmi";
-import WAVES_TCG_NFT_ABI from "../contracts/WavesTCGNFT.json";
+import { useAccount } from "wagmi";
 
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:3001";
-
-// Max blocks per query (RPC free tier limit)
-const MAX_BLOCKS_PER_QUERY = 9999n;
-
-// Contract deployment block on Base mainnet
-const CONTRACT_DEPLOYMENT_BLOCK = 38740679n;
 
 export function useMyCards() {
   const [cards, setCards] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const { address, isConnected } = useAccount();
-  const publicClient = usePublicClient();
 
   const NFT_CONTRACT_ADDRESS = import.meta.env.VITE_NFT_CONTRACT_ADDRESS;
   const NETWORK = import.meta.env.VITE_NETWORK || "base";
-
-  /**
-   * Fetch user's minted cards from backend
-   */
-  const fetchCardsFromBackend = async () => {
-    try {
-      const response = await fetch(
-        `${API_BASE_URL}/api/cards/wallet/${address}`
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch cards from backend");
-      }
-
-      const data = await response.json();
-      return data.cards || [];
-    } catch (err) {
-      console.warn("Backend fetch failed, falling back to on-chain:", err);
-      return null;
-    }
-  };
-
-  /**
-   * Fetch token metadata from IPFS (with fallback gateways)
-   */
-  const fetchTokenMetadata = async (tokenURI) => {
-    // IPFS gateways to try (in order)
-    const gateways = [
-      "https://gateway.pinata.cloud/ipfs/",
-      "https://ipfs.io/ipfs/",
-      "https://cloudflare-ipfs.com/ipfs/",
-      "https://dweb.link/ipfs/",
-    ];
-
-    let ipfsCID = null;
-
-    // Handle HTTPS gateway URLs directly
-    if (tokenURI.startsWith("https://")) {
-      try {
-        const response = await fetch(tokenURI, {
-          signal: AbortSignal.timeout(10000),
-        });
-        if (response.ok) {
-          return await response.json();
-        }
-      } catch (err) {
-        console.warn(`Direct fetch failed for: ${tokenURI}`, err.message);
-      }
-
-      // Extract CID from gateway URL for fallback
-      const match = tokenURI.match(/\/ipfs\/([^/?]+)/);
-      if (match) {
-        ipfsCID = match[1];
-      }
-    }
-
-    // Extract CID if it's an ipfs:// URI
-    if (tokenURI.startsWith("ipfs://")) {
-      ipfsCID = tokenURI.replace("ipfs://", "");
-    }
-
-    if (!ipfsCID) {
-      console.error(`Could not extract IPFS CID from: ${tokenURI}`);
-      return null;
-    }
-
-    // Try each gateway
-    for (const gateway of gateways) {
-      try {
-        const fetchUrl = `${gateway}${ipfsCID}`;
-        console.log(`    Trying gateway: ${fetchUrl}`);
-
-        const response = await fetch(fetchUrl, {
-          signal: AbortSignal.timeout(10000), // 10 second timeout
-        });
-
-        if (response.ok) {
-          const metadata = await response.json();
-          console.log(`    ✅ Success with ${gateway}`);
-          return metadata;
-        }
-      } catch (err) {
-        console.warn(`    ⚠️ Gateway ${gateway} failed:`, err.message);
-        continue;
-      }
-    }
-
-    console.error(`    ❌ All gateways failed for: ${tokenURI}`);
-    return null;
-  };
 
   /**
    * Get OpenSea URL for a token
@@ -120,229 +22,7 @@ export function useMyCards() {
   };
 
   /**
-   * Fetch events in chunks to respect RPC block limits
-   */
-  const fetchEventsInChunks = async (fromBlock, toBlock, minterAddress) => {
-    const allLogs = [];
-    let currentFrom = fromBlock;
-
-    console.log(
-      `📊 Fetching events from block ${fromBlock} to ${toBlock} in chunks...`
-    );
-
-    while (currentFrom < toBlock) {
-      const currentTo =
-        currentFrom + MAX_BLOCKS_PER_QUERY > toBlock
-          ? toBlock
-          : currentFrom + MAX_BLOCKS_PER_QUERY;
-
-      try {
-        console.log(`  📦 Querying blocks ${currentFrom} to ${currentTo}...`);
-
-        const logs = await publicClient.getContractEvents({
-          address: NFT_CONTRACT_ADDRESS,
-          abi: WAVES_TCG_NFT_ABI.abi,
-          eventName: "CardMinted",
-          args: {
-            minter: minterAddress,
-          },
-          fromBlock: currentFrom,
-          toBlock: currentTo,
-        });
-
-        if (logs && logs.length > 0) {
-          allLogs.push(...logs);
-          console.log(`  ✅ Found ${logs.length} events in this chunk`);
-        }
-      } catch (err) {
-        console.warn(
-          `  ⚠️ Failed to fetch chunk ${currentFrom}-${currentTo}:`,
-          err.message
-        );
-        // Continue to next chunk even if one fails
-      }
-
-      currentFrom = currentTo + 1n;
-
-      // Small delay to avoid rate limiting
-      await new Promise((resolve) => setTimeout(resolve, 100));
-    }
-
-    console.log(`📊 Total events found: ${allLogs.length}`);
-    return allLogs;
-  };
-
-  /**
-   * Fetch cards from blockchain using CardMinted events
-   */
-  const fetchCardsFromBlockchain = async () => {
-    try {
-      if (!NFT_CONTRACT_ADDRESS || !publicClient) {
-        console.warn("Missing NFT_CONTRACT_ADDRESS or publicClient");
-        return [];
-      }
-
-      console.log("🔍 Fetching NFTs from blockchain for address:", address);
-      console.log("📝 Contract address:", NFT_CONTRACT_ADDRESS);
-
-      // Get current block
-      const currentBlock = await publicClient.getBlockNumber();
-
-      console.log("📦 Querying from deployment block:", CONTRACT_DEPLOYMENT_BLOCK.toString());
-
-      // Query from contract deployment block to get all events
-      const fromBlock = CONTRACT_DEPLOYMENT_BLOCK;
-
-      // Fetch events in chunks to respect RPC limits
-      const logs = await fetchEventsInChunks(fromBlock, currentBlock, address);
-
-      console.log(`📦 Found ${logs.length} CardMinted events`);
-
-      if (!logs || logs.length === 0) {
-        return [];
-      }
-
-      // Process each minted card
-      const cardsPromises = logs.map(async (log) => {
-        try {
-          const tokenId = log.args.tokenId.toString();
-          const tokenURI = log.args.tokenURI;
-
-          console.log(`  🎴 Processing token #${tokenId}`);
-
-          // Fetch metadata from IPFS
-          const metadata = await fetchTokenMetadata(tokenURI);
-
-          if (!metadata) {
-            console.warn(`  ⚠️ Failed to fetch metadata for token #${tokenId}`);
-            return {
-              id: `token-${tokenId}`,
-              tokenId,
-              name: `Card #${tokenId}`,
-              image: null,
-              openSeaUrl: getOpenSeaUrl(tokenId),
-            };
-          }
-
-          console.log(
-            `  ✅ Metadata loaded for token #${tokenId}: ${metadata.name}`
-          );
-
-          // Extract attributes from metadata
-          const getAttr = (traitType, defaultValue = "") => {
-            const attr = metadata.attributes?.find(
-              (attr) => attr.trait_type === traitType
-            );
-            return attr ? attr.value : defaultValue;
-          };
-
-          // Process image URL
-          let imageUrl = metadata.image;
-          if (imageUrl?.startsWith("ipfs://")) {
-            imageUrl = imageUrl.replace(
-              "ipfs://",
-              "https://gateway.pinata.cloud/ipfs/"
-            );
-          }
-
-          // Build card object compatible with MintedCardDisplay
-          return {
-            id: `token-${tokenId}`,
-            tokenId,
-            name: metadata.name || `Card #${tokenId}`,
-            subtitle: "",
-            image: imageUrl,
-            imageData: imageUrl,
-            rarity: getAttr("Rarity", "Common"),
-            type: getAttr("Type", "Creature"),
-            level: getAttr("Level", "1"),
-            artist: getAttr("Artist", "Waves TCG"),
-            stats: {
-              attack: getAttr("Attack", 0),
-              defense: getAttr("Defense", 0),
-            },
-            manaCost: [
-              {
-                type: "hp",
-                value: getAttr("HP", 0),
-                color: "#ff4444",
-                textColor: "#fff",
-              },
-              {
-                type: "mana",
-                value: getAttr("Mana", 0),
-                color: "#4444ff",
-                textColor: "#fff",
-              },
-            ],
-            flavorText:
-              metadata.description ||
-              `${metadata.name} - A unique trading card`,
-            theme: {
-              background: "linear-gradient(145deg, #2a2a2a, #1a1a1a)",
-              header: {
-                background: "rgba(0, 0, 0, 0.6)",
-                color: "#fff",
-                textShadow: "0 2px 4px rgba(0,0,0,0.5)",
-                boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
-              },
-              imageArea: {
-                background: "rgba(0, 0, 0, 0.3)",
-                border: "2px solid rgba(255, 255, 255, 0.1)",
-                boxShadow: "inset 0 2px 4px rgba(0,0,0,0.3)",
-              },
-              typeSection: {
-                background: "rgba(0, 0, 0, 0.6)",
-                color: "#fff",
-                textShadow: "0 1px 2px rgba(0,0,0,0.5)",
-                boxShadow: "0 2px 4px rgba(0,0,0,0.3)",
-              },
-              stat: {
-                background: "rgba(255, 255, 255, 0.1)",
-                border: "1px solid rgba(255, 255, 255, 0.2)",
-                color: "#fff",
-                boxShadow: "0 1px 3px rgba(0,0,0,0.3)",
-              },
-              flavorText: {
-                background: "rgba(0, 0, 0, 0.4)",
-                color: "#ddd",
-                border: "1px solid rgba(255, 255, 255, 0.1)",
-              },
-              bottomSection: {
-                background: "rgba(0, 0, 0, 0.6)",
-              },
-              rarity: {
-                background: "rgba(255, 215, 0, 0.2)",
-                color: "#ffd700",
-                border: "1px solid rgba(255, 215, 0, 0.4)",
-                boxShadow: "0 0 10px rgba(255, 215, 0, 0.3)",
-              },
-            },
-            transactionHash: log.transactionHash,
-            blockNumber: log.blockNumber,
-            openSeaUrl: getOpenSeaUrl(tokenId),
-          };
-        } catch (err) {
-          console.error(`Error processing token ${log.args.tokenId}:`, err);
-          return null;
-        }
-      });
-
-      const cards = await Promise.all(cardsPromises);
-      const validCards = cards.filter((card) => card !== null);
-      console.log(
-        `✅ Successfully processed ${validCards.length} cards from blockchain`
-      );
-      return validCards;
-    } catch (err) {
-      console.error("❌ Error fetching cards from blockchain:", err);
-      console.error("Error details:", err.message, err.stack);
-      throw err;
-    }
-  };
-
-  /**
-   * Fetch cards - tries backend first, then falls back to on-chain
+   * Fetch user's minted cards from backend (Supabase)
    */
   const fetchCards = useCallback(async () => {
     if (!isConnected || !address) {
@@ -354,21 +34,28 @@ export function useMyCards() {
     setError(null);
 
     try {
-      // Try backend first
-      const backendCards = await fetchCardsFromBackend();
+      console.log(`📋 Fetching cards for wallet: ${address}`);
 
-      if (backendCards && backendCards.length > 0) {
-        // Format backend cards
+      const response = await fetch(
+        `${API_BASE_URL}/api/cards/wallet/${address}`
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || "Failed to fetch cards");
+      }
+
+      const data = await response.json();
+      const backendCards = data.cards || [];
+
+      if (backendCards.length > 0) {
+        // Format cards for display
         const formattedCards = backendCards.map((card) => ({
           id: card.id,
           tokenId: card.tokenId,
           name: card.name || "Unknown Card",
           imageData: card.imageData || card.image,
-          image:
-            card.ipfsLinks?.find((l) => l.type === "styled_card")
-              ?.gateway_url ||
-            card.ipfsLinks?.find((l) => l.type === "raw_image")?.gateway_url ||
-            card.imageData,
+          image: card.image || card.imageData,
           rarity: card.rarity,
           type: card.type,
           stats: card.stats,
@@ -379,58 +66,20 @@ export function useMyCards() {
           openSeaUrl: card.tokenId ? getOpenSeaUrl(card.tokenId) : null,
         }));
 
+        console.log(`✅ Found ${formattedCards.length} cards for wallet`);
         setCards(formattedCards);
-        setLoading(false);
-        return;
-      }
-
-      // Fallback: fetch from blockchain using CardMinted events
-      console.log("Backend returned no cards, fetching from blockchain...");
-
-      if (!NFT_CONTRACT_ADDRESS) {
-        console.error("❌ NFT_CONTRACT_ADDRESS not configured");
-        setError(
-          "NFT contract not configured. Please set VITE_NFT_CONTRACT_ADDRESS in your environment."
-        );
-        setCards([]);
-        setLoading(false);
-        return;
-      }
-
-      if (!publicClient) {
-        console.error("❌ publicClient not available");
-        setError(
-          "Blockchain client not configured. Please check your wallet connection."
-        );
-        setCards([]);
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const blockchainCards = await fetchCardsFromBlockchain();
-
-        if (blockchainCards.length > 0) {
-          console.log(
-            `✅ Loaded ${blockchainCards.length} cards from blockchain`
-          );
-          setCards(blockchainCards);
-        } else {
-          console.log("ℹ️ No cards found for this wallet");
-          setCards([]);
-        }
-      } catch (blockchainErr) {
-        console.error("❌ Blockchain fetch failed:", blockchainErr);
-        setError(`Failed to fetch NFTs: ${blockchainErr.message}`);
+      } else {
+        console.log("ℹ️ No cards found for this wallet");
         setCards([]);
       }
     } catch (err) {
       console.error("❌ Error fetching cards:", err);
       setError(err.message);
+      setCards([]);
     } finally {
       setLoading(false);
     }
-  }, [address, isConnected, NFT_CONTRACT_ADDRESS, publicClient]);
+  }, [address, isConnected, NFT_CONTRACT_ADDRESS, NETWORK]);
 
   // Fetch cards when wallet connects
   useEffect(() => {
