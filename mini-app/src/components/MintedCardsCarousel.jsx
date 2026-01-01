@@ -21,16 +21,9 @@ const MintedCardsCarousel = ({ cards }) => {
     }
   };
 
-  // Extract unique identifier from IPFS URL or use tokenId/id
-  const getCardKey = (card) => {
-    const imageUrl = card.image || card.imageData;
-    if (imageUrl && imageUrl.includes('/ipfs/')) {
-      // Extract IPFS filename/CID from URL
-      const match = imageUrl.match(/\/ipfs\/([^/?]+)/);
-      if (match) return match[1];
-    }
-    // Fallback to tokenId or id
-    return card.tokenId || card.id || `card-${currentIndex}`;
+  // Get unique identifier for a card
+  const getCardKey = (card, index) => {
+    return card.id || card.tokenId || `card-${index}`;
   };
 
   if (!cards || cards.length === 0) {
@@ -38,7 +31,7 @@ const MintedCardsCarousel = ({ cards }) => {
   }
 
   const currentCard = cards[currentIndex];
-  const cardKey = getCardKey(currentCard);
+  const cardKey = getCardKey(currentCard, currentIndex);
 
   return (
     <div className="minted-cards-carousel">
@@ -79,7 +72,7 @@ const MintedCardsCarousel = ({ cards }) => {
         <div className="carousel-dots">
           {cards.map((card, index) => (
             <button
-              key={getCardKey(card)}
+              key={getCardKey(card, index)}
               className={`carousel-dot ${index === currentIndex ? 'active' : ''}`}
               onClick={() => goToCard(index)}
               aria-label={`Go to card ${index + 1}`}

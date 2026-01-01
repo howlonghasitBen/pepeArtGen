@@ -57,8 +57,9 @@ function PartEditor({ part, partSchema, card, onUpdateField, onUpdateFields }) {
 
     setIsExtractingColors(true);
     try {
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_SERVER_URL || 'http://localhost:3001';
       const response = await fetch(
-        `${import.meta.env.VITE_SERVER_URL || 'http://localhost:3001'}/api/extract-colors`,
+        `${apiBaseUrl}/api/extract-colors`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

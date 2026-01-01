@@ -98,6 +98,162 @@ app.post("/api/extract-colors", async (req, res) => {
   }
 });
 
+// Get cards for a specific wallet address (from Supabase)
+app.get("/api/cards/wallet/:address", async (req, res) => {
+  try {
+    const { address } = req.params;
+
+    if (!address || !address.startsWith('0x')) {
+      return res.status(400).json({ error: "Valid wallet address required" });
+    }
+
+    if (!isSupabaseConfigured()) {
+      return res.status(503).json({
+        error: "Database not configured",
+        message: "Please configure Supabase in your .env file",
+      });
+    }
+
+    console.log(`📋 Fetching cards for wallet: ${address}`);
+
+    // Get mints for this wallet
+    const mints = await mintService.getWalletMints(address.toLowerCase());
+
+    if (!mints || mints.length === 0) {
+      return res.json({ cards: [] });
+    }
+
+    // Get full card data for each mint
+    const cards = await Promise.all(
+      mints.map(async (mint) => {
+        try {
+          const card = await cardService.getCard(mint.card_id);
+          const ipfsLinks = await ipfsService.getCardLinks(mint.card_id);
+
+          if (!card) return null;
+
+          // Find the styled card image URL
+          const styledCardLink = ipfsLinks?.find((l) => l.type === "styled_card");
+          const rawImageLink = ipfsLinks?.find((l) => l.type === "raw_image");
+
+          return {
+            id: card.id,
+            tokenId: mint.token_id,
+            name: card.name,
+            imageData: card.image_data,
+            image: styledCardLink?.gateway_url || rawImageLink?.gateway_url || card.image_data,
+            rarity: card.rarity || "1/1",
+            type: "Creature — Generated",
+            stats: {
+              attack: card.attack,
+              defense: card.defense,
+            },
+            flavorText: card.flavor_text,
+            theme: card.theme_colors,
+            mintedAt: mint.minted_at,
+            transactionHash: mint.transaction_hash,
+            ipfsLinks,
+          };
+        } catch (err) {
+          console.error(`Error fetching card ${mint.card_id}:`, err);
+          return null;
+        }
+      })
+    );
+
+    const validCards = cards.filter((c) => c !== null);
+    console.log(`✅ Found ${validCards.length} cards for wallet ${address}`);
+
+    res.json({ cards: validCards });
+  } catch (error) {
+    console.error("❌ Error fetching wallet cards:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get all minted cards (from Supabase)
+app.get("/api/cards/all", async (req, res) => {
+  try {
+    if (!isSupabaseConfigured()) {
+      return res.status(503).json({
+        error: "Database not configured",
+        message: "Please configure Supabase in your .env file",
+      });
+    }
+
+    console.log("📋 Fetching all minted cards");
+
+    // Use supabase service role client to get all mints
+    const { createClient } = await import('@supabase/supabase-js');
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (!supabaseUrl || !supabaseServiceKey) {
+      return res.status(503).json({ error: "Database not configured" });
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Get all mints ordered by date
+    const { data: mints, error: mintsError } = await supabase
+      .from('mints')
+      .select('*')
+      .order('minted_at', { ascending: false });
+
+    if (mintsError) throw mintsError;
+
+    if (!mints || mints.length === 0) {
+      return res.json({ cards: [] });
+    }
+
+    // Get full card data for each mint
+    const cards = await Promise.all(
+      mints.map(async (mint) => {
+        try {
+          const card = await cardService.getCard(mint.card_id);
+          const ipfsLinks = await ipfsService.getCardLinks(mint.card_id);
+
+          if (!card) return null;
+
+          const styledCardLink = ipfsLinks?.find((l) => l.type === "styled_card");
+          const rawImageLink = ipfsLinks?.find((l) => l.type === "raw_image");
+
+          return {
+            id: card.id,
+            tokenId: mint.token_id,
+            name: card.name,
+            imageData: card.image_data,
+            image: styledCardLink?.gateway_url || rawImageLink?.gateway_url || card.image_data,
+            rarity: card.rarity || "1/1",
+            type: "Creature — Generated",
+            stats: {
+              attack: card.attack,
+              defense: card.defense,
+            },
+            flavorText: card.flavor_text,
+            theme: card.theme_colors,
+            walletAddress: mint.minter_address,
+            mintedAt: mint.minted_at,
+            transactionHash: mint.transaction_hash,
+            ipfsLinks,
+          };
+        } catch (err) {
+          console.error(`Error fetching card ${mint.card_id}:`, err);
+          return null;
+        }
+      })
+    );
+
+    const validCards = cards.filter((c) => c !== null);
+    console.log(`✅ Found ${validCards.length} total minted cards`);
+
+    res.json({ cards: validCards });
+  } catch (error) {
+    console.error("❌ Error fetching all cards:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // In-memory storage for demo (use Redis/DB in production)
 const generatedCards = new Map();
 let dailyGenerationCount = 0;
