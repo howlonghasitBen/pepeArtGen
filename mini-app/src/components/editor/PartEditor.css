@@ -62,11 +62,11 @@
 .field-value-display {
   margin-left: auto;
   padding: 2px 10px;
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.3), rgba(139, 92, 246, 0.2));
+  background: linear-gradient(135deg, rgba(64, 69, 101, 0.4), rgba(45, 48, 71, 0.3));
   border-radius: 12px;
   font-size: 14px;
   font-weight: 600;
-  color: #a29bfe;
+  color: #B8B4B4;
 }
 
 /* Input fields */
@@ -87,9 +87,9 @@
 .field-textarea:focus,
 .field-select:focus {
   outline: none;
-  border-color: #6c5ce7;
+  border-color: #404565;
   background: rgba(255, 255, 255, 0.08);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+  box-shadow: 0 0 0 3px rgba(64, 69, 101, 0.3);
 }
 
 .field-input::placeholder,
@@ -145,10 +145,10 @@
   appearance: none;
   width: 20px;
   height: 20px;
-  background: linear-gradient(135deg, #74b9ff, #6c5ce7);
+  background: linear-gradient(135deg, #B8B4B4, #404565);
   border-radius: 50%;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4);
+  box-shadow: 0 2px 8px rgba(64, 69, 101, 0.4);
   transition: transform 0.1s;
 }
 
@@ -159,11 +159,11 @@
 .field-slider::-moz-range-thumb {
   width: 20px;
   height: 20px;
-  background: linear-gradient(135deg, #74b9ff, #6c5ce7);
+  background: linear-gradient(135deg, #B8B4B4, #404565);
   border-radius: 50%;
   cursor: pointer;
   border: none;
-  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4);
+  box-shadow: 0 2px 8px rgba(64, 69, 101, 0.4);
 }
 
 .slider-labels {
@@ -190,8 +190,8 @@
 }
 
 .randomize-btn:hover {
-  background: rgba(99, 102, 241, 0.3);
-  border-color: #6c5ce7;
+  background: rgba(64, 69, 101, 0.3);
+  border-color: #404565;
   transform: rotate(180deg);
 }
 
@@ -214,8 +214,8 @@
 }
 
 .image-drop-zone:hover {
-  background: rgba(99, 102, 241, 0.1);
-  border-color: #6c5ce7;
+  background: rgba(64, 69, 101, 0.15);
+  border-color: #404565;
 }
 
 .drop-zone-content {
@@ -307,8 +307,8 @@
   margin-top: 12px;
   width: 100%;
   padding: 12px;
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.3), rgba(139, 92, 246, 0.2));
-  border: 1px solid rgba(99, 102, 241, 0.4);
+  background: linear-gradient(135deg, rgba(64, 69, 101, 0.4), rgba(45, 48, 71, 0.3));
+  border: 1px solid rgba(64, 69, 101, 0.5);
   border-radius: 10px;
   color: #fff;
   font-size: 14px;
@@ -317,7 +317,7 @@
 }
 
 .extract-colors-btn:hover {
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.4), rgba(139, 92, 246, 0.3));
+  background: linear-gradient(135deg, rgba(64, 69, 101, 0.5), rgba(45, 48, 71, 0.4));
 }
 
 /* Part editor actions */
@@ -343,6 +343,6 @@
 }
 
 .preset-btn:hover {
-  background: rgba(99, 102, 241, 0.2);
-  border-color: #6c5ce7;
+  background: rgba(64, 69, 101, 0.25);
+  border-color: #404565;
 }

@@ -196,6 +196,7 @@ function AppContent() {
   const [generatedCards, setGeneratedCards] = useState([]);
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [cardToEdit, setCardToEdit] = useState(null);
+  const [expandedMenu, setExpandedMenu] = useState(null); // 'editor' | 'deckbuilder' | null
 
   const handleCardsGenerated = (cards) => {
     setGeneratedCards(cards);
@@ -210,21 +211,33 @@ function AppContent() {
 
   const handleShowMyCards = () => {
     setScreen(screen === "mycards" ? "generator" : "mycards");
+    setExpandedMenu(null);
   };
 
   const handleOpenEditor = (card = null) => {
     setCardToEdit(card);
     setScreen("editor");
+    setExpandedMenu(null);
   };
 
   const handleOpenDeckBuilder = () => {
     setScreen("deckbuilder");
+    setExpandedMenu(null);
   };
 
   const handleEditorSave = (card) => {
     // Card saved, return to generator
     setCardToEdit(null);
     setScreen("generator");
+  };
+
+  const toggleMenu = (menu) => {
+    setExpandedMenu(expandedMenu === menu ? null : menu);
+  };
+
+  const handleCloseFullscreen = () => {
+    setScreen("generator");
+    setCardToEdit(null);
   };
 
   return (
@@ -263,27 +276,70 @@ function AppContent() {
         {screen === "mycards" && (
           <MyCardsScreen onBack={handleBackToGenerator} />
         )}
-        {screen === "editor" && (
+      </main>
+
+      {/* Fullscreen Editor Overlay */}
+      {screen === "editor" && (
+        <div className="fullscreen-overlay">
           <CardEditorScreen
             initialCard={cardToEdit}
             onSave={handleEditorSave}
-            onBack={handleBackToGenerator}
+            onBack={handleCloseFullscreen}
           />
-        )}
-        {screen === "deckbuilder" && (
-          <DeckBuilder onBack={handleBackToGenerator} />
-        )}
-      </main>
+        </div>
+      )}
+
+      {/* Fullscreen Deck Builder Overlay */}
+      {screen === "deckbuilder" && (
+        <div className="fullscreen-overlay">
+          <DeckBuilder onBack={handleCloseFullscreen} />
+        </div>
+      )}
+
+      {/* Collapsible Menus */}
+      <div className={`collapsible-menus ${expandedMenu ? 'has-expanded' : ''}`}>
+        {/* Editor Menu */}
+        <div className={`collapsible-menu ${expandedMenu === 'editor' ? 'expanded' : ''}`}>
+          <div className="menu-content">
+            <button className="menu-item" onClick={() => handleOpenEditor()}>
+              <span className="menu-icon">✏️</span>
+              <span>New Card</span>
+            </button>
+            <button className="menu-item" onClick={() => handleOpenEditor()}>
+              <span className="menu-icon">📁</span>
+              <span>Open Drafts</span>
+            </button>
+            <button className="menu-item" onClick={() => handleOpenEditor()}>
+              <span className="menu-icon">📥</span>
+              <span>Import Card</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Deck Builder Menu */}
+        <div className={`collapsible-menu ${expandedMenu === 'deckbuilder' ? 'expanded' : ''}`}>
+          <div className="menu-content">
+            <button className="menu-item" onClick={handleOpenDeckBuilder}>
+              <span className="menu-icon">📚</span>
+              <span>My Decks</span>
+            </button>
+            <button className="menu-item" onClick={handleOpenDeckBuilder}>
+              <span className="menu-icon">➕</span>
+              <span>New Deck</span>
+            </button>
+          </div>
+        </div>
+      </div>
 
       {/* Bottom Bar */}
-      <div className="bottom-bar">
+      <div className={`bottom-bar ${screen === 'editor' || screen === 'deckbuilder' ? 'hidden' : ''}`}>
         <div className="wallet-container">
           <WalletButtonWrapper />
         </div>
         <div className="bottom-bar-actions">
           <button
-            className={`nav-btn ${screen === "editor" ? "active" : ""}`}
-            onClick={() => handleOpenEditor()}
+            className={`nav-btn ${screen === "editor" || expandedMenu === 'editor' ? "active" : ""}`}
+            onClick={() => toggleMenu('editor')}
             title="Card Editor"
           >
             <svg
@@ -297,8 +353,8 @@ function AppContent() {
             </svg>
           </button>
           <button
-            className={`nav-btn ${screen === "deckbuilder" ? "active" : ""}`}
-            onClick={handleOpenDeckBuilder}
+            className={`nav-btn ${screen === "deckbuilder" || expandedMenu === 'deckbuilder' ? "active" : ""}`}
+            onClick={() => toggleMenu('deckbuilder')}
             title="Deck Builder"
           >
             <svg

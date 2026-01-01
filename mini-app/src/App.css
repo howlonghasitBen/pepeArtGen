@@ -1,8 +1,38 @@
-/* Base Blue Accent */
+/* Valspar Professional Color Palette */
 :root {
-  --base-blue: #0052ff;
-  --base-blue-light: rgba(0, 82, 255, 0.15);
-  --base-blue-glow: rgba(0, 82, 255, 0.4);
+  /* Primary Colors - Valspar Skyline */
+  --skyline: #404565;
+  --skyline-light: rgba(64, 69, 101, 0.15);
+  --skyline-glow: rgba(64, 69, 101, 0.4);
+
+  /* Secondary Colors - Valspar Ganymede */
+  --ganymede: #B8B4B4;
+  --ganymede-dark: #9A9696;
+  --ganymede-light: #D0CDCD;
+
+  /* Tertiary Colors - Valspar Statuary */
+  --statuary: #D5D6DA;
+  --statuary-dark: #BFC0C5;
+  --statuary-light: #EAEBED;
+
+  /* Derived accent colors */
+  --accent-deep: #2D3047;
+  --accent-warm: #625D5D;
+
+  /* Legacy aliases for compatibility */
+  --base-blue: #404565;
+  --base-blue-light: rgba(64, 69, 101, 0.15);
+  --base-blue-glow: rgba(64, 69, 101, 0.4);
+
+  /* Glass effect colors */
+  --glass-bg: rgba(64, 69, 101, 0.08);
+  --glass-bg-strong: rgba(64, 69, 101, 0.12);
+  --glass-border: rgba(184, 180, 180, 0.2);
+
+  /* Text colors */
+  --text-primary: #D5D6DA;
+  --text-secondary: #B8B4B4;
+  --text-muted: rgba(184, 180, 180, 0.6);
 }
 
 .app {
@@ -474,6 +504,102 @@
     flex: 1;
     min-width: 80px;
   }
+}
+
+/* ============================================
+   FULLSCREEN OVERLAY
+   ============================================ */
+
+.fullscreen-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, #1a1a1f 0%, #2D3047 50%, #1a1a1f 100%);
+  z-index: 200;
+  overflow: hidden;
+}
+
+/* ============================================
+   COLLAPSIBLE MENUS
+   ============================================ */
+
+.collapsible-menus {
+  position: fixed;
+  bottom: 70px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  z-index: 99;
+  pointer-events: none;
+}
+
+.collapsible-menus.has-expanded {
+  pointer-events: auto;
+}
+
+.collapsible-menu {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease, opacity 0.3s ease;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.collapsible-menu.expanded {
+  max-height: 200px;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.menu-content {
+  display: flex;
+  gap: 8px;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15), 0 0 40px var(--base-blue-light);
+  border: 1px solid rgba(64, 69, 101, 0.2);
+}
+
+.menu-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 16px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  color: var(--accent-deep);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 80px;
+}
+
+.menu-item:hover {
+  background: var(--base-blue-light);
+  border-color: var(--base-blue);
+  color: var(--base-blue);
+  transform: translateY(-2px);
+}
+
+.menu-icon {
+  font-size: 1.2rem;
+}
+
+/* Bottom bar hidden state */
+.bottom-bar.hidden {
+  transform: translateY(100%);
+  pointer-events: none;
 }
 
 /* ============================================

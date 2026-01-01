@@ -1,8 +1,13 @@
 .deck-builder {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100vh;
   padding: 20px;
-  min-height: 100vh;
-  background: linear-gradient(180deg, #0a0a0f 0%, #1a1a2e 100%);
-  color: #fff;
+  background: transparent;
+  color: #D5D6DA;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
 .deck-builder-header {
@@ -16,7 +21,7 @@
   margin: 0;
   flex: 1;
   font-size: 24px;
-  background: linear-gradient(135deg, #74b9ff, #a29bfe);
+  background: linear-gradient(135deg, #B8B4B4, #D5D6DA);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -38,10 +43,10 @@
 
 .new-deck-btn {
   padding: 10px 20px;
-  background: linear-gradient(135deg, #00b894, #00cec9);
+  background: linear-gradient(135deg, #404565, #2D3047);
   border: none;
   border-radius: 10px;
-  color: #fff;
+  color: #D5D6DA;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
@@ -49,7 +54,7 @@
 
 .new-deck-btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 184, 148, 0.4);
+  box-shadow: 0 4px 12px rgba(64, 69, 101, 0.4);
 }
 
 /* Error */
@@ -78,15 +83,19 @@
   display: grid;
   grid-template-columns: 220px 1fr 280px;
   gap: 20px;
-  min-height: calc(100vh - 140px);
+  flex: 1;
+  overflow: hidden;
 }
 
 /* Deck List Panel */
 .deck-list-panel {
+  display: flex;
+  flex-direction: column;
   background: rgba(0, 0, 0, 0.3);
   border-radius: 12px;
   padding: 16px;
   border: 1px solid rgba(255, 255, 255, 0.1);
+  overflow: hidden;
 }
 
 .deck-list-panel h3 {
@@ -117,6 +126,8 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+  flex: 1;
+  overflow-y: auto;
 }
 
 .deck-item {
@@ -134,8 +145,8 @@
 }
 
 .deck-item.active {
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.3), rgba(139, 92, 246, 0.2));
-  border: 1px solid rgba(99, 102, 241, 0.4);
+  background: linear-gradient(135deg, rgba(64, 69, 101, 0.4), rgba(45, 48, 71, 0.3));
+  border: 1px solid rgba(64, 69, 101, 0.5);
 }
 
 .deck-item-info {
@@ -175,10 +186,13 @@
 
 /* Deck Contents Panel */
 .deck-contents-panel {
+  display: flex;
+  flex-direction: column;
   background: rgba(0, 0, 0, 0.3);
   border-radius: 12px;
   padding: 20px;
   border: 1px solid rgba(255, 255, 255, 0.1);
+  overflow: hidden;
 }
 
 .deck-contents-header {
@@ -222,14 +236,14 @@
 .stat-value {
   font-size: 18px;
   font-weight: 600;
-  color: #a29bfe;
+  color: #B8B4B4;
 }
 
 .deck-cards {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 12px;
-  max-height: calc(100vh - 340px);
+  flex: 1;
   overflow-y: auto;
 }
 
@@ -316,10 +330,13 @@
 
 /* Card Library Panel */
 .card-library-panel {
+  display: flex;
+  flex-direction: column;
   background: rgba(0, 0, 0, 0.3);
   border-radius: 12px;
   padding: 16px;
   border: 1px solid rgba(255, 255, 255, 0.1);
+  overflow: hidden;
 }
 
 .card-library-panel h3 {
@@ -343,7 +360,7 @@
 
 .library-search input:focus {
   outline: none;
-  border-color: #6c5ce7;
+  border-color: #404565;
 }
 
 .library-search input::placeholder {
@@ -361,7 +378,7 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  max-height: calc(100vh - 280px);
+  flex: 1;
   overflow-y: auto;
 }
 
@@ -467,7 +484,7 @@
 
 .modal-content input:focus {
   outline: none;
-  border-color: #6c5ce7;
+  border-color: #404565;
 }
 
 .modal-actions {
@@ -487,7 +504,7 @@
 
 .create-btn {
   padding: 10px 20px;
-  background: linear-gradient(135deg, #0984e3, #6c5ce7);
+  background: linear-gradient(135deg, #404565, #2D3047);
   border: none;
   border-radius: 8px;
   color: #fff;
