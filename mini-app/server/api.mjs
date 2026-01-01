@@ -72,6 +72,32 @@ app.use("/api/drafts", draftRoutes);
 // Mount deck routes
 app.use("/api/decks", deckRoutes);
 
+// Extract colors from image endpoint
+app.post("/api/extract-colors", async (req, res) => {
+  try {
+    const { imageData } = req.body;
+
+    if (!imageData) {
+      return res.status(400).json({ error: "imageData is required" });
+    }
+
+    console.log("🎨 Extracting colors from image...");
+    const colors = await extractColorsFromImage(imageData);
+    const theme = generateCardTheme(colors);
+
+    console.log("✅ Colors extracted:", colors);
+
+    res.json({
+      success: true,
+      colors,
+      theme
+    });
+  } catch (error) {
+    console.error("❌ Color extraction error:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // In-memory storage for demo (use Redis/DB in production)
 const generatedCards = new Map();
 let dailyGenerationCount = 0;
