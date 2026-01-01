@@ -1,8 +1,8 @@
 .deck-builder {
   padding: 20px;
   min-height: 100vh;
-  background: linear-gradient(180deg, #0a0a0f 0%, #1a1a2e 100%);
-  color: #fff;
+  background: linear-gradient(180deg, #1a1a1f 0%, #2D3047 100%);
+  color: #D5D6DA;
 }
 
 .deck-builder-header {
@@ -16,7 +16,7 @@
   margin: 0;
   flex: 1;
   font-size: 24px;
-  background: linear-gradient(135deg, #74b9ff, #a29bfe);
+  background: linear-gradient(135deg, #B8B4B4, #D5D6DA);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -38,10 +38,10 @@
 
 .new-deck-btn {
   padding: 10px 20px;
-  background: linear-gradient(135deg, #00b894, #00cec9);
+  background: linear-gradient(135deg, #404565, #2D3047);
   border: none;
   border-radius: 10px;
-  color: #fff;
+  color: #D5D6DA;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
@@ -49,7 +49,7 @@
 
 .new-deck-btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 184, 148, 0.4);
+  box-shadow: 0 4px 12px rgba(64, 69, 101, 0.4);
 }
 
 /* Error */
@@ -134,8 +134,8 @@
 }
 
 .deck-item.active {
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.3), rgba(139, 92, 246, 0.2));
-  border: 1px solid rgba(99, 102, 241, 0.4);
+  background: linear-gradient(135deg, rgba(64, 69, 101, 0.4), rgba(45, 48, 71, 0.3));
+  border: 1px solid rgba(64, 69, 101, 0.5);
 }
 
 .deck-item-info {
@@ -222,7 +222,7 @@
 .stat-value {
   font-size: 18px;
   font-weight: 600;
-  color: #a29bfe;
+  color: #B8B4B4;
 }
 
 .deck-cards {
@@ -343,7 +343,7 @@
 
 .library-search input:focus {
   outline: none;
-  border-color: #6c5ce7;
+  border-color: #404565;
 }
 
 .library-search input::placeholder {
@@ -467,7 +467,7 @@
 
 .modal-content input:focus {
   outline: none;
-  border-color: #6c5ce7;
+  border-color: #404565;
 }
 
 .modal-actions {
@@ -487,7 +487,7 @@
 
 .create-btn {
   padding: 10px 20px;
-  background: linear-gradient(135deg, #0984e3, #6c5ce7);
+  background: linear-gradient(135deg, #404565, #2D3047);
   border: none;
   border-radius: 8px;
   color: #fff;

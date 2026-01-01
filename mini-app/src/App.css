@@ -1,8 +1,38 @@
-/* Base Blue Accent */
+/* Valspar Professional Color Palette */
 :root {
-  --base-blue: #0052ff;
-  --base-blue-light: rgba(0, 82, 255, 0.15);
-  --base-blue-glow: rgba(0, 82, 255, 0.4);
+  /* Primary Colors - Valspar Skyline */
+  --skyline: #404565;
+  --skyline-light: rgba(64, 69, 101, 0.15);
+  --skyline-glow: rgba(64, 69, 101, 0.4);
+
+  /* Secondary Colors - Valspar Ganymede */
+  --ganymede: #B8B4B4;
+  --ganymede-dark: #9A9696;
+  --ganymede-light: #D0CDCD;
+
+  /* Tertiary Colors - Valspar Statuary */
+  --statuary: #D5D6DA;
+  --statuary-dark: #BFC0C5;
+  --statuary-light: #EAEBED;
+
+  /* Derived accent colors */
+  --accent-deep: #2D3047;
+  --accent-warm: #625D5D;
+
+  /* Legacy aliases for compatibility */
+  --base-blue: #404565;
+  --base-blue-light: rgba(64, 69, 101, 0.15);
+  --base-blue-glow: rgba(64, 69, 101, 0.4);
+
+  /* Glass effect colors */
+  --glass-bg: rgba(64, 69, 101, 0.08);
+  --glass-bg-strong: rgba(64, 69, 101, 0.12);
+  --glass-border: rgba(184, 180, 180, 0.2);
+
+  /* Text colors */
+  --text-primary: #D5D6DA;
+  --text-secondary: #B8B4B4;
+  --text-muted: rgba(184, 180, 180, 0.6);
 }
 
 .app {

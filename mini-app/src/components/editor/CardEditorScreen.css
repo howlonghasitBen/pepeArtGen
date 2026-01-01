@@ -3,8 +3,8 @@
   flex-direction: column;
   height: 100%;
   min-height: 100vh;
-  background: linear-gradient(180deg, #0a0a0f 0%, #1a1a2e 100%);
-  color: #fff;
+  background: linear-gradient(180deg, #1a1a1f 0%, #2D3047 100%);
+  color: #D5D6DA;
 }
 
 /* Header */
@@ -42,7 +42,7 @@
   font-size: 24px;
   font-weight: 700;
   margin: 0;
-  background: linear-gradient(135deg, #74b9ff, #a29bfe);
+  background: linear-gradient(135deg, #B8B4B4, #D5D6DA);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -80,13 +80,13 @@
 }
 
 .editor-btn.primary {
-  background: linear-gradient(135deg, #0984e3, #6c5ce7);
-  color: #fff;
+  background: linear-gradient(135deg, #404565, #2D3047);
+  color: #D5D6DA;
 }
 
 .editor-btn.primary:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+  box-shadow: 0 4px 12px rgba(64, 69, 101, 0.4);
 }
 
 .editor-btn.secondary {
@@ -100,13 +100,13 @@
 }
 
 .editor-btn.accent {
-  background: linear-gradient(135deg, #00b894, #00cec9);
+  background: linear-gradient(135deg, #404565, #2D3047);
   color: #fff;
 }
 
 .editor-btn.accent:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 184, 148, 0.4);
+  box-shadow: 0 4px 12px rgba(64, 69, 101, 0.4);
 }
 
 .editor-btn:disabled {
@@ -175,7 +175,7 @@
   justify-content: center;
   padding: 24px;
   overflow: auto;
-  background: radial-gradient(ellipse at center, rgba(99, 102, 241, 0.1) 0%, transparent 70%);
+  background: radial-gradient(ellipse at center, rgba(64, 69, 101, 0.15) 0%, transparent 70%);
 }
 
 /* Panel */

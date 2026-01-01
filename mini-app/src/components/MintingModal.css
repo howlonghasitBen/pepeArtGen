@@ -123,8 +123,8 @@
 .status-message.approving,
 .status-message.minting,
 .status-message.confirming {
-  background: rgba(102, 126, 234, 0.1);
-  color: #667eea;
+  background: rgba(64, 69, 101, 0.15);
+  color: #404565;
 }
 
 .status-message.success {
@@ -153,7 +153,7 @@
 }
 
 .tx-hash a {
-  color: #667eea;
+  color: #404565;
   text-decoration: none;
   font-weight: 500;
   font-size: 0.9rem;
@@ -188,9 +188,9 @@
 }
 
 .mint-btn {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #404565 0%, #2D3047 100%);
   color: white;
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 4px 15px rgba(64, 69, 101, 0.3);
 }
 
 .mint-btn::before {
@@ -211,7 +211,7 @@
 
 .mint-btn:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 8px 25px rgba(64, 69, 101, 0.4);
 }
 
 .mint-btn:disabled {
