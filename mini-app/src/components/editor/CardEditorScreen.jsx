@@ -35,6 +35,22 @@ function CardEditorScreen({ initialCard, onSave, onBack }) {
   const [isLoadingDrafts, setIsLoadingDrafts] = useState(false);
   const [error, setError] = useState(null);
 
+  // Mobile-specific state
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isPartEditorModalOpen, setIsPartEditorModalOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Detect mobile viewport
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   // Load drafts when panel opens
   useEffect(() => {
     if (showDrafts && address) {
@@ -89,11 +105,38 @@ function CardEditorScreen({ initialCard, onSave, onBack }) {
     }
   };
 
+  // Handle part selection on mobile
+  const handleSelectPart = (partKey) => {
+    setSelectedPart(partKey);
+    if (isMobile) {
+      setIsSidebarOpen(false);
+      setIsPartEditorModalOpen(true);
+    }
+  };
+
+  // Close part editor modal
+  const handleClosePartEditorModal = () => {
+    setIsPartEditorModalOpen(false);
+  };
+
   return (
     <div className="card-editor-screen">
       {/* Header */}
       <div className="editor-header">
         <div className="editor-header-left">
+          {/* Mobile menu toggle */}
+          <button
+            className="mobile-menu-toggle"
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            aria-label="Toggle menu"
+          >
+            <span className="hamburger-icon">
+              <span></span>
+              <span></span>
+              <span></span>
+            </span>
+          </button>
+
           {onBack && (
             <button className="editor-back-btn" onClick={onBack}>
               ← Back
@@ -127,18 +170,18 @@ function CardEditorScreen({ initialCard, onSave, onBack }) {
             className="editor-btn secondary"
             onClick={() => setShowDrafts(!showDrafts)}
           >
-            📁 Drafts
+            📁 <span className="btn-text">Drafts</span>
           </button>
 
           <button
             className="editor-btn secondary"
             onClick={handleExport}
           >
-            📤 Export
+            📤 <span className="btn-text">Export</span>
           </button>
 
           <label className="editor-btn secondary import-btn">
-            📥 Import
+            📥 <span className="btn-text">Import</span>
             <input
               type="file"
               accept=".json"
@@ -153,7 +196,7 @@ function CardEditorScreen({ initialCard, onSave, onBack }) {
             className="editor-btn secondary"
             onClick={resetCard}
           >
-            🔄 Reset
+            🔄 <span className="btn-text">Reset</span>
           </button>
 
           <button
@@ -161,7 +204,7 @@ function CardEditorScreen({ initialCard, onSave, onBack }) {
             onClick={handleSave}
             disabled={!isConnected || isSaving}
           >
-            {isSaving ? 'Saving...' : '💾 Save'}
+            {isSaving ? '...' : '💾'} <span className="btn-text">{isSaving ? 'Saving' : 'Save'}</span>
           </button>
 
           {onSave && (
@@ -169,7 +212,7 @@ function CardEditorScreen({ initialCard, onSave, onBack }) {
               className="editor-btn accent"
               onClick={handleFinish}
             >
-              ✓ Done
+              ✓ <span className="btn-text">Done</span>
             </button>
           )}
         </div>
@@ -192,22 +235,49 @@ function CardEditorScreen({ initialCard, onSave, onBack }) {
 
       {/* Main editor layout */}
       <div className="editor-main">
-        {/* Left panel - Part selector */}
-        <div className="editor-sidebar">
+        {/* Mobile sidebar overlay */}
+        {isMobile && isSidebarOpen && (
+          <div
+            className="sidebar-overlay"
+            onClick={() => setIsSidebarOpen(false)}
+          />
+        )}
+
+        {/* Left panel - Part selector (collapsible on mobile) */}
+        <div className={`editor-sidebar ${isSidebarOpen ? 'open' : ''}`}>
+          <div className="sidebar-header-mobile">
+            <h3>Card Parts</h3>
+            <button
+              className="sidebar-close-btn"
+              onClick={() => setIsSidebarOpen(false)}
+            >
+              ×
+            </button>
+          </div>
           <PartSelector
             parts={CARD_PARTS}
             selectedPart={selectedPart}
-            onSelectPart={setSelectedPart}
+            onSelectPart={handleSelectPart}
           />
         </div>
 
         {/* Center - Live preview */}
         <div className="editor-preview">
           <LiveCardPreview card={card} />
+
+          {/* Mobile: Button to open part editor */}
+          {isMobile && selectedPart && (
+            <button
+              className="mobile-edit-btn"
+              onClick={() => setIsPartEditorModalOpen(true)}
+            >
+              ✏️ Edit {CARD_PARTS[selectedPart]?.label}
+            </button>
+          )}
         </div>
 
-        {/* Right panel - Part editor */}
-        <div className="editor-panel">
+        {/* Right panel - Part editor (desktop only) */}
+        <div className="editor-panel desktop-only">
           <PartEditor
             part={selectedPart}
             partSchema={CARD_PARTS[selectedPart]}
@@ -217,6 +287,43 @@ function CardEditorScreen({ initialCard, onSave, onBack }) {
           />
         </div>
       </div>
+
+      {/* Mobile Part Editor Modal */}
+      {isMobile && isPartEditorModalOpen && (
+        <div className="part-editor-modal-overlay" onClick={handleClosePartEditorModal}>
+          <div className="part-editor-modal" onClick={e => e.stopPropagation()}>
+            <div className="part-editor-modal-header">
+              <div className="modal-header-title">
+                <span className="modal-part-icon">{CARD_PARTS[selectedPart]?.icon}</span>
+                <h3>{CARD_PARTS[selectedPart]?.label}</h3>
+              </div>
+              <button
+                className="modal-close-btn"
+                onClick={handleClosePartEditorModal}
+              >
+                ×
+              </button>
+            </div>
+            <div className="part-editor-modal-content">
+              <PartEditor
+                part={selectedPart}
+                partSchema={CARD_PARTS[selectedPart]}
+                card={card}
+                onUpdateField={updateField}
+                onUpdateFields={updateFields}
+              />
+            </div>
+            <div className="part-editor-modal-footer">
+              <button
+                className="modal-done-btn"
+                onClick={handleClosePartEditorModal}
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Drafts modal */}
       {showDrafts && (
