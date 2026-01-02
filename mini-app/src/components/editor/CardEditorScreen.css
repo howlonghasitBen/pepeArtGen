@@ -24,6 +24,36 @@
   gap: 16px;
 }
 
+/* Mobile menu toggle - hidden on desktop */
+.mobile-menu-toggle {
+  display: none;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.mobile-menu-toggle:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.hamburger-icon {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 20px;
+}
+
+.hamburger-icon span {
+  display: block;
+  height: 2px;
+  background: #fff;
+  border-radius: 1px;
+  transition: all 0.2s;
+}
+
 .editor-back-btn {
   background: transparent;
   border: 1px solid rgba(255, 255, 255, 0.2);
@@ -160,6 +190,17 @@
   grid-template-columns: 240px 1fr 360px;
   flex: 1;
   overflow: hidden;
+  position: relative;
+}
+
+/* Sidebar Overlay (mobile) */
+.sidebar-overlay {
+  display: none;
+}
+
+/* Sidebar header for mobile */
+.sidebar-header-mobile {
+  display: none;
 }
 
 /* Sidebar */
@@ -172,11 +213,18 @@
 /* Preview */
 .editor-preview {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 24px;
   overflow: auto;
   background: radial-gradient(ellipse at center, rgba(64, 69, 101, 0.15) 0%, transparent 70%);
+  gap: 16px;
+}
+
+/* Mobile edit button - hidden on desktop */
+.mobile-edit-btn {
+  display: none;
 }
 
 /* Panel */
@@ -184,6 +232,124 @@
   background: rgba(0, 0, 0, 0.3);
   border-left: 1px solid rgba(255, 255, 255, 0.1);
   overflow-y: auto;
+}
+
+/* Desktop only class */
+.desktop-only {
+  display: block;
+}
+
+/* Part Editor Modal (mobile) */
+.part-editor-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s;
+}
+
+.part-editor-modal {
+  background: #1a1a2e;
+  border-radius: 20px 20px 0 0;
+  width: 100%;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  animation: slideUpModal 0.3s ease-out;
+}
+
+@keyframes slideUpModal {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.part-editor-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  flex-shrink: 0;
+}
+
+.modal-header-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.modal-part-icon {
+  font-size: 24px;
+}
+
+.part-editor-modal-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.modal-close-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: #fff;
+  font-size: 24px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.modal-close-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.part-editor-modal-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0;
+}
+
+.part-editor-modal-content .part-editor {
+  height: auto;
+}
+
+.part-editor-modal-content .part-editor-header {
+  display: none;
+}
+
+.part-editor-modal-footer {
+  padding: 16px 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  flex-shrink: 0;
+}
+
+.modal-done-btn {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, #404565, #2D3047);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.modal-done-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(64, 69, 101, 0.4);
 }
 
 /* Drafts Modal */
@@ -286,32 +452,201 @@
   color: rgba(255, 255, 255, 0.5);
 }
 
-/* Responsive */
+/* ============================================ */
+/* Responsive Styles */
+/* ============================================ */
+
+/* Tablet breakpoint */
 @media (max-width: 1024px) {
   .editor-main {
-    grid-template-columns: 1fr;
-    grid-template-rows: auto 1fr auto;
-  }
-
-  .editor-sidebar {
-    border-right: none;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  }
-
-  .editor-panel {
-    border-left: none;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    grid-template-columns: 200px 1fr 320px;
   }
 }
 
+/* Mobile breakpoint */
 @media (max-width: 768px) {
+  /* Show hamburger menu */
+  .mobile-menu-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Header adjustments */
   .editor-header {
-    flex-direction: column;
+    padding: 12px 16px;
+  }
+
+  .editor-header-left {
     gap: 12px;
   }
 
-  .editor-header-actions {
-    flex-wrap: wrap;
+  .editor-title {
+    font-size: 18px;
+  }
+
+  /* Hide button text on mobile */
+  .btn-text {
+    display: none;
+  }
+
+  .editor-btn {
+    padding: 8px 12px;
+    min-width: 40px;
     justify-content: center;
+  }
+
+  .editor-btn-divider {
+    margin: 0 4px;
+  }
+
+  .editor-header-actions {
+    gap: 4px;
+  }
+
+  /* Main layout - single column */
+  .editor-main {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr;
+  }
+
+  /* Sidebar becomes a sliding drawer */
+  .editor-sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 280px;
+    z-index: 100;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease-out;
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(20, 20, 35, 0.98);
+    backdrop-filter: blur(10px);
+  }
+
+  .editor-sidebar.open {
+    transform: translateX(0);
+  }
+
+  /* Show mobile header in sidebar */
+  .sidebar-header-mobile {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.3);
+  }
+
+  .sidebar-header-mobile h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+  }
+
+  .sidebar-close-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: #fff;
+    font-size: 24px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Overlay when sidebar is open */
+  .sidebar-overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 99;
+    animation: fadeIn 0.2s;
+  }
+
+  /* Hide desktop panel on mobile */
+  .desktop-only {
+    display: none;
+  }
+
+  /* Preview takes full space */
+  .editor-preview {
+    padding: 16px;
+    padding-bottom: 80px; /* Space for mobile edit button */
+  }
+
+  /* Show mobile edit button */
+  .mobile-edit-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 14px 28px;
+    background: linear-gradient(135deg, #404565, #2D3047);
+    color: #fff;
+    border: none;
+    border-radius: 30px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    z-index: 50;
+    transition: all 0.2s;
+  }
+
+  .mobile-edit-btn:hover {
+    transform: translateX(-50%) translateY(-2px);
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5);
+  }
+
+  /* Hide PartSelector header on mobile (we have our own) */
+  .editor-sidebar .part-selector-header {
+    display: none;
+  }
+
+  /* Last saved - smaller on mobile */
+  .last-saved {
+    padding: 6px 16px;
+    font-size: 11px;
+  }
+}
+
+/* Small mobile */
+@media (max-width: 480px) {
+  .editor-header {
+    padding: 10px 12px;
+  }
+
+  .editor-title {
+    font-size: 16px;
+  }
+
+  .editor-back-btn {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+
+  .editor-btn {
+    padding: 6px 10px;
+    min-width: 36px;
+  }
+
+  .editor-sidebar {
+    width: 100%;
+  }
+
+  .mobile-edit-btn {
+    padding: 12px 24px;
+    font-size: 14px;
+    bottom: 16px;
   }
 }
