@@ -15,6 +15,15 @@
   align-items: center;
   gap: 16px;
   margin-bottom: 24px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+}
+
+.deck-builder-header::-webkit-scrollbar {
+  display: none; /* Chrome/Safari */
 }
 
 .deck-builder-header h2 {
@@ -35,6 +44,8 @@
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .back-btn:hover {
@@ -50,6 +61,8 @@
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .new-deck-btn:hover {
