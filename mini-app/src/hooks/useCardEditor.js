@@ -335,8 +335,15 @@ export function useCardEditor(initialCard = null) {
         throw new Error(errorMsg);
       }
 
+      // Server returns snake_case (card_data), not camelCase
+      const cardData = data.card_data || data.cardData;
+
+      if (!cardData) {
+        throw new Error('Draft has no card data');
+      }
+
       setDraftId(data.id);
-      loadCard(data.cardData);
+      loadCard(cardData);
       setLastSaved(new Date(data.updated_at));
 
       return data;
