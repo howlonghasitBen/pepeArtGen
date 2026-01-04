@@ -1,5 +1,12 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { useWeb3 } from '../context/Web3Context';
+
+// Get API base URL consistently
+const getApiBaseUrl = () => {
+  return import.meta.env.VITE_API_BASE_URL ||
+         import.meta.env.VITE_SERVER_URL ||
+         'http://localhost:3001';
+};
 
 /**
  * Card Parts Schema - defines all editable parts of a card
@@ -277,7 +284,8 @@ export function useCardEditor(initialCard = null) {
     setIsSaving(true);
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_SERVER_URL || 'http://localhost:3001'}/api/drafts`, {
+      const apiUrl = getApiBaseUrl();
+      const response = await fetch(`${apiUrl}/api/drafts`, {
         method: draftId ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -288,16 +296,25 @@ export function useCardEditor(initialCard = null) {
         })
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        throw new Error('Failed to save draft');
+        // Extract error message from server response
+        const errorMsg = data.error || data.message || 'Failed to save draft';
+        throw new Error(errorMsg);
       }
 
-      const data = await response.json();
       setDraftId(data.id);
       setIsDirty(false);
       setLastSaved(new Date());
 
       return data;
+    } catch (err) {
+      // Re-throw with more context if it's a network error
+      if (err.name === 'TypeError' && err.message.includes('fetch')) {
+        throw new Error('Cannot connect to server. Please check if the server is running.');
+      }
+      throw err;
     } finally {
       setIsSaving(false);
     }
@@ -307,18 +324,28 @@ export function useCardEditor(initialCard = null) {
    * Load draft from server
    */
   const loadDraft = useCallback(async (id) => {
-    const response = await fetch(`${import.meta.env.VITE_SERVER_URL || 'http://localhost:3001'}/api/drafts/${id}`);
+    try {
+      const apiUrl = getApiBaseUrl();
+      const response = await fetch(`${apiUrl}/api/drafts/${id}`);
 
-    if (!response.ok) {
-      throw new Error('Failed to load draft');
+      const data = await response.json();
+
+      if (!response.ok) {
+        const errorMsg = data.error || data.message || 'Failed to load draft';
+        throw new Error(errorMsg);
+      }
+
+      setDraftId(data.id);
+      loadCard(data.cardData);
+      setLastSaved(new Date(data.updated_at));
+
+      return data;
+    } catch (err) {
+      if (err.name === 'TypeError' && err.message.includes('fetch')) {
+        throw new Error('Cannot connect to server. Please check if the server is running.');
+      }
+      throw err;
     }
-
-    const data = await response.json();
-    setDraftId(data.id);
-    loadCard(data.cardData);
-    setLastSaved(new Date(data.updated_at));
-
-    return data;
   }, [loadCard]);
 
   /**
@@ -329,36 +356,55 @@ export function useCardEditor(initialCard = null) {
       return [];
     }
 
-    const response = await fetch(
-      `${import.meta.env.VITE_SERVER_URL || 'http://localhost:3001'}/api/drafts?owner=${address}`
-    );
+    try {
+      const apiUrl = getApiBaseUrl();
+      const response = await fetch(`${apiUrl}/api/drafts?owner=${address}`);
 
-    if (!response.ok) {
-      throw new Error('Failed to fetch drafts');
+      const data = await response.json();
+
+      if (!response.ok) {
+        const errorMsg = data.error || data.message || 'Failed to fetch drafts';
+        throw new Error(errorMsg);
+      }
+
+      return data;
+    } catch (err) {
+      if (err.name === 'TypeError' && err.message.includes('fetch')) {
+        throw new Error('Cannot connect to server. Please check if the server is running.');
+      }
+      throw err;
     }
-
-    return response.json();
   }, [address]);
 
   /**
    * Delete a draft
    */
   const deleteDraft = useCallback(async (id) => {
-    const response = await fetch(
-      `${import.meta.env.VITE_SERVER_URL || 'http://localhost:3001'}/api/drafts/${id}`,
-      { method: 'DELETE' }
-    );
+    try {
+      const apiUrl = getApiBaseUrl();
+      const response = await fetch(`${apiUrl}/api/drafts/${id}?owner=${address}`, {
+        method: 'DELETE'
+      });
 
-    if (!response.ok) {
-      throw new Error('Failed to delete draft');
+      const data = await response.json();
+
+      if (!response.ok) {
+        const errorMsg = data.error || data.message || 'Failed to delete draft';
+        throw new Error(errorMsg);
+      }
+
+      if (id === draftId) {
+        resetCard();
+      }
+
+      return true;
+    } catch (err) {
+      if (err.name === 'TypeError' && err.message.includes('fetch')) {
+        throw new Error('Cannot connect to server. Please check if the server is running.');
+      }
+      throw err;
     }
-
-    if (id === draftId) {
-      resetCard();
-    }
-
-    return true;
-  }, [draftId, resetCard]);
+  }, [address, draftId, resetCard]);
 
   /**
    * Export card as JSON
