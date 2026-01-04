@@ -1,10 +1,46 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
+import { useWeb3 } from '../../context/Web3Context';
+import { useGenerationPayment } from '../../hooks/useGenerationPayment';
 import './PartEditor.css';
 
 function PartEditor({ part, partSchema, card, onUpdateField, onUpdateFields }) {
   const [imagePreview, setImagePreview] = useState(null);
   const [isExtractingColors, setIsExtractingColors] = useState(false);
   const fileInputRef = useRef(null);
+
+  // Art generation state
+  const [artPrompt, setArtPrompt] = useState('');
+  const [isGeneratingArt, setIsGeneratingArt] = useState(false);
+  const [artGenError, setArtGenError] = useState('');
+  const [showArtPaymentFlow, setShowArtPaymentFlow] = useState(false);
+  const [generationsUsed, setGenerationsUsed] = useState(0);
+
+  // Web3 and payment hooks
+  const {
+    address,
+    isConnected,
+    isCorrectChain,
+    hasActiveSession,
+    paymentSession,
+    useGeneration,
+    checkActiveSession,
+    isLoadingSession,
+    config,
+    switchToCorrectChain,
+    isSwitchingChain,
+  } = useWeb3();
+
+  const {
+    payForGeneration,
+    hasSufficientBalance,
+    clearError,
+    status: paymentStatus,
+    error: paymentError,
+    txHash,
+    generationFeeUsdc,
+    usdcBalanceFormatted,
+    isBalanceLoading,
+  } = useGenerationPayment();
 
   if (!partSchema) {
     return <div className="part-editor-empty">Select a part to edit</div>;
@@ -85,6 +121,96 @@ function PartEditor({ part, partSchema, card, onUpdateField, onUpdateFields }) {
       setIsExtractingColors(false);
     }
   };
+
+  // Art generation handlers
+  const handleGenerateArt = useCallback(async () => {
+    if (!artPrompt.trim()) {
+      setArtGenError('Please enter a prompt for art generation');
+      return;
+    }
+
+    // Check if user needs to pay first
+    if (!hasActiveSession) {
+      setShowArtPaymentFlow(true);
+      return;
+    }
+
+    setIsGeneratingArt(true);
+    setArtGenError('');
+
+    try {
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_SERVER_URL || 'http://localhost:3001';
+      const response = await fetch(`${apiBaseUrl}/api/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          monsterNames: [artPrompt.trim()],
+          sessionId: paymentSession?.id,
+          walletAddress: address,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        if (data.error === 'No generations remaining') {
+          setArtGenError('No generations remaining. Please make a new payment.');
+          setShowArtPaymentFlow(true);
+          return;
+        }
+        throw new Error(data.error || data.message || 'Art generation failed');
+      }
+
+      if (data.success && data.cards.length > 0) {
+        const generatedCard = data.cards[0];
+
+        // Update card with generated image and colors
+        onUpdateField('imageData', generatedCard.imageData);
+        setImagePreview(generatedCard.imageData);
+
+        if (generatedCard.colors) {
+          onUpdateFields({
+            colors: generatedCard.colors,
+            theme: generatedCard.theme
+          });
+        }
+
+        // Also update move name and flavor text if available
+        if (generatedCard.moveName) {
+          onUpdateField('moveName', generatedCard.moveName);
+        }
+        if (generatedCard.flavorText) {
+          onUpdateField('flavorText', generatedCard.flavorText);
+        }
+
+        // Update local session state (decrement generations)
+        useGeneration();
+        setGenerationsUsed(prev => prev + 1);
+      } else {
+        setArtGenError('Art generation failed - no images returned');
+      }
+    } catch (error) {
+      console.error('Art generation error:', error);
+      setArtGenError(error.message || 'Art generation failed');
+    } finally {
+      setIsGeneratingArt(false);
+    }
+  }, [artPrompt, hasActiveSession, paymentSession, address, onUpdateField, onUpdateFields, useGeneration]);
+
+  const handleArtPayment = useCallback(async () => {
+    try {
+      clearError();
+      const result = await payForGeneration();
+      console.log('Art generation payment successful:', result);
+      setShowArtPaymentFlow(false);
+      // Now trigger the generation
+      await checkActiveSession();
+    } catch (err) {
+      console.error('Art payment failed:', err);
+    }
+  }, [payForGeneration, clearError, checkActiveSession]);
+
+  const generationsRemaining = paymentSession?.generationsRemaining ?? 0;
 
   const handleRandomize = (fieldKey, fieldSchema) => {
     let value;
@@ -208,6 +334,144 @@ function PartEditor({ part, partSchema, card, onUpdateField, onUpdateFields }) {
         return (
           <div key={fieldKey} className="field-group">
             <label className="field-label">{fieldSchema.label}</label>
+
+            {/* AI Art Generation Section */}
+            <div className="art-generation-section">
+              <div className="art-gen-header">
+                <span className="art-gen-icon">🎨</span>
+                <span className="art-gen-title">Generate with AI</span>
+              </div>
+
+              {/* Session Status */}
+              <div className="art-session-status">
+                {isLoadingSession ? (
+                  <span className="session-badge loading">Checking session...</span>
+                ) : hasActiveSession ? (
+                  <span className="session-badge active">
+                    {generationsRemaining} generation{generationsRemaining !== 1 ? 's' : ''} remaining
+                  </span>
+                ) : (
+                  <span className="session-badge inactive">Pay $2.50 for 3 generations</span>
+                )}
+              </div>
+
+              {/* Payment Flow */}
+              {showArtPaymentFlow && !hasActiveSession && (
+                <div className="art-payment-flow">
+                  <div className="payment-info">
+                    <p>Generate AI artwork for your card!</p>
+                    <ul>
+                      <li>1 initial generation + 2 re-rolls</li>
+                      <li>Powered by Google Imagen</li>
+                    </ul>
+                  </div>
+
+                  {!isConnected ? (
+                    <div className="connect-prompt">
+                      <p>Connect your wallet to continue</p>
+                      <appkit-button />
+                    </div>
+                  ) : !isCorrectChain ? (
+                    <button
+                      className="switch-network-btn"
+                      onClick={switchToCorrectChain}
+                      disabled={isSwitchingChain}
+                    >
+                      {isSwitchingChain ? 'Switching...' : 'Switch to Base Network'}
+                    </button>
+                  ) : !hasSufficientBalance() ? (
+                    <div className="insufficient-balance">
+                      <p>Insufficient USDC balance ({usdcBalanceFormatted} USDC)</p>
+                      <a href="https://bridge.base.org" target="_blank" rel="noopener noreferrer">
+                        Bridge to Base
+                      </a>
+                    </div>
+                  ) : (
+                    <button
+                      className="pay-btn"
+                      onClick={handleArtPayment}
+                      disabled={paymentStatus !== 'idle' && paymentStatus !== 'error'}
+                    >
+                      {paymentStatus === 'paying' ? 'Confirm in Wallet...' :
+                       paymentStatus === 'creating_session' ? 'Creating Session...' :
+                       paymentStatus === 'verifying_payment' ? 'Verifying Payment...' :
+                       `Pay ${generationFeeUsdc} USDC`}
+                    </button>
+                  )}
+
+                  {paymentError && (
+                    <div className="payment-error">{paymentError}</div>
+                  )}
+
+                  {txHash && (
+                    <a
+                      href={`https://basescan.org/tx/${txHash}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="tx-link"
+                    >
+                      View transaction
+                    </a>
+                  )}
+
+                  <button
+                    className="cancel-payment-btn"
+                    onClick={() => setShowArtPaymentFlow(false)}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              )}
+
+              {/* Art Prompt Input */}
+              {!showArtPaymentFlow && (
+                <div className="art-prompt-section">
+                  <input
+                    type="text"
+                    className="art-prompt-input"
+                    placeholder="Enter monster name or description..."
+                    value={artPrompt}
+                    onChange={(e) => setArtPrompt(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && !isGeneratingArt && handleGenerateArt()}
+                    disabled={isGeneratingArt}
+                  />
+
+                  <button
+                    className="generate-art-btn"
+                    onClick={handleGenerateArt}
+                    disabled={isGeneratingArt || !artPrompt.trim()}
+                  >
+                    {isGeneratingArt ? (
+                      <>
+                        <span className="spinner-small"></span>
+                        Generating...
+                      </>
+                    ) : hasActiveSession ? (
+                      'Generate Art'
+                    ) : (
+                      `Pay & Generate ($${generationFeeUsdc})`
+                    )}
+                  </button>
+
+                  {artGenError && (
+                    <div className="art-gen-error">{artGenError}</div>
+                  )}
+
+                  {isGeneratingArt && (
+                    <div className="art-gen-progress">
+                      <p>AI is creating your unique artwork...</p>
+                      <p className="progress-hint">This may take 30-60 seconds</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div className="art-gen-divider">
+                <span>or</span>
+              </div>
+            </div>
+
+            {/* Original Upload Section */}
             <div className="image-upload-area">
               {(imagePreview || card.imageData) ? (
                 <div className="image-preview-container">
@@ -309,7 +573,7 @@ function PartEditor({ part, partSchema, card, onUpdateField, onUpdateFields }) {
                 'stats.attack': Math.floor(Math.random() * 12) + 3,
                 'stats.defense': Math.floor(Math.random() * 12) + 3,
                 'stats.mana': Math.floor(Math.random() * 8) + 2,
-                'stats.speed': Math.floor(Math.random() * 8) + 2
+                'stats.crit': Math.floor(Math.random() * 20) + 1
               });
             }}
           >
