@@ -27,27 +27,14 @@ export const CARD_PARTS = {
       attack: { type: 'number', label: 'Attack', min: 0, max: 15 },
       defense: { type: 'number', label: 'Defense', min: 0, max: 15 },
       mana: { type: 'number', label: 'Mana Cost', min: 0, max: 10 },
-      speed: { type: 'number', label: 'Speed', min: 1, max: 10 }
+      crit: { type: 'number', label: 'Crit', min: 1, max: 20 }
     }
   },
   abilities: {
     label: 'Abilities',
     icon: '✨',
     fields: {
-      moveName: { type: 'string', label: 'Move Name', placeholder: 'Shadow Strike' },
-      moveDescription: {
-        type: 'textarea',
-        label: 'Move Description',
-        placeholder: 'Deal 3 damage to target creature...',
-        rows: 3
-      },
-      passiveAbility: {
-        type: 'textarea',
-        label: 'Passive Ability (Optional)',
-        placeholder: 'When this creature enters play...',
-        rows: 2,
-        optional: true
-      }
+      moveName: { type: 'string', label: 'Move Name', placeholder: 'Shadow Strike' }
     }
   },
   visuals: {
@@ -73,25 +60,6 @@ export const CARD_PARTS = {
         type: 'select',
         label: 'Rarity',
         options: ['Common', 'Uncommon', 'Rare', 'Epic', 'Legendary', '1/1']
-      },
-      setName: { type: 'string', label: 'Set Name (Optional)', placeholder: 'Genesis', optional: true }
-    }
-  },
-  terrain: {
-    label: 'Terrain',
-    icon: '🌍',
-    fields: {
-      terrainType: {
-        type: 'select',
-        label: 'Terrain Type',
-        options: ['Fire', 'Water', 'Earth', 'Air', 'Shadow', 'Light', 'Neutral']
-      },
-      terrainBonus: {
-        type: 'textarea',
-        label: 'Terrain Bonus (Optional)',
-        placeholder: '+1 ATK when on Fire terrain',
-        rows: 2,
-        optional: true
       }
     }
   }
@@ -109,22 +77,18 @@ const DEFAULT_CARD = {
     hp: 5,
     attack: 3,
     defense: 3,
-    speed: 5
+    mana: 3,
+    crit: 10
   },
   manaCost: [
     { type: 'hp', value: 5, color: 'radial-gradient(circle, #ff6b6b, #c0392b)', textColor: '#fff' },
     { type: 'mana', value: 3, color: 'radial-gradient(circle, #74b9ff, #0984e3)', textColor: '#fff' },
-    { type: 'terrain', value: '?', color: 'radial-gradient(circle, #a29bfe, #6c5ce7)', textColor: '#fff' }
+    { type: 'crit', value: 10, color: 'radial-gradient(circle, #a29bfe, #6c5ce7)', textColor: '#fff' }
   ],
   moveName: '',
-  moveDescription: '',
-  passiveAbility: '',
   flavorText: '',
   artist: 'Waves TCG',
   rarity: '1/1',
-  setName: '',
-  terrainType: 'Neutral',
-  terrainBonus: '',
   imageData: null,
   colors: null,
   theme: null
@@ -178,7 +142,7 @@ export function useCardEditor(initialCard = null) {
       current[parts[parts.length - 1]] = value;
 
       // Update mana cost orbs when stats change
-      if (fieldPath === 'stats.hp' || fieldPath === 'stats.mana' || fieldPath === 'terrainType') {
+      if (fieldPath === 'stats.hp' || fieldPath === 'stats.mana' || fieldPath === 'stats.crit') {
         newCard.manaCost = [
           {
             type: 'hp',
@@ -193,9 +157,9 @@ export function useCardEditor(initialCard = null) {
             textColor: '#fff'
           },
           {
-            type: 'terrain',
-            value: getTerrainSymbol(newCard.terrainType),
-            color: getTerrainColor(newCard.terrainType),
+            type: 'crit',
+            value: newCard.stats?.crit || 10,
+            color: 'radial-gradient(circle, #a29bfe, #6c5ce7)',
             textColor: '#fff'
           }
         ];
@@ -265,6 +229,10 @@ export function useCardEditor(initialCard = null) {
    */
   const loadCard = useCallback((cardData) => {
     // Transform generated card format to editor format
+    const hp = cardData.stats?.hp || cardData.manaCost?.[0]?.value || DEFAULT_CARD.stats.hp;
+    const mana = cardData.stats?.mana || cardData.manaCost?.[1]?.value || DEFAULT_CARD.stats.mana;
+    const crit = cardData.stats?.crit || cardData.manaCost?.[2]?.value || DEFAULT_CARD.stats.crit;
+
     const editorCard = {
       ...DEFAULT_CARD,
       name: cardData.name || DEFAULT_CARD.name,
@@ -272,25 +240,24 @@ export function useCardEditor(initialCard = null) {
       type: cardData.type || DEFAULT_CARD.type,
       level: parseInt(cardData.level) || DEFAULT_CARD.level,
       stats: {
-        hp: cardData.stats?.hp || cardData.manaCost?.[0]?.value || DEFAULT_CARD.stats.hp,
+        hp,
         attack: cardData.stats?.attack || DEFAULT_CARD.stats.attack,
         defense: cardData.stats?.defense || DEFAULT_CARD.stats.defense,
-        mana: cardData.stats?.mana || cardData.manaCost?.[1]?.value || DEFAULT_CARD.stats.mana,
-        speed: cardData.stats?.speed || DEFAULT_CARD.stats.speed
+        mana,
+        crit
       },
       moveName: cardData.moveName || extractMoveName(cardData.flavorText) || '',
-      moveDescription: cardData.moveDescription || '',
-      passiveAbility: cardData.passiveAbility || '',
       flavorText: cardData.flavorText || '',
       artist: cardData.artist || DEFAULT_CARD.artist,
       rarity: cardData.rarity || DEFAULT_CARD.rarity,
-      setName: cardData.setName || '',
-      terrainType: cardData.terrainType || extractTerrainFromMana(cardData.manaCost) || 'Neutral',
-      terrainBonus: cardData.terrainBonus || '',
       imageData: cardData.imageData,
       colors: cardData.colors,
       theme: cardData.theme,
-      manaCost: cardData.manaCost || DEFAULT_CARD.manaCost
+      manaCost: [
+        { type: 'hp', value: hp, color: 'radial-gradient(circle, #ff6b6b, #c0392b)', textColor: '#fff' },
+        { type: 'mana', value: mana, color: 'radial-gradient(circle, #74b9ff, #0984e3)', textColor: '#fff' },
+        { type: 'crit', value: crit, color: 'radial-gradient(circle, #a29bfe, #6c5ce7)', textColor: '#fff' }
+      ]
     };
 
     setCard(editorCard);
@@ -483,32 +450,6 @@ export function useCardEditor(initialCard = null) {
 }
 
 // Helper functions
-function getTerrainSymbol(terrainType) {
-  const symbols = {
-    Fire: '🔥',
-    Water: '💧',
-    Earth: '🌍',
-    Air: '💨',
-    Shadow: '🌑',
-    Light: '☀️',
-    Neutral: '?'
-  };
-  return symbols[terrainType] || '?';
-}
-
-function getTerrainColor(terrainType) {
-  const colors = {
-    Fire: 'radial-gradient(circle, #ff7675, #d63031)',
-    Water: 'radial-gradient(circle, #74b9ff, #0984e3)',
-    Earth: 'radial-gradient(circle, #a29bfe, #6c5ce7)',
-    Air: 'radial-gradient(circle, #81ecec, #00cec9)',
-    Shadow: 'radial-gradient(circle, #636e72, #2d3436)',
-    Light: 'radial-gradient(circle, #ffeaa7, #fdcb6e)',
-    Neutral: 'radial-gradient(circle, #dfe6e9, #b2bec3)'
-  };
-  return colors[terrainType] || colors.Neutral;
-}
-
 function extractMoveName(flavorText) {
   if (!flavorText) return '';
   const lines = flavorText.split('\n');
@@ -516,16 +457,6 @@ function extractMoveName(flavorText) {
     return lines[0];
   }
   return '';
-}
-
-function extractTerrainFromMana(manaCost) {
-  if (!manaCost) return 'Neutral';
-  const terrainOrb = manaCost.find(m => m.type === 'terrain');
-  if (terrainOrb?.value) {
-    const symbols = { '🔥': 'Fire', '💧': 'Water', '🌍': 'Earth', '💨': 'Air', '🌑': 'Shadow', '☀️': 'Light' };
-    return symbols[terrainOrb.value] || 'Neutral';
-  }
-  return 'Neutral';
 }
 
 export default useCardEditor;
