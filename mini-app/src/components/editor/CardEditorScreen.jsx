@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useWeb3 } from '../../context/Web3Context';
 import { useCardEditor, CARD_PARTS } from '../../hooks/useCardEditor';
+import { useMintCard } from '../../hooks/useMintCard';
 import PartSelector from './PartSelector';
 import PartEditor from './PartEditor';
 import LiveCardPreview from './LiveCardPreview';
+import MintingModal from '../MintingModal';
+import MintSuccessModal from '../MintSuccessModal';
 import './CardEditorScreen.css';
 
 function CardEditorScreen({ initialCard, onSave, onBack }) {
@@ -34,6 +37,11 @@ function CardEditorScreen({ initialCard, onSave, onBack }) {
   const [drafts, setDrafts] = useState([]);
   const [isLoadingDrafts, setIsLoadingDrafts] = useState(false);
   const [error, setError] = useState(null);
+
+  // Minting state
+  const [showMintingModal, setShowMintingModal] = useState(false);
+  const [showMintSuccessModal, setShowMintSuccessModal] = useState(false);
+  const [mintSuccessData, setMintSuccessData] = useState(null);
 
   // Mobile-specific state
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -99,7 +107,33 @@ function CardEditorScreen({ initialCard, onSave, onBack }) {
     }
   };
 
-  const handleFinish = () => {
+  const handleMint = () => {
+    // Validate card has required data
+    if (!card.imageData) {
+      setError('Please add an image to your card before minting');
+      return;
+    }
+    if (!card.name || card.name === 'Untitled Card') {
+      setError('Please give your card a name before minting');
+      return;
+    }
+    setShowMintingModal(true);
+  };
+
+  const handleMintSuccess = (data) => {
+    setShowMintingModal(false);
+    setMintSuccessData(data);
+    setShowMintSuccessModal(true);
+  };
+
+  const handleMintModalClose = () => {
+    setShowMintingModal(false);
+  };
+
+  const handleMintSuccessClose = () => {
+    setShowMintSuccessModal(false);
+    setMintSuccessData(null);
+    // Optionally call onSave or onBack after successful mint
     if (onSave) {
       onSave(card);
     }
@@ -207,14 +241,13 @@ function CardEditorScreen({ initialCard, onSave, onBack }) {
             {isSaving ? '...' : '💾'} <span className="btn-text">{isSaving ? 'Saving' : 'Save'}</span>
           </button>
 
-          {onSave && (
-            <button
-              className="editor-btn accent"
-              onClick={handleFinish}
-            >
-              ✓ <span className="btn-text">Done</span>
-            </button>
-          )}
+          <button
+            className="editor-btn accent"
+            onClick={handleMint}
+            disabled={!isConnected}
+          >
+            🪙 <span className="btn-text">Mint</span>
+          </button>
         </div>
       </div>
 
@@ -356,6 +389,23 @@ function CardEditorScreen({ initialCard, onSave, onBack }) {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Minting Modal */}
+      {showMintingModal && (
+        <MintingModal
+          cards={[card]}
+          onClose={handleMintModalClose}
+          onSuccess={handleMintSuccess}
+        />
+      )}
+
+      {/* Mint Success Modal */}
+      {showMintSuccessModal && mintSuccessData && (
+        <MintSuccessModal
+          mintData={mintSuccessData}
+          onClose={handleMintSuccessClose}
+        />
       )}
     </div>
   );
