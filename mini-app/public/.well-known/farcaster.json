@@ -1,0 +1,30 @@
+{
+  "accountAssociation": {
+    "header": "",
+    "payload": "",
+    "signature": ""
+  },
+  "miniapp": {
+    "version": "1",
+    "name": "Waves TCG Community Mint",
+    "homeUrl": "https://wavestcg.xyz",
+    "iconUrl": "https://wavestcg.xyz/favicon.ico",
+    "splashImageUrl": "https://wavestcg.xyz/splash.png",
+    "splashBackgroundColor": "#3281ba",
+    "subtitle": "Community Creations Mint",
+    "description": "Create and trade unique NFTs with AI-generated fantasy world Pepe art.",
+    "screenshotUrls": [
+      "https://wavestcg.xyz/screenshot1.png",
+      "https://wavestcg.xyz/screenshot2.png",
+      "https://wavestcg.xyz/screenshot3.png"
+    ],
+    "primaryCategory": "games",
+    "tags": ["NFT", "AI", "Fantasy", "Pepe", "Waves TCG"],
+    "heroImageUrl": "https://wavestcg.xyz/hero.png",
+    "tagline": "Create, Battle, Collect",
+    "ogTitle": "Waves TCG Community Mint",
+    "ogDescription": "Create and trade unique NFTs with AI-generated fantasy world Pepe art.",
+    "ogImageUrl": "https://wavestcg.xyz/hero.png",
+    "noindex": true
+  }
+}
