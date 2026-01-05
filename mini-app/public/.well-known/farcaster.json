@@ -19,13 +19,7 @@
             "https://wavestcg.xyz/screenshot3.png"
         ],
         "primaryCategory": "games",
-        "tags": [
-            "NFT",
-            "AI",
-            "Fantasy",
-            "Pepe",
-            "Waves TCG"
-        ],
+        "tags": ["NFT","AI","Fantasy","Pepe","Waves TCG"],
         "heroImageUrl": "https://wavestcg.xyz/hero.png",
         "tagline": "Create, Battle, Collect",
         "ogTitle": "Waves TCG Community Mint",
