@@ -198,6 +198,15 @@ function AppContent() {
   const [cardToEdit, setCardToEdit] = useState(null);
   const [expandedMenu, setExpandedMenu] = useState(null); // 'editor' | 'deckbuilder' | null
 
+  // Send ready message to Base app
+  useEffect(() => {
+    // Signal to the Base app that the mini app is ready
+    if (window.parent && window.parent !== window) {
+      console.log('📤 Sending ready message to Base app');
+      window.parent.postMessage({ type: 'ready' }, '*');
+    }
+  }, []);
+
   const handleCardsGenerated = (cards) => {
     setGeneratedCards(cards);
     setScreen("curation");
