@@ -5,6 +5,7 @@ import { base, baseSepolia } from "wagmi/chains";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createAppKit, useAppKitState } from "@reown/appkit/react";
 import { WagmiAdapter } from "@reown/appkit-adapter-wagmi";
+import { sdk } from "@farcaster/miniapp-sdk";
 
 // Import the Web3Provider and hook for USDC balance
 import { Web3Provider, useWeb3 } from "./context/Web3Context";
@@ -198,13 +199,19 @@ function AppContent() {
   const [cardToEdit, setCardToEdit] = useState(null);
   const [expandedMenu, setExpandedMenu] = useState(null); // 'editor' | 'deckbuilder' | null
 
-  // Send ready message to Base app
+  // Send ready message to Base app using official Farcaster SDK
   useEffect(() => {
-    // Signal to the Base app that the mini app is ready
-    if (window.parent && window.parent !== window) {
-      console.log('📤 Sending ready message to Base app');
-      window.parent.postMessage({ type: 'ready' }, '*');
-    }
+    const initMiniApp = async () => {
+      try {
+        console.log('📤 Signaling app ready to Base/Farcaster host');
+        await sdk.actions.ready();
+        console.log('✅ Mini app ready signal sent successfully');
+      } catch (error) {
+        console.error('❌ Failed to send ready signal:', error);
+      }
+    };
+
+    initMiniApp();
   }, []);
 
   const handleCardsGenerated = (cards) => {
