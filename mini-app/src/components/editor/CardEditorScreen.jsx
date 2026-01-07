@@ -173,11 +173,11 @@ function CardEditorScreen({ initialCard, onSave, onBack }) {
 
           {onBack && (
             <button className="editor-back-btn" onClick={onBack}>
-              ← Back
+              &lt; Back
             </button>
           )}
           <h2 className="editor-title">Card Editor</h2>
-          {isDirty && <span className="unsaved-indicator">●</span>}
+          {isDirty && <span className="unsaved-indicator">[*]</span>}
         </div>
 
         <div className="editor-header-actions">
@@ -187,7 +187,7 @@ function CardEditorScreen({ initialCard, onSave, onBack }) {
             disabled={!canUndo}
             title="Undo (Ctrl+Z)"
           >
-            ↶
+            &lt;
           </button>
           <button
             className="editor-btn secondary"
@@ -195,7 +195,7 @@ function CardEditorScreen({ initialCard, onSave, onBack }) {
             disabled={!canRedo}
             title="Redo (Ctrl+Y)"
           >
-            ↷
+            &gt;
           </button>
 
           <div className="editor-btn-divider" />
@@ -204,18 +204,18 @@ function CardEditorScreen({ initialCard, onSave, onBack }) {
             className="editor-btn secondary"
             onClick={() => setShowDrafts(!showDrafts)}
           >
-            📁 <span className="btn-text">Drafts</span>
+            [F] <span className="btn-text">Drafts</span>
           </button>
 
           <button
             className="editor-btn secondary"
             onClick={handleExport}
           >
-            📤 <span className="btn-text">Export</span>
+            [^] <span className="btn-text">Export</span>
           </button>
 
           <label className="editor-btn secondary import-btn">
-            📥 <span className="btn-text">Import</span>
+            [v] <span className="btn-text">Import</span>
             <input
               type="file"
               accept=".json"
@@ -230,7 +230,7 @@ function CardEditorScreen({ initialCard, onSave, onBack }) {
             className="editor-btn secondary"
             onClick={resetCard}
           >
-            🔄 <span className="btn-text">Reset</span>
+            [R] <span className="btn-text">Reset</span>
           </button>
 
           <button
@@ -238,7 +238,7 @@ function CardEditorScreen({ initialCard, onSave, onBack }) {
             onClick={handleSave}
             disabled={!isConnected || isSaving}
           >
-            {isSaving ? '...' : '💾'} <span className="btn-text">{isSaving ? 'Saving' : 'Save'}</span>
+            {isSaving ? '...' : '[S]'} <span className="btn-text">{isSaving ? 'Saving' : 'Save'}</span>
           </button>
 
           <button
@@ -246,7 +246,7 @@ function CardEditorScreen({ initialCard, onSave, onBack }) {
             onClick={handleMint}
             disabled={!isConnected}
           >
-            🪙 <span className="btn-text">Mint</span>
+            [M] <span className="btn-text">Mint</span>
           </button>
         </div>
       </div>
@@ -255,7 +255,7 @@ function CardEditorScreen({ initialCard, onSave, onBack }) {
       {error && (
         <div className="editor-error">
           {error}
-          <button onClick={() => setError(null)}>×</button>
+          <button onClick={() => setError(null)}>x</button>
         </div>
       )}
 
@@ -284,7 +284,7 @@ function CardEditorScreen({ initialCard, onSave, onBack }) {
               className="sidebar-close-btn"
               onClick={() => setIsSidebarOpen(false)}
             >
-              ×
+              x
             </button>
           </div>
           <PartSelector
@@ -304,7 +304,7 @@ function CardEditorScreen({ initialCard, onSave, onBack }) {
               className="mobile-edit-btn"
               onClick={() => setIsPartEditorModalOpen(true)}
             >
-              ✏️ Edit {CARD_PARTS[selectedPart]?.label}
+              [E] Edit {CARD_PARTS[selectedPart]?.label}
             </button>
           )}
         </div>
@@ -334,7 +334,7 @@ function CardEditorScreen({ initialCard, onSave, onBack }) {
                 className="modal-close-btn"
                 onClick={handleClosePartEditorModal}
               >
-                ×
+                x
               </button>
             </div>
             <div className="part-editor-modal-content">
@@ -364,7 +364,7 @@ function CardEditorScreen({ initialCard, onSave, onBack }) {
           <div className="drafts-modal" onClick={e => e.stopPropagation()}>
             <div className="drafts-modal-header">
               <h3>Your Drafts</h3>
-              <button onClick={() => setShowDrafts(false)}>×</button>
+              <button onClick={() => setShowDrafts(false)}>x</button>
             </div>
 
             <div className="drafts-list">

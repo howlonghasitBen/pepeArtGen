@@ -193,11 +193,11 @@ function MintSuccessModal({ mintData, onClose }) {
         onClick={(e) => e.stopPropagation()}
       >
         <button className="modal-close" onClick={onClose}>
-          ✕
+          x
         </button>
 
         <div className="success-header">
-          <div className="success-icon">🎉</div>
+          <div className="success-icon">[OK]</div>
           <h2>Minted on Base!</h2>
           {currentTokenId !== undefined && (
             <p className="token-id-badge">Token #{currentTokenId}</p>
@@ -208,7 +208,7 @@ function MintSuccessModal({ mintData, onClose }) {
         <div className="full-card-container">
           {cards.length > 1 && (
             <button className="card-nav-btn prev" onClick={handlePrevCard}>
-              ‹
+              &lt;
             </button>
           )}
 
@@ -233,7 +233,7 @@ function MintSuccessModal({ mintData, onClose }) {
 
           {cards.length > 1 && (
             <button className="card-nav-btn next" onClick={handleNextCard}>
-              ›
+              &gt;
             </button>
           )}
         </div>
@@ -281,7 +281,7 @@ function MintSuccessModal({ mintData, onClose }) {
             rel="noopener noreferrer"
             className="action-link"
           >
-            View on BaseScan ↗
+            View on BaseScan [^]
           </a>
           <button
             className="action-link"
@@ -290,12 +290,12 @@ function MintSuccessModal({ mintData, onClose }) {
           >
             {downloading[currentCardIndex]
               ? "Downloading..."
-              : "📥 Download Art"}
+              : "[D] Download Art"}
           </button>
         </div>
 
         <button className="close-success-btn" onClick={onClose}>
-          ✨ Done
+          Done
         </button>
       </div>
     </div>

@@ -38,7 +38,7 @@ const MintedCardsCarousel = ({ cards }) => {
       <div className="carousel-container">
         {currentIndex > 0 && (
           <button className="carousel-nav carousel-nav-left" onClick={goToPrevious}>
-            ‹
+            &lt;
           </button>
         )}
 
@@ -63,7 +63,7 @@ const MintedCardsCarousel = ({ cards }) => {
 
         {currentIndex < cards.length - 1 && (
           <button className="carousel-nav carousel-nav-right" onClick={goToNext}>
-            ›
+            &gt;
           </button>
         )}
       </div>

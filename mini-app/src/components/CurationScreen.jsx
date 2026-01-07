@@ -76,7 +76,7 @@ function CurationScreen({ cards, onBack }) {
       <div className="curation-screen">
         <p className="empty-state">No cards to curate</p>
         <button className="back-btn" onClick={onBack}>
-          ← Back to Generator
+          &lt; Back to Generator
         </button>
       </div>
     );
@@ -87,7 +87,7 @@ function CurationScreen({ cards, onBack }) {
       <div className="curation-screen">
         {showMintModal ? (
           <div className="mint-modal">
-            <h2>🎉 Curation Complete!</h2>
+            <h2>Curation Complete!</h2>
 
             <div className="stats-grid">
               <div className="stat-box">
@@ -130,7 +130,7 @@ function CurationScreen({ cards, onBack }) {
                     </div>
                   </div>
                   <p className="payment-note">
-                    ✅ You already paid $2.50 USDC for generation
+                    [OK] You already paid $2.50 USDC for generation
                   </p>
                 </div>
 
@@ -141,7 +141,7 @@ function CurationScreen({ cards, onBack }) {
                   </div>
                 ) : (
                   <button className="mint-btn" onClick={handleMintAll}>
-                    🪙 Mint {toMint.length} Card{toMint.length > 1 ? "s" : ""}{" "}
+                    Mint {toMint.length} Card{toMint.length > 1 ? "s" : ""}{" "}
                     (FREE)
                   </button>
                 )}
@@ -149,32 +149,32 @@ function CurationScreen({ cards, onBack }) {
             )}
 
             <button className="secondary-btn" onClick={onBack}>
-              ← Generate More Cards
+              &lt; Generate More Cards
             </button>
           </div>
         ) : (
           <>
             <div className="curation-header">
               <button className="back-btn-small" onClick={onBack}>
-                ← Back
+                &lt; Back
               </button>
               <div className="progress">
                 {currentIndex + 1} / {cards.length}
               </div>
               <div className="stats-mini">
-                <span className="stat-mint">✓ {toMint.length}</span>
-                <span className="stat-discard">✗ {discarded.length}</span>
+                <span className="stat-mint">[+] {toMint.length}</span>
+                <span className="stat-discard">[-] {discarded.length}</span>
               </div>
             </div>
 
             <div className="swipe-instructions">
               <div className="instruction left">
-                <span className="icon">⬅️</span>
+                <span className="icon">&lt;&lt;</span>
                 <span>Swipe left to discard</span>
               </div>
               <div className="instruction right">
                 <span>Swipe right to mint</span>
-                <span className="icon">➡️</span>
+                <span className="icon">&gt;&gt;</span>
               </div>
             </div>
 
@@ -194,7 +194,7 @@ function CurationScreen({ cards, onBack }) {
                 onClick={handleSwipeLeft}
                 disabled={isLastCard && currentIndex >= cards.length}
               >
-                <span className="btn-icon">✗</span>
+                <span className="btn-icon">X</span>
                 <span>Discard</span>
               </button>
 
@@ -203,7 +203,7 @@ function CurationScreen({ cards, onBack }) {
                 onClick={handleUndo}
                 disabled={currentIndex === 0}
               >
-                <span className="btn-icon">↶</span>
+                <span className="btn-icon">&lt;</span>
                 <span>Undo</span>
               </button>
 
@@ -212,7 +212,7 @@ function CurationScreen({ cards, onBack }) {
                 onClick={handleSwipeRight}
                 disabled={isLastCard && currentIndex >= cards.length}
               >
-                <span className="btn-icon">✓</span>
+                <span className="btn-icon">+</span>
                 <span>Mint</span>
               </button>
             </div>

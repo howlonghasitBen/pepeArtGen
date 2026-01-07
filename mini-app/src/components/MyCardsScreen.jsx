@@ -24,14 +24,14 @@ function MyCardsScreen({ onBack }) {
       <div className="my-cards-screen">
         <div className="screen-header">
           <button className="back-btn" onClick={onBack}>
-            ← Back
+            &lt; Back
           </button>
           <h2>My Cards</h2>
           <div className="header-spacer"></div>
         </div>
 
         <div className="connect-prompt">
-          <div className="connect-icon">🔗</div>
+          <div className="connect-icon">[LINK]</div>
           <h3>Connect Your Wallet</h3>
           <p>Connect your wallet to view your minted cards</p>
           <div className="connect-btn-wrapper">
@@ -49,7 +49,7 @@ function MyCardsScreen({ onBack }) {
       <div className="my-cards-screen">
         <div className="screen-header">
           <button className="back-btn" onClick={onBack}>
-            ← Back
+            &lt; Back
           </button>
           <h2>My Cards</h2>
           <div className="header-spacer"></div>
@@ -69,14 +69,14 @@ function MyCardsScreen({ onBack }) {
       <div className="my-cards-screen">
         <div className="screen-header">
           <button className="back-btn" onClick={onBack}>
-            ← Back
+            &lt; Back
           </button>
           <h2>My Cards</h2>
           <div className="header-spacer"></div>
         </div>
 
         <div className="error-state">
-          <div className="error-icon">⚠️</div>
+          <div className="error-icon">[!]</div>
           <h3>Failed to Load</h3>
           <p>{error}</p>
           <button className="retry-btn" onClick={refetch}>
@@ -93,18 +93,18 @@ function MyCardsScreen({ onBack }) {
       <div className="my-cards-screen">
         <div className="screen-header">
           <button className="back-btn" onClick={onBack}>
-            ← Back
+            &lt; Back
           </button>
           <h2>My Cards</h2>
           <div className="header-spacer"></div>
         </div>
 
         <div className="empty-state">
-          <div className="empty-icon">🃏</div>
+          <div className="empty-icon">[CARD]</div>
           <h3>No Cards Yet</h3>
           <p>Generate and mint your first trading card!</p>
           <button className="generate-cta" onClick={onBack}>
-            🎨 Generate a Card
+            Generate a Card
           </button>
         </div>
       </div>
@@ -117,7 +117,7 @@ function MyCardsScreen({ onBack }) {
       <div className="my-cards-screen">
         <div className="screen-header">
           <button className="back-btn" onClick={() => setSelectedCard(null)}>
-            ← Back to Collection
+            &lt; Back to Collection
           </button>
           <h2>Card Details</h2>
           <div className="header-spacer"></div>
@@ -167,7 +167,7 @@ function MyCardsScreen({ onBack }) {
                   rel="noopener noreferrer"
                   className="basescan-link"
                 >
-                  View Transaction ↗
+                  View Transaction [^]
                 </a>
               )}
             </div>
@@ -188,11 +188,11 @@ function MyCardsScreen({ onBack }) {
     <div className="my-cards-screen">
       <div className="screen-header">
         <button className="back-btn" onClick={onBack}>
-          ← Back
+          &lt; Back
         </button>
         <h2>My Cards</h2>
         <button className="refresh-btn" onClick={refetch} title="Refresh">
-          ↻
+          [R]
         </button>
       </div>
 
@@ -207,7 +207,7 @@ function MyCardsScreen({ onBack }) {
           rel="noopener noreferrer"
           className="opensea-collection-link"
         >
-          View Collection on OpenSea ↗
+          View Collection on OpenSea [^]
         </a>
       </div>
 
@@ -229,7 +229,7 @@ function MyCardsScreen({ onBack }) {
                   className="card-grid-image"
                 />
               ) : (
-                <div className="card-placeholder">🃏</div>
+                <div className="card-placeholder">[CARD]</div>
               )}
               {card.rarity && (
                 <span

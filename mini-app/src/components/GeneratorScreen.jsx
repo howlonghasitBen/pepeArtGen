@@ -147,12 +147,12 @@ function GeneratorScreen({ onCardsGenerated }) {
       <div className="session-status">
         {isLoadingSession ? (
           <div className="active-session">
-            <span className="session-badge">🔄 Checking session...</span>
+            <span className="session-badge">[~] Checking session...</span>
             <span className="generations-info">Please wait</span>
           </div>
         ) : hasActiveSession ? (
           <div className="active-session">
-            <span className="session-badge">✓ Active Session</span>
+            <span className="session-badge">[OK] Active Session</span>
             <span className="generations-info">
               {generationsRemaining} generation
               {generationsRemaining !== 1 ? "s" : ""} remaining
@@ -203,7 +203,7 @@ function GeneratorScreen({ onCardsGenerated }) {
         </div>
       </div>
 
-      {error && <div className="error-message">⚠️ {error}</div>}
+      {error && <div className="error-message">[!] {error}</div>}
 
       {loading && (
         <div className="loading-container">
@@ -237,7 +237,7 @@ function GeneratorScreen({ onCardsGenerated }) {
             onClick={handleReroll}
             disabled={loading || !canReroll}
           >
-            🔄 Re-roll ({rerollsRemaining} remaining)
+            [~] Re-roll ({rerollsRemaining} remaining)
           </button>
         </div>
       )}

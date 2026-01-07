@@ -188,7 +188,7 @@ function DeckBuilder({ onBack }) {
     return (
       <div className="deck-builder">
         <div className="deck-builder-header">
-          <button className="back-btn" onClick={onBack}>← Back</button>
+          <button className="back-btn" onClick={onBack}>&lt; Back</button>
           <h2>Deck Builder</h2>
         </div>
         <div className="deck-connect-prompt">
@@ -202,7 +202,7 @@ function DeckBuilder({ onBack }) {
     <div className="deck-builder">
       {/* Header */}
       <div className="deck-builder-header">
-        <button className="back-btn" onClick={onBack}>← Back</button>
+        <button className="back-btn" onClick={onBack}>&lt; Back</button>
         <h2>Deck Builder</h2>
         <button className="new-deck-btn" onClick={() => setShowNewDeckModal(true)}>
           + New Deck
@@ -213,7 +213,7 @@ function DeckBuilder({ onBack }) {
       {error && (
         <div className="deck-error">
           {error}
-          <button onClick={() => setError(null)}>×</button>
+          <button onClick={() => setError(null)}>x</button>
         </div>
       )}
 
@@ -247,7 +247,7 @@ function DeckBuilder({ onBack }) {
                       deleteDeck(deck.id);
                     }}
                   >
-                    ×
+                    x
                   </button>
                 </div>
               ))}
@@ -285,7 +285,7 @@ function DeckBuilder({ onBack }) {
                 {deckCards.length === 0 ? (
                   <div className="deck-empty">
                     <p>No cards in this deck</p>
-                    <p className="deck-empty-hint">Add cards from your collection →</p>
+                    <p className="deck-empty-hint">Add cards from your collection &gt;</p>
                   </div>
                 ) : (
                   deckCards.map((card, index) => (
@@ -305,7 +305,7 @@ function DeckBuilder({ onBack }) {
                         className="remove-card-btn"
                         onClick={() => removeCardFromDeck(card.id, index)}
                       >
-                        −
+                        -
                       </button>
                     </div>
                   ))
