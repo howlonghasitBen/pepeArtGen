@@ -149,7 +149,7 @@ function LiveCardPreview({ card }) {
             className="preview-artist"
             style={{ color: theme.flavorText?.color }}
           >
-            ◆ {card.artist || 'Waves TCG'} ◆
+            {card.artist || 'Waves TCG'}
           </div>
           <div
             className="preview-rarity"
@@ -160,7 +160,7 @@ function LiveCardPreview({ card }) {
               boxShadow: theme.rarity?.boxShadow
             }}
           >
-            ★ {card.rarity || '1/1'} ★
+            {card.rarity || '1/1'}
           </div>
         </div>
       </div>
