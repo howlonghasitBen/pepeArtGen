@@ -17,7 +17,6 @@ function PartSelector({ parts, selectedPart, onSelectPart }) {
             className={`part-item ${selectedPart === key ? 'active' : ''}`}
             onClick={() => onSelectPart(key)}
           >
-            <span className="part-icon">{part.icon}</span>
             <span className="part-label">{part.label}</span>
             <span className="part-arrow">&gt;</span>
           </button>

@@ -59,22 +59,6 @@
   border-color: var(--bevel-ocean-light) var(--bevel-ocean-dark) var(--bevel-ocean-dark) var(--bevel-ocean-light);
 }
 
-.part-icon {
-  font-size: 20px;
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--win95-gray);
-  border: 2px solid;
-  border-color: var(--bevel-light) var(--bevel-darker) var(--bevel-darker) var(--bevel-light);
-}
-
-.part-item.active .part-icon {
-  background: var(--ocean-sky);
-  border-color: var(--bevel-ocean-light) var(--bevel-ocean-dark) var(--bevel-ocean-dark) var(--bevel-ocean-light);
-}
 
 .part-label {
   flex: 1;
