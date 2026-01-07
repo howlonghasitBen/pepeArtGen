@@ -1,34 +1,96 @@
+/* ============================================
+   WINDOWS 95 × PASTEL DESIGN SYSTEM
+   Ocean + Sunset Pastels with Classic Bevels
+   ============================================ */
+
+/* Import IBM Plex Mono */
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
+
 :root {
-  /* Base Blue - Primary Accent */
-  --base-blue: #0052FF;
-  --base-blue-light: rgba(0, 82, 255, 0.15);
-  --base-blue-glow: rgba(0, 82, 255, 0.4);
-  --base-blue-dark: #0047e0;
+  /* ============================================
+     OCEAN PASTELS - Foundation/Background
+     ============================================ */
+  --ocean-seafoam: #A8E6CF;
+  --ocean-sky: #B8D4E3;
+  --ocean-teal: #88C9BF;
+  --ocean-cream: #FFF8E7;
+  --ocean-mist: #D4E5ED;
+  --ocean-foam: #E8F4F8;
 
-  /* Glassmorphism Design System */
-  --glass-bg: rgba(255, 255, 255, 0.15);
-  --glass-bg-strong: rgba(255, 255, 255, 0.25);
-  --glass-border: rgba(255, 255, 255, 0.25);
-  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  --glass-shadow-strong: 0 12px 48px rgba(0, 0, 0, 0.15);
+  /* ============================================
+     SUNSET PASTELS - Accents/Highlights
+     ============================================ */
+  --sunset-peach: #FFCBA4;
+  --sunset-coral: #FFB5A7;
+  --sunset-yellow: #FDE68A;
+  --sunset-rose: #E8B4B8;
+  --sunset-apricot: #FFD7BA;
+  --sunset-blush: #FEC8D8;
 
-  /* Color Palette */
-  --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  --success-gradient: linear-gradient(135deg, #4cd964 0%, #34c759 100%);
-  --accent-gradient: linear-gradient(135deg, #00d4ff 0%, #0099ff 100%);
-  --warm-gradient: linear-gradient(135deg, #ff9a56 0%, #ff6a88 100%);
+  /* ============================================
+     WIN95 SYSTEM COLORS
+     ============================================ */
+  --win95-gray: #C0C0C0;
+  --win95-gray-light: #DFDFDF;
+  --win95-gray-dark: #808080;
+  --win95-white: #FFFFFF;
+  --win95-black: #000000;
 
-  /* Text Colors */
-  --text-primary: #1a1a1a;
-  --text-secondary: #666;
-  --text-light: rgba(255, 255, 255, 0.95);
-  --text-muted: rgba(255, 255, 255, 0.7);
+  /* Pastel-ified system colors */
+  --sys-background: var(--ocean-foam);
+  --sys-surface: var(--ocean-cream);
+  --sys-panel: var(--ocean-mist);
 
-  /* Blur Effects */
-  --blur-light: blur(10px);
-  --blur-medium: blur(20px);
-  --blur-strong: blur(30px);
+  /* ============================================
+     BEVEL COLORS - For 3D Effects
+     ============================================ */
+  /* Raised elements (buttons, panels) */
+  --bevel-light: #FFFFFF;
+  --bevel-dark: #808080;
+  --bevel-darker: #404040;
+
+  /* Pastel bevels */
+  --bevel-ocean-light: #D4F1E9;
+  --bevel-ocean-dark: #6BA89C;
+  --bevel-sunset-light: #FFE4D6;
+  --bevel-sunset-dark: #D4968A;
+
+  /* ============================================
+     TEXT COLORS
+     ============================================ */
+  --text-primary: #2D3436;
+  --text-secondary: #636E72;
+  --text-muted: #B2BEC3;
+  --text-on-accent: #2D3436;
+  --text-link: #4A90A4;
+
+  /* ============================================
+     ACCENT COLORS (for interactive elements)
+     ============================================ */
+  --accent-primary: var(--sunset-coral);
+  --accent-secondary: var(--ocean-teal);
+  --accent-success: var(--ocean-seafoam);
+  --accent-warning: var(--sunset-yellow);
+  --accent-danger: var(--sunset-rose);
+
+  /* ============================================
+     LEGACY ALIASES (for compatibility)
+     ============================================ */
+  --base-blue: var(--ocean-teal);
+  --base-blue-light: rgba(136, 201, 191, 0.3);
+  --base-blue-glow: rgba(136, 201, 191, 0.5);
+
+  /* ============================================
+     SHADOWS (Win95 style - minimal/none)
+     ============================================ */
+  --shadow-sm: 1px 1px 0 var(--bevel-dark);
+  --shadow-md: 2px 2px 0 var(--bevel-dark);
+  --shadow-inset: inset 1px 1px 0 var(--bevel-dark), inset -1px -1px 0 var(--bevel-light);
 }
+
+/* ============================================
+   RESET & BASE STYLES
+   ============================================ */
 
 * {
   margin: 0;
@@ -37,51 +99,27 @@
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
-    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  overflow-x: hidden;
-  background: linear-gradient(
-    135deg,
-    #f5f7fa 0%,
-    #e4e8f0 25%,
-    #dce3ed 50%,
-    #e8ecf4 75%,
-    #f0f4f8 100%
-  );
-  background-size: 400% 400%;
-  animation: gradientShift 15s ease infinite;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--text-primary);
+  background: var(--sys-background);
   min-height: 100vh;
-  position: relative;
+  overflow-x: hidden;
+  overscroll-behavior-y: contain;
+
+  /* Subtle pixel pattern background */
+  background-image:
+    linear-gradient(90deg, var(--ocean-mist) 1px, transparent 1px),
+    linear-gradient(var(--ocean-mist) 1px, transparent 1px);
+  background-size: 4px 4px;
 }
 
-/* Subtle blue accent overlay */
-body::before {
-  content: "";
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: 
-    radial-gradient(ellipse at top, rgba(0, 82, 255, 0.03) 0%, transparent 50%),
-    radial-gradient(ellipse at bottom right, rgba(0, 82, 255, 0.05) 0%, transparent 50%);
-  pointer-events: none;
-  z-index: 0;
-}
-
-@keyframes gradientShift {
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
+/* Remove any smooth rendering - embrace the pixel */
+body, button, input, textarea, select {
+  -webkit-font-smoothing: none;
+  -moz-osx-font-smoothing: unset;
+  text-rendering: optimizeSpeed;
 }
 
 button {
@@ -89,86 +127,356 @@ button {
   border: none;
   background: none;
   font-family: inherit;
+  font-size: inherit;
 }
 
-input {
+input, textarea, select {
   font-family: inherit;
+  font-size: inherit;
 }
 
-/* Mobile optimizations */
-@media (max-width: 768px) {
-  body {
-    font-size: 16px; /* Prevent zoom on input focus */
-  }
+/* ============================================
+   WIN95 BEVEL MIXINS (as classes)
+   ============================================ */
+
+/* Raised/Outset border (default button state) */
+.win95-raised {
+  border: 2px solid;
+  border-color: var(--bevel-light) var(--bevel-darker) var(--bevel-darker) var(--bevel-light);
+  box-shadow: inset 1px 1px 0 var(--bevel-light), inset -1px -1px 0 var(--bevel-dark);
 }
 
-/* Prevent pull-to-refresh on mobile */
-body {
-  overscroll-behavior-y: contain;
+/* Inset/Pressed border (pressed button, input fields) */
+.win95-inset {
+  border: 2px solid;
+  border-color: var(--bevel-darker) var(--bevel-light) var(--bevel-light) var(--bevel-darker);
+  box-shadow: inset 1px 1px 2px rgba(0, 0, 0, 0.2);
 }
 
-/* Card styles with glassmorphism */
+/* Flat border (for containers) */
+.win95-flat {
+  border: 2px solid var(--bevel-dark);
+}
+
+/* Pastel raised (ocean) */
+.win95-raised-ocean {
+  border: 2px solid;
+  border-color: var(--bevel-ocean-light) var(--bevel-ocean-dark) var(--bevel-ocean-dark) var(--bevel-ocean-light);
+}
+
+/* Pastel raised (sunset) */
+.win95-raised-sunset {
+  border: 2px solid;
+  border-color: var(--bevel-sunset-light) var(--bevel-sunset-dark) var(--bevel-sunset-dark) var(--bevel-sunset-light);
+}
+
+/* ============================================
+   WIN95 BUTTON STYLES
+   ============================================ */
+
+.win95-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 16px;
+  min-height: 28px;
+  background: var(--win95-gray);
+  border: 2px solid;
+  border-color: var(--bevel-light) var(--bevel-darker) var(--bevel-darker) var(--bevel-light);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: none; /* No smooth transitions - authentic Win95 */
+}
+
+.win95-btn:hover {
+  background: var(--win95-gray-light);
+}
+
+.win95-btn:active,
+.win95-btn.active {
+  border-color: var(--bevel-darker) var(--bevel-light) var(--bevel-light) var(--bevel-darker);
+  padding: 7px 15px 5px 17px; /* Shift content to simulate press */
+}
+
+.win95-btn:disabled {
+  color: var(--bevel-dark);
+  cursor: not-allowed;
+}
+
+.win95-btn:disabled::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+
+/* Pastel button variants */
+.win95-btn-ocean {
+  background: var(--ocean-sky);
+  border-color: var(--bevel-ocean-light) var(--bevel-ocean-dark) var(--bevel-ocean-dark) var(--bevel-ocean-light);
+}
+
+.win95-btn-ocean:hover {
+  background: var(--ocean-mist);
+}
+
+.win95-btn-sunset {
+  background: var(--sunset-peach);
+  border-color: var(--bevel-sunset-light) var(--bevel-sunset-dark) var(--bevel-sunset-dark) var(--bevel-sunset-light);
+}
+
+.win95-btn-sunset:hover {
+  background: var(--sunset-apricot);
+}
+
+.win95-btn-coral {
+  background: var(--sunset-coral);
+  border-color: var(--bevel-sunset-light) var(--bevel-sunset-dark) var(--bevel-sunset-dark) var(--bevel-sunset-light);
+}
+
+.win95-btn-coral:hover {
+  background: var(--sunset-blush);
+}
+
+.win95-btn-seafoam {
+  background: var(--ocean-seafoam);
+  border-color: var(--bevel-ocean-light) var(--bevel-ocean-dark) var(--bevel-ocean-dark) var(--bevel-ocean-light);
+}
+
+.win95-btn-seafoam:hover {
+  background: #B8EED9;
+}
+
+/* ============================================
+   WIN95 INPUT STYLES
+   ============================================ */
+
+.win95-input {
+  padding: 6px 8px;
+  background: var(--win95-white);
+  border: 2px solid;
+  border-color: var(--bevel-darker) var(--bevel-light) var(--bevel-light) var(--bevel-darker);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 13px;
+  color: var(--text-primary);
+}
+
+.win95-input:focus {
+  outline: 1px dotted var(--text-primary);
+  outline-offset: -4px;
+}
+
+.win95-input::placeholder {
+  color: var(--text-muted);
+}
+
+/* ============================================
+   WIN95 PANEL/CONTAINER STYLES
+   ============================================ */
+
+.win95-panel {
+  background: var(--sys-surface);
+  border: 2px solid;
+  border-color: var(--bevel-light) var(--bevel-darker) var(--bevel-darker) var(--bevel-light);
+  padding: 12px;
+}
+
+.win95-panel-inset {
+  background: var(--win95-white);
+  border: 2px solid;
+  border-color: var(--bevel-darker) var(--bevel-light) var(--bevel-light) var(--bevel-darker);
+  padding: 12px;
+}
+
+.win95-panel-ocean {
+  background: var(--ocean-foam);
+  border: 2px solid;
+  border-color: var(--bevel-ocean-light) var(--bevel-ocean-dark) var(--bevel-ocean-dark) var(--bevel-ocean-light);
+  padding: 12px;
+}
+
+.win95-panel-sunset {
+  background: var(--sunset-apricot);
+  border: 2px solid;
+  border-color: var(--bevel-sunset-light) var(--bevel-sunset-dark) var(--bevel-sunset-dark) var(--bevel-sunset-light);
+  padding: 12px;
+}
+
+/* ============================================
+   WIN95 SCROLLBAR STYLES
+   ============================================ */
+
+::-webkit-scrollbar {
+  width: 16px;
+  height: 16px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--ocean-mist);
+  border: 1px solid var(--bevel-dark);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--win95-gray);
+  border: 2px solid;
+  border-color: var(--bevel-light) var(--bevel-darker) var(--bevel-darker) var(--bevel-light);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--win95-gray-light);
+}
+
+::-webkit-scrollbar-thumb:active {
+  border-color: var(--bevel-darker) var(--bevel-light) var(--bevel-light) var(--bevel-darker);
+}
+
+::-webkit-scrollbar-button {
+  background: var(--win95-gray);
+  border: 2px solid;
+  border-color: var(--bevel-light) var(--bevel-darker) var(--bevel-darker) var(--bevel-light);
+  width: 16px;
+  height: 16px;
+}
+
+::-webkit-scrollbar-corner {
+  background: var(--win95-gray);
+}
+
+/* ============================================
+   SELECTION STYLES
+   ============================================ */
+
+::selection {
+  background: var(--ocean-teal);
+  color: var(--win95-white);
+}
+
+/* ============================================
+   FOCUS STYLES (Win95 dotted outline)
+   ============================================ */
+
+*:focus-visible {
+  outline: 1px dotted var(--text-primary);
+  outline-offset: 2px;
+}
+
+/* ============================================
+   CARD CONTAINER (base styles)
+   ============================================ */
+
 .card-container {
   perspective: 1000px;
 }
 
 .card {
-  background: var(--glass-bg-strong);
-  backdrop-filter: var(--blur-medium);
-  -webkit-backdrop-filter: var(--blur-medium);
-  border: 1px solid var(--glass-border);
-  border-radius: 24px;
-  box-shadow: var(--glass-shadow-strong);
+  background: var(--sys-surface);
+  border: 2px solid;
+  border-color: var(--bevel-light) var(--bevel-darker) var(--bevel-darker) var(--bevel-light);
   overflow: hidden;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: none;
 }
 
 .card:hover {
-  transform: translateY(-4px);
-  box-shadow: 
-    0 16px 64px rgba(0, 0, 0, 0.2),
-    0 0 40px var(--base-blue-light);
+  transform: translateY(-2px);
 }
 
 .card:active {
-  transform: scale(0.98);
+  border-color: var(--bevel-darker) var(--bevel-light) var(--bevel-light) var(--bevel-darker);
 }
 
-/* Swipe animations */
+/* Swipe card base */
 .swipe-card {
   position: absolute;
   will-change: transform;
   touch-action: none;
 }
 
-/* Selection with Base blue */
-::selection {
-  background: var(--base-blue-light);
-  color: var(--text-primary);
+/* ============================================
+   LOADING SPINNER (Win95 style)
+   ============================================ */
+
+@keyframes win95-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
-/* Scrollbar styling */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--ocean-mist);
+  border-top: 3px solid var(--ocean-teal);
+  border-radius: 0; /* Square spinner for that retro feel */
+  animation: win95-spin 1s steps(8) infinite;
+  margin: 20px auto;
 }
 
-::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.05);
-  border-radius: 10px;
+/* Alternative hourglass-style loading */
+@keyframes hourglass {
+  0%, 100% { content: '⏳'; }
+  50% { content: '⌛'; }
 }
 
-::-webkit-scrollbar-thumb {
-  background: rgba(0, 82, 255, 0.3);
-  border-radius: 10px;
+.win95-loading::before {
+  content: '⏳';
+  animation: hourglass 1s steps(2) infinite;
+  font-size: 24px;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 82, 255, 0.5);
+/* ============================================
+   PIXEL PATTERN ANIMATION (replaces ring pulse)
+   ============================================ */
+
+@keyframes pixelPulse {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.02);
+  }
 }
 
-/* Focus styles with Base blue */
-*:focus-visible {
-  outline: 2px solid var(--base-blue);
-  outline-offset: 2px;
+.pixel-pattern {
+  background-image:
+    linear-gradient(45deg, var(--ocean-teal) 25%, transparent 25%),
+    linear-gradient(-45deg, var(--ocean-teal) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, var(--sunset-peach) 75%),
+    linear-gradient(-45deg, transparent 75%, var(--sunset-peach) 75%);
+  background-size: 8px 8px;
+  background-position: 0 0, 4px 0, 4px -4px, 0px 4px;
+  animation: pixelPulse 2s ease-in-out infinite;
 }
+
+/* ============================================
+   MOBILE OPTIMIZATIONS
+   ============================================ */
+
+@media (max-width: 768px) {
+  body {
+    font-size: 13px;
+  }
+
+  .win95-btn {
+    min-height: 36px;
+    padding: 8px 12px;
+  }
+}
+
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
+
+.text-ocean { color: var(--ocean-teal); }
+.text-sunset { color: var(--sunset-coral); }
+.text-muted { color: var(--text-muted); }
+
+.bg-ocean { background: var(--ocean-foam); }
+.bg-sunset { background: var(--sunset-apricot); }
+.bg-surface { background: var(--sys-surface); }
+
+.border-ocean { border-color: var(--ocean-teal); }
+.border-sunset { border-color: var(--sunset-coral); }

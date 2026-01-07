@@ -1,43 +1,11 @@
-/* Valspar Professional Color Palette */
-:root {
-  /* Primary Colors - Valspar Skyline */
-  --skyline: #404565;
-  --skyline-light: rgba(64, 69, 101, 0.15);
-  --skyline-glow: rgba(64, 69, 101, 0.4);
-
-  /* Secondary Colors - Valspar Ganymede */
-  --ganymede: #B8B4B4;
-  --ganymede-dark: #9A9696;
-  --ganymede-light: #D0CDCD;
-
-  /* Tertiary Colors - Valspar Statuary */
-  --statuary: #D5D6DA;
-  --statuary-dark: #BFC0C5;
-  --statuary-light: #EAEBED;
-
-  /* Derived accent colors */
-  --accent-deep: #2D3047;
-  --accent-warm: #625D5D;
-
-  /* Legacy aliases for compatibility */
-  --base-blue: #404565;
-  --base-blue-light: rgba(64, 69, 101, 0.15);
-  --base-blue-glow: rgba(64, 69, 101, 0.4);
-
-  /* Glass effect colors */
-  --glass-bg: rgba(64, 69, 101, 0.08);
-  --glass-bg-strong: rgba(64, 69, 101, 0.12);
-  --glass-border: rgba(184, 180, 180, 0.2);
-
-  /* Text colors */
-  --text-primary: #D5D6DA;
-  --text-secondary: #B8B4B4;
-  --text-muted: rgba(184, 180, 180, 0.6);
-}
+/* ============================================
+   APP.CSS - WINDOWS 95 × PASTEL THEME
+   Main App Layout & Taskbar
+   ============================================ */
 
 .app {
   min-height: 100vh;
-  padding: 0 20px 100px 20px;
+  padding: 0 16px 80px 16px;
   max-width: 500px;
   margin: 0 auto;
   position: relative;
@@ -51,50 +19,40 @@
 .hero-section {
   position: relative;
   text-align: center;
-  padding: 40px 0 30px;
+  padding: 32px 0 24px;
 }
 
 .hero-glow {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 300px;
-  height: 300px;
-  background: radial-gradient(
-    circle,
-    var(--base-blue-light) 0%,
-    transparent 70%
-  );
-  pointer-events: none;
-  z-index: -1;
+  display: none; /* Removed - replaced with pixel pattern */
 }
 
 .hero-content {
   position: relative;
 }
 
-/* Logo with animated rings */
+/* Logo with pixel pattern instead of rings */
 .logo-container {
   position: relative;
   display: inline-block;
 }
 
 .logo-icon {
-  font-size: 4rem;
-  display: block;
-  position: relative;
-  z-index: 2;
-  filter: drop-shadow(0 0 20px var(--base-blue-glow));
+  font-size: 3.5rem;
   display: flex;
   place-content: center;
   align-content: center;
+  position: relative;
+  z-index: 2;
+  /* Win95 style - no drop shadow, clean edges */
+  filter: none;
 }
 
 .logo-icon img {
-  height: 4rem;
+  height: 3.5rem;
+  image-rendering: pixelated;
 }
 
+/* Pixel pattern rings (replacing smooth rings) */
 .logo-rings {
   position: absolute;
   top: 50%;
@@ -108,70 +66,79 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  border: 2px solid var(--base-blue);
-  border-radius: 50%;
+  border: 2px dashed var(--ocean-teal);
   opacity: 0;
-  animation: ringPulse 3s ease-out infinite;
+  animation: pixelRingPulse 3s steps(4) infinite;
 }
 
 .ring-1 {
   width: 80px;
   height: 80px;
+  border-color: var(--ocean-teal);
   animation-delay: 0s;
 }
 
 .ring-2 {
   width: 110px;
   height: 110px;
+  border-color: var(--sunset-peach);
   animation-delay: 1s;
 }
 
 .ring-3 {
   width: 140px;
   height: 140px;
+  border-color: var(--ocean-seafoam);
   animation-delay: 2s;
 }
 
-@keyframes ringPulse {
+@keyframes pixelRingPulse {
   0% {
+    opacity: 0.8;
+    transform: translate(-50%, -50%) scale(0.9);
+  }
+  25% {
     opacity: 0.6;
-    transform: translate(-50%, -50%) scale(0.8);
+  }
+  50% {
+    opacity: 0.4;
+  }
+  75% {
+    opacity: 0.2;
   }
   100% {
     opacity: 0;
-    transform: translate(-50%, -50%) scale(1.2);
+    transform: translate(-50%, -50%) scale(1.1);
   }
 }
 
 .hero-title {
-  font-size: 1.8rem;
-  font-weight: 800;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 1.6rem;
+  font-weight: 700;
   color: var(--text-primary);
-  margin-bottom: 6px;
+  margin-bottom: 4px;
   letter-spacing: -0.5px;
-  text-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+  text-shadow: 1px 1px 0 var(--bevel-light);
 }
 
 .hero-subtitle {
-  font-size: 0.95rem;
-  color: var(--text-primary);
-  opacity: 0.8;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
 }
 
-/* Hero Stats */
+/* Hero Stats - Win95 Panel Style */
 .hero-stats {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 16px;
-  background: var(--glass-bg);
-  backdrop-filter: var(--blur-light);
-  -webkit-backdrop-filter: var(--blur-light);
-  border: 1px solid var(--glass-border);
-  border-radius: 16px;
-  padding: 14px 20px;
-  box-shadow: var(--glass-shadow), 0 0 30px var(--base-blue-light),
-    inset 0 0 20px rgba(255, 255, 255, 0.05);
+  gap: 12px;
+  background: var(--ocean-cream);
+  border: 2px solid;
+  border-color: var(--bevel-light) var(--bevel-darker) var(--bevel-darker) var(--bevel-light);
+  padding: 12px 16px;
+  margin-top: 16px;
 }
 
 .hero-stat {
@@ -182,29 +149,25 @@
 }
 
 .stat-value {
-  font-size: 0.95rem;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.9rem;
   font-weight: 700;
-  color: var(--base-blue);
-  text-shadow: 0 0 10px var(--base-blue-glow);
+  color: var(--ocean-teal);
 }
 
 .stat-label {
-  font-size: 0.7rem;
-  color: var(--text-primary);
-  opacity: 0.7;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
 .hero-stat-divider {
-  width: 1px;
-  height: 30px;
-  background: linear-gradient(
-    to bottom,
-    transparent,
-    var(--base-blue-glow),
-    transparent
-  );
+  width: 2px;
+  height: 28px;
+  background: var(--bevel-dark);
+  box-shadow: 1px 0 0 var(--bevel-light);
 }
 
 /* ============================================
@@ -216,7 +179,7 @@
 }
 
 /* ============================================
-   BOTTOM FIXED BAR
+   WIN95 TASKBAR (Bottom Bar)
    ============================================ */
 
 .bottom-bar {
@@ -227,15 +190,15 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 16px;
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-top: 1px solid rgba(0, 82, 255, 0.15);
-  box-shadow: 0 -4px 30px rgba(0, 0, 0, 0.1), 0 0 40px var(--base-blue-light);
+  padding: 4px 8px;
+  height: 48px;
+  background: var(--win95-gray);
+  border-top: 2px solid var(--bevel-light);
+  box-shadow: inset 0 1px 0 var(--bevel-light);
   z-index: 100;
 }
 
+/* Wallet Container - Win95 Start Button Style */
 .wallet-container {
   flex: 0;
   display: flex;
@@ -243,176 +206,180 @@
   justify-content: flex-start;
   min-width: auto;
   max-width: none;
-  overflow: visible; /* Allow connected details to be visible */
+  overflow: visible;
 }
 
-/* Custom wallet button styles (React wrapper using AppKit) */
 .wallet-container .connect-btn,
 .wallet-container .wallet-connected-btn {
   width: auto;
-  max-width: 260px;
-  min-width: 140px;
-  border-radius: 12px;
-  padding: 10px 16px;
+  max-width: 200px;
+  min-width: 100px;
+  min-height: 36px;
+  padding: 4px 12px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
   font-weight: 600;
-  border: none;
-  cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  transition: all 0.3s ease;
+  gap: 6px;
+  cursor: pointer;
+  transition: none;
 }
 
 .wallet-container .connect-btn {
-  background: var(--base-blue);
-  color: white;
-  box-shadow: 0 0 20px var(--base-blue-glow);
+  background: var(--sunset-peach);
+  color: var(--text-primary);
+  border: 2px solid;
+  border-color: var(--bevel-sunset-light) var(--bevel-sunset-dark) var(--bevel-sunset-dark) var(--bevel-sunset-light);
 }
 
 .wallet-container .connect-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 20px var(--base-blue-glow);
+  background: var(--sunset-apricot);
+}
+
+.wallet-container .connect-btn:active {
+  border-color: var(--bevel-sunset-dark) var(--bevel-sunset-light) var(--bevel-sunset-light) var(--bevel-sunset-dark);
+  padding: 5px 11px 3px 13px;
 }
 
 .wallet-container .wallet-connected-btn {
-  background: var(--glass-bg-strong);
+  background: var(--ocean-seafoam);
   color: var(--text-primary);
-  border: 1px solid var(--glass-border);
+  border: 2px solid;
+  border-color: var(--bevel-ocean-light) var(--bevel-ocean-dark) var(--bevel-ocean-dark) var(--bevel-ocean-light);
 }
 
 .wallet-container .wallet-connected-btn:hover {
-  background: var(--base-blue-light);
-  border-color: var(--base-blue);
-  color: var(--base-blue);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 20px var(--base-blue-glow);
+  background: #B8EED9;
+}
+
+.wallet-container .wallet-connected-btn:active {
+  border-color: var(--bevel-ocean-dark) var(--bevel-ocean-light) var(--bevel-ocean-light) var(--bevel-ocean-dark);
+  padding: 5px 11px 3px 13px;
 }
 
 .wallet-container .wallet-connected-btn .wallet-dot {
   width: 8px;
   height: 8px;
-  border-radius: 999px;
-  background: #22c55e;
-  box-shadow: 0 0 8px rgba(34, 197, 94, 0.8);
+  background: #22C55E;
+  border: 1px solid #16A34A;
   flex-shrink: 0;
 }
 
 .wallet-container .wallet-connected-btn .wallet-balance {
-  font-size: 0.85rem;
-  opacity: 0.8;
+  font-size: 0.75rem;
 }
 
 /* Bottom Bar Action Buttons */
 .bottom-bar-actions {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 4px;
 }
 
-/* Navigation Buttons */
+/* Navigation Buttons - Win95 Taskbar Button Style */
 .nav-btn,
 .my-cards-btn {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  background: var(--glass-bg-strong);
+  width: 40px;
+  height: 36px;
+  background: var(--win95-gray);
   color: var(--text-primary);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  border: 1px solid var(--glass-border);
+  border: 2px solid;
+  border-color: var(--bevel-light) var(--bevel-darker) var(--bevel-darker) var(--bevel-light);
   cursor: pointer;
   flex-shrink: 0;
+  transition: none;
 }
 
 .nav-btn svg,
 .my-cards-btn svg {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
 }
 
 .nav-btn:hover,
 .my-cards-btn:hover {
-  background: var(--base-blue-light);
-  border-color: var(--base-blue);
-  color: var(--base-blue);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 15px var(--base-blue-light);
+  background: var(--win95-gray-light);
+}
+
+.nav-btn:active,
+.my-cards-btn:active {
+  border-color: var(--bevel-darker) var(--bevel-light) var(--bevel-light) var(--bevel-darker);
+  padding-top: 2px;
+  padding-left: 2px;
 }
 
 .nav-btn.active,
 .my-cards-btn.active {
-  background: var(--base-blue);
-  color: white;
-  border-color: var(--base-blue);
-  box-shadow: 0 0 20px var(--base-blue-glow);
+  background: var(--ocean-sky);
+  border-color: var(--bevel-darker) var(--bevel-light) var(--bevel-light) var(--bevel-darker);
 }
 
 /* OpenSea Button */
 .opensea-btn {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  background: #2081e2;
-  color: white;
+  width: 40px;
+  height: 36px;
+  background: var(--ocean-sky);
+  color: var(--text-primary);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 0 20px rgba(32, 129, 226, 0.3);
-  border: none;
+  border: 2px solid;
+  border-color: var(--bevel-ocean-light) var(--bevel-ocean-dark) var(--bevel-ocean-dark) var(--bevel-ocean-light);
   cursor: pointer;
   flex-shrink: 0;
   text-decoration: none;
+  transition: none;
 }
 
 .opensea-btn img {
-  width: 30px;
-  height: 30px;
+  width: 24px;
+  height: 24px;
 }
 
 .opensea-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 25px rgba(32, 129, 226, 0.4);
-  background: #2081e2;
+  background: var(--ocean-mist);
 }
 
 .opensea-btn:active {
-  transform: translateY(0);
+  border-color: var(--bevel-ocean-dark) var(--bevel-ocean-light) var(--bevel-ocean-light) var(--bevel-ocean-dark);
+  padding-top: 2px;
+  padding-left: 2px;
 }
 
 /* Info Button */
 .info-btn {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  background: var(--base-blue);
-  color: white;
+  width: 40px;
+  height: 36px;
+  background: var(--sunset-coral);
+  color: var(--text-primary);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 0 20px var(--base-blue-glow);
-  border: none;
+  border: 2px solid;
+  border-color: var(--bevel-sunset-light) var(--bevel-sunset-dark) var(--bevel-sunset-dark) var(--bevel-sunset-light);
   cursor: pointer;
   flex-shrink: 0;
+  transition: none;
 }
 
 .info-btn svg {
-  width: 22px;
-  height: 22px;
+  width: 20px;
+  height: 20px;
 }
 
 .info-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 25px var(--base-blue-glow);
-  background: #0047e0;
+  background: var(--sunset-blush);
 }
 
 .info-btn:active {
-  transform: translateY(0);
+  border-color: var(--bevel-sunset-dark) var(--bevel-sunset-light) var(--bevel-sunset-light) var(--bevel-sunset-dark);
+  padding-top: 2px;
+  padding-left: 2px;
 }
 
 /* ============================================
@@ -421,15 +388,19 @@
 
 @media (max-width: 768px) {
   .app {
-    padding: 0 15px 90px 15px;
+    padding: 0 12px 70px 12px;
   }
 
   .hero-section {
-    padding: 30px 0 20px;
+    padding: 24px 0 16px;
   }
 
   .logo-icon {
     font-size: 3rem;
+  }
+
+  .logo-icon img {
+    height: 3rem;
   }
 
   .ring-1 {
@@ -448,44 +419,50 @@
   }
 
   .hero-title {
-    font-size: 1.5rem;
+    font-size: 1.3rem;
   }
 
   .hero-subtitle {
-    font-size: 0.85rem;
+    font-size: 0.8rem;
   }
 
   .hero-stats {
-    padding: 12px 16px;
-    gap: 12px;
+    padding: 10px 12px;
+    gap: 10px;
   }
 
   .stat-value {
-    font-size: 0.85rem;
+    font-size: 0.8rem;
   }
 
   .stat-label {
-    font-size: 0.65rem;
+    font-size: 0.6rem;
   }
 
   .bottom-bar {
-    padding: 10px 12px;
+    height: 44px;
+    padding: 3px 6px;
   }
 
   .nav-btn,
   .my-cards-btn,
   .opensea-btn,
   .info-btn {
-    width: 40px;
-    height: 40px;
+    width: 36px;
+    height: 32px;
   }
 
   .nav-btn svg,
   .my-cards-btn svg,
   .opensea-btn svg,
   .info-btn svg {
-    width: 18px;
-    height: 18px;
+    width: 16px;
+    height: 16px;
+  }
+
+  .opensea-btn img {
+    width: 20px;
+    height: 20px;
   }
 }
 
@@ -493,7 +470,7 @@
 @media (max-width: 380px) {
   .hero-stats {
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 6px;
   }
 
   .hero-stat-divider {
@@ -502,7 +479,14 @@
 
   .hero-stat {
     flex: 1;
+    min-width: 70px;
+  }
+
+  .wallet-container .connect-btn,
+  .wallet-container .wallet-connected-btn {
     min-width: 80px;
+    font-size: 11px;
+    padding: 3px 8px;
   }
 }
 
@@ -516,24 +500,24 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, #1a1a1f 0%, #2D3047 50%, #1a1a1f 100%);
+  background: var(--ocean-cream);
   z-index: 200;
   overflow: hidden;
 }
 
 /* ============================================
-   COLLAPSIBLE MENUS
+   COLLAPSIBLE MENUS - Win95 Popup Style
    ============================================ */
 
 .collapsible-menus {
   position: fixed;
-  bottom: 70px;
+  bottom: 52px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
   z-index: 99;
   pointer-events: none;
 }
@@ -545,7 +529,7 @@
 .collapsible-menu {
   max-height: 0;
   overflow: hidden;
-  transition: max-height 0.3s ease, opacity 0.3s ease;
+  transition: max-height 0.15s steps(3), opacity 0.15s steps(3);
   opacity: 0;
   pointer-events: none;
 }
@@ -558,42 +542,40 @@
 
 .menu-content {
   display: flex;
-  gap: 8px;
-  padding: 12px 16px;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15), 0 0 40px var(--base-blue-light);
-  border: 1px solid rgba(64, 69, 101, 0.2);
+  gap: 2px;
+  padding: 4px;
+  background: var(--win95-gray);
+  border: 2px solid;
+  border-color: var(--bevel-light) var(--bevel-darker) var(--bevel-darker) var(--bevel-light);
 }
 
 .menu-item {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
-  padding: 12px 16px;
+  gap: 2px;
+  padding: 8px 12px;
   background: transparent;
-  border: 1px solid transparent;
-  border-radius: 12px;
-  color: var(--accent-deep);
-  font-size: 0.8rem;
-  font-weight: 600;
+  border: none;
+  color: var(--text-primary);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.75rem;
+  font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
-  min-width: 80px;
+  min-width: 70px;
+  transition: none;
 }
 
 .menu-item:hover {
-  background: var(--base-blue-light);
-  border-color: var(--base-blue);
-  color: var(--base-blue);
-  transform: translateY(-2px);
+  background: var(--ocean-sky);
+}
+
+.menu-item:active {
+  background: var(--ocean-teal);
 }
 
 .menu-icon {
-  font-size: 1.2rem;
+  font-size: 1.1rem;
 }
 
 /* Bottom bar hidden state */
@@ -606,50 +588,56 @@
    LOADING SPINNER
    ============================================ */
 
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
+@keyframes win95Spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 .spinner {
-  border: 3px solid var(--glass-border);
-  border-top: 3px solid var(--base-blue);
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  animation: spin 1s linear infinite;
+  border: 3px solid var(--ocean-mist);
+  border-top: 3px solid var(--ocean-teal);
+  width: 32px;
+  height: 32px;
+  animation: win95Spin 1s steps(8) infinite;
   margin: 20px auto;
-  box-shadow: 0 0 15px var(--base-blue-light);
 }
 
 /* ============================================
-   GLOBAL BLUE ACCENT OVERRIDES
+   GLOBAL BUTTON OVERRIDES (Win95 Style)
    ============================================ */
 
-/* Add blue glow to primary buttons */
 .generate-btn,
 .mint-btn {
-  box-shadow: var(--glass-shadow-strong), 0 0 30px var(--base-blue-light) !important;
+  background: var(--sunset-coral) !important;
+  border: 2px solid !important;
+  border-color: var(--bevel-sunset-light) var(--bevel-sunset-dark) var(--bevel-sunset-dark) var(--bevel-sunset-light) !important;
+  box-shadow: none !important;
+  transition: none !important;
 }
 
 .generate-btn:hover:not(:disabled),
 .mint-btn:hover:not(:disabled) {
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25), 0 0 40px var(--base-blue-glow) !important;
+  background: var(--sunset-blush) !important;
+  box-shadow: none !important;
 }
 
-/* Active session badge */
+.generate-btn:active:not(:disabled),
+.mint-btn:active:not(:disabled) {
+  border-color: var(--bevel-sunset-dark) var(--bevel-sunset-light) var(--bevel-sunset-light) var(--bevel-sunset-dark) !important;
+}
+
+/* Active session badge - Win95 style */
 .session-badge {
-  border: 1px solid var(--base-blue) !important;
-  box-shadow: 0 0 10px var(--base-blue-light) !important;
+  border: 2px solid var(--ocean-teal) !important;
+  box-shadow: none !important;
+  background: var(--ocean-foam) !important;
 }
 
-/* Input focus states */
+/* Input focus states - Win95 dotted */
 .monster-input:focus,
 .batch-input:focus {
-  border-color: var(--base-blue) !important;
-  box-shadow: 0 0 0 3px var(--base-blue-light), var(--glass-shadow-strong) !important;
+  border-color: var(--bevel-darker) var(--bevel-light) var(--bevel-light) var(--bevel-darker) !important;
+  box-shadow: none !important;
+  outline: 1px dotted var(--text-primary);
+  outline-offset: -4px;
 }

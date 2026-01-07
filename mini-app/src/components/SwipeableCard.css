@@ -1,12 +1,15 @@
-/* SwipeableCard.css - Surf-works styling with swipe functionality */
+/* ============================================
+   SWIPEABLE CARD - WIN95 × PASTEL THEME
+   Card design with pastel accents
+   ============================================ */
 
-@import url("https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap");
 
 /* Swipeable Card Container */
 .swipeable-card {
   position: relative;
   width: 100%;
-  max-width: 400px;
+  max-width: 380px;
   aspect-ratio: 3 / 4;
   cursor: grab;
   user-select: none;
@@ -17,67 +20,72 @@
   cursor: grabbing;
 }
 
-/* Subtle Glow Indicators */
+/* Swipe Glow Indicators - Win95 style with pastels */
 .swipe-glow {
   position: absolute;
-  top: -10px;
-  bottom: -10px;
+  top: -8px;
+  bottom: -8px;
   width: 100%;
   pointer-events: none;
   z-index: -1;
-  border-radius: min(2vw, 16px);
-  filter: blur(20px);
-  transition: opacity 0.2s;
+  transition: opacity 0.15s steps(3);
 }
 
 .swipe-glow.left {
-  left: -10px;
-  background: radial-gradient(ellipse at left, #ff3b30, transparent 70%);
+  left: -8px;
+  background: var(--sunset-coral);
+  opacity: 0;
 }
 
 .swipe-glow.right {
-  right: -10px;
-  background: radial-gradient(ellipse at right, #4cd964, transparent 70%);
+  right: -8px;
+  background: var(--ocean-seafoam);
+  opacity: 0;
 }
 
-/* Card Content */
+/* Card Content - Win95 beveled frame */
 .card-content {
   letter-spacing: 0.1px;
   width: 100%;
   height: 100%;
-  border: min(0.8vw, 6px) solid #1a1a1a;
-  border-radius: min(1.8vw, 14px);
+  border: 3px solid;
+  border-color: var(--bevel-light) var(--bevel-darker) var(--bevel-darker) var(--bevel-light);
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  background: var(--ocean-cream);
 }
 
 /* Card Header */
 .card-header {
-  border-bottom: min(0.4vw, 3px) solid #1a1a2e;
+  border-bottom: 2px solid var(--bevel-dark);
   padding: min(1vw, 8px) min(1.5vw, 12px);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-family: "Cinzel", serif;
+  font-family: 'IBM Plex Mono', monospace;
   flex-shrink: 0;
   position: relative;
+  background: var(--ocean-foam);
 }
 
 .card-title {
   font-size: 0.7rem;
   font-weight: 700;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
+  color: var(--text-primary);
 }
 
 .card-level {
   padding: min(0.5vw, 4px) min(1vw, 8px);
-  border-radius: min(1.5vw, 12px);
+  background: var(--ocean-sky);
+  border: 2px solid;
+  border-color: var(--bevel-ocean-light) var(--bevel-ocean-dark) var(--bevel-ocean-dark) var(--bevel-ocean-light);
   font-size: 0.7rem;
   font-weight: 700;
   text-wrap: nowrap;
+  color: var(--text-primary);
 }
 
 /* Mana Cost Orbs */
@@ -90,28 +98,29 @@
 .mana-orb {
   width: 1.5rem;
   height: 1.5rem;
-  border-radius: 50%;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   font-weight: bold;
-  border: min(0.25vw, 2px) solid #1a1a1a;
-  box-shadow: 0 min(0.25vw, 2px) min(0.5vw, 4px) rgba(0, 0, 0, 0.3);
+  border: 2px solid;
+  border-color: var(--bevel-light) var(--bevel-darker) var(--bevel-darker) var(--bevel-light);
   position: relative;
   cursor: help;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: none;
+  background: var(--sunset-peach);
 }
 
 .mana-orb:hover {
-  transform: scale(1.1);
-  box-shadow: 0 min(0.4vw, 3px) min(0.8vw, 6px) rgba(0, 0, 0, 0.4);
+  background: var(--sunset-apricot);
 }
 
 .orb-value {
+  font-family: 'IBM Plex Mono', monospace;
   font-size: 0.6rem;
   font-weight: 700;
   line-height: 1;
+  color: var(--text-primary);
 }
 
 /* Tooltip on hover */
@@ -121,18 +130,19 @@
   bottom: calc(100% + 0.5rem);
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(0, 0, 0, 0.9);
-  color: white;
+  background: var(--win95-black);
+  color: var(--win95-white);
   padding: 0.3rem 0.6rem;
-  border-radius: 0.3rem;
+  font-family: 'IBM Plex Mono', monospace;
   font-size: 0.45rem;
   white-space: nowrap;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.2s ease;
+  transition: opacity 0.15s steps(2);
   z-index: 10;
   font-weight: 500;
   letter-spacing: 0.02em;
+  border: 1px solid var(--win95-white);
 }
 
 .mana-orb:hover::after {
@@ -143,13 +153,15 @@
 .image-area {
   height: 40%;
   margin: min(0.8vw, 8px);
-  border-radius: min(1vw, 8px);
+  border: 2px solid;
+  border-color: var(--bevel-darker) var(--bevel-light) var(--bevel-light) var(--bevel-darker);
   position: relative;
   overflow: hidden;
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
+  background: var(--ocean-mist);
 }
 
 .card-image {
@@ -162,15 +174,17 @@
 /* Type and Power Section */
 .type-power-section {
   padding: min(1.2vw, 10px) min(2vw, 16px);
-  font-family: "Cinzel", serif;
+  font-family: 'IBM Plex Mono', monospace;
   font-size: 0.525rem;
   font-weight: 600;
-  border-top: min(0.25vw, 2px) solid #1a1a2e;
-  border-bottom: min(0.25vw, 2px) solid #1a1a2e;
+  border-top: 2px solid var(--bevel-dark);
+  border-bottom: 2px solid var(--bevel-dark);
   flex-shrink: 0;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  background: var(--ocean-foam);
+  color: var(--text-primary);
 }
 
 .power-stats {
@@ -182,8 +196,10 @@
 
 .stat {
   padding: min(0.5vw, 4px) min(1vw, 8px);
-  border-radius: min(0.5vw, 4px);
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+  border: 2px solid;
+  border-color: var(--bevel-light) var(--bevel-darker) var(--bevel-darker) var(--bevel-light);
+  background: var(--ocean-sky);
+  color: var(--text-primary);
 }
 
 /* Flavor Text */
@@ -199,6 +215,8 @@
   align-items: center;
   justify-content: center;
   position: relative;
+  color: var(--text-primary);
+  background: var(--ocean-cream);
 }
 
 .flavor-text::before {
@@ -207,7 +225,8 @@
   position: absolute;
   top: 0;
   left: 0;
-  opacity: 0.4;
+  opacity: 0.3;
+  color: var(--ocean-teal);
 }
 
 .flavor-text::after {
@@ -216,7 +235,8 @@
   position: absolute;
   bottom: -1.25vh;
   right: 0.35vw;
-  opacity: 0.4;
+  opacity: 0.3;
+  color: var(--ocean-teal);
 }
 
 .flavor-text-content {
@@ -230,28 +250,33 @@
   justify-content: space-between;
   align-items: center;
   flex-shrink: 0;
+  border-top: 2px solid var(--bevel-dark);
+  background: var(--ocean-foam);
 }
 
 .artist-info {
   font-size: 0.6rem;
-  font-family: "Cinzel", serif;
+  font-family: 'IBM Plex Mono', monospace;
   opacity: 0.8;
+  color: var(--text-primary);
 }
 
 .rarity-indicator {
   padding: min(0.5vw, 4px) min(1vw, 8px);
-  border-radius: min(1vw, 8px);
   font-size: 0.625rem;
   font-weight: 700;
-  border: min(0.25vw, 2px) solid #1a1a1a;
-  font-family: "Cinzel", serif;
-  letter-spacing: 0.1em;
+  border: 2px solid;
+  border-color: var(--bevel-sunset-light) var(--bevel-sunset-dark) var(--bevel-sunset-dark) var(--bevel-sunset-light);
+  font-family: 'IBM Plex Mono', monospace;
+  letter-spacing: 0.08em;
+  background: var(--sunset-peach);
+  color: var(--text-primary);
 }
 
 /* Mobile Responsive */
 @media (max-width: 1079px) {
   .swipeable-card {
-    max-width: 350px;
+    max-width: 340px;
   }
 
   .card-header {
@@ -313,7 +338,7 @@
 /* Extra small screens */
 @media (max-width: 480px) {
   .swipeable-card {
-    max-width: 300px;
+    max-width: 290px;
   }
 
   .card-title {

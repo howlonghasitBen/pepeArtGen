@@ -1,11 +1,15 @@
+/* ============================================
+   DECK BUILDER - WIN95 × PASTEL THEME
+   ============================================ */
+
 .deck-builder {
   display: flex;
   flex-direction: column;
   width: 100%;
   height: 100vh;
   padding: 20px;
-  background: transparent;
-  color: #D5D6DA;
+  background: var(--ocean-mist);
+  color: var(--text-primary);
   overflow: hidden;
   box-sizing: border-box;
 }
@@ -18,56 +22,65 @@
   overflow-x: auto;
   overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE/Edge */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
 .deck-builder-header::-webkit-scrollbar {
-  display: none; /* Chrome/Safari */
+  display: none;
 }
 
 .deck-builder-header h2 {
   margin: 0;
   flex: 1;
-  font-size: 24px;
-  background: linear-gradient(135deg, #B8B4B4, #D5D6DA);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text-primary);
 }
 
 .back-btn {
-  background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: #fff;
+  background: var(--win95-gray);
+  border: 2px solid;
+  border-color: var(--bevel-light) var(--bevel-darker) var(--bevel-darker) var(--bevel-light);
+  color: var(--text-primary);
   padding: 8px 16px;
-  border-radius: 8px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: none;
   flex-shrink: 0;
   white-space: nowrap;
 }
 
 .back-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--win95-gray-light);
+}
+
+.back-btn:active {
+  border-color: var(--bevel-darker) var(--bevel-light) var(--bevel-light) var(--bevel-darker);
 }
 
 .new-deck-btn {
   padding: 10px 20px;
-  background: linear-gradient(135deg, #404565, #2D3047);
-  border: none;
-  border-radius: 10px;
-  color: #D5D6DA;
-  font-weight: 500;
+  background: var(--ocean-teal);
+  border: 2px solid;
+  border-color: var(--bevel-ocean-light) var(--bevel-ocean-dark) var(--bevel-ocean-dark) var(--bevel-ocean-light);
+  color: var(--text-primary);
+  font-family: 'IBM Plex Mono', monospace;
+  font-weight: 700;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: none;
   flex-shrink: 0;
   white-space: nowrap;
 }
 
 .new-deck-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(64, 69, 101, 0.4);
+  background: var(--ocean-seafoam);
+}
+
+.new-deck-btn:active {
+  border-color: var(--bevel-ocean-dark) var(--bevel-ocean-light) var(--bevel-ocean-light) var(--bevel-ocean-dark);
 }
 
 /* Error */
@@ -76,17 +89,18 @@
   align-items: center;
   justify-content: space-between;
   padding: 12px 16px;
-  background: rgba(214, 48, 49, 0.2);
-  border: 1px solid rgba(214, 48, 49, 0.3);
-  border-radius: 8px;
+  background: var(--sunset-rose);
+  border: 2px solid;
+  border-color: var(--bevel-sunset-light) var(--bevel-sunset-dark) var(--bevel-sunset-dark) var(--bevel-sunset-light);
   margin-bottom: 16px;
-  color: #ff7675;
+  color: var(--text-primary);
+  font-family: 'IBM Plex Mono', monospace;
 }
 
 .deck-error button {
   background: transparent;
   border: none;
-  color: #ff7675;
+  color: var(--text-primary);
   font-size: 20px;
   cursor: pointer;
 }
@@ -104,35 +118,45 @@
 .deck-list-panel {
   display: flex;
   flex-direction: column;
-  background: rgba(0, 0, 0, 0.3);
-  border-radius: 12px;
+  background: var(--ocean-cream);
+  border: 2px solid;
+  border-color: var(--bevel-light) var(--bevel-darker) var(--bevel-darker) var(--bevel-light);
   padding: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
   overflow: hidden;
 }
 
 .deck-list-panel h3 {
   margin: 0 0 16px 0;
-  font-size: 14px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.85rem;
   text-transform: uppercase;
   letter-spacing: 1px;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--text-secondary);
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--bevel-dark);
 }
 
 .no-decks {
   text-align: center;
   padding: 24px 0;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-secondary);
+  font-family: 'IBM Plex Mono', monospace;
 }
 
 .no-decks button {
   margin-top: 12px;
   padding: 8px 16px;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 8px;
-  color: #fff;
+  background: var(--win95-gray);
+  border: 2px solid;
+  border-color: var(--bevel-light) var(--bevel-darker) var(--bevel-darker) var(--bevel-light);
+  color: var(--text-primary);
+  font-family: 'IBM Plex Mono', monospace;
+  font-weight: 600;
   cursor: pointer;
+}
+
+.no-decks button:hover {
+  background: var(--win95-gray-light);
 }
 
 .deck-list {
@@ -147,19 +171,20 @@
   display: flex;
   align-items: center;
   padding: 12px;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 8px;
+  background: var(--ocean-foam);
+  border: 2px solid;
+  border-color: var(--bevel-light) var(--bevel-darker) var(--bevel-darker) var(--bevel-light);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: none;
 }
 
 .deck-item:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--ocean-sky);
 }
 
 .deck-item.active {
-  background: linear-gradient(135deg, rgba(64, 69, 101, 0.4), rgba(45, 48, 71, 0.3));
-  border: 1px solid rgba(64, 69, 101, 0.5);
+  background: var(--ocean-teal);
+  border-color: var(--bevel-ocean-light) var(--bevel-ocean-dark) var(--bevel-ocean-dark) var(--bevel-ocean-light);
 }
 
 .deck-item-info {
@@ -168,13 +193,16 @@
 
 .deck-name {
   display: block;
-  font-weight: 500;
+  font-family: 'IBM Plex Mono', monospace;
+  font-weight: 600;
   margin-bottom: 2px;
+  color: var(--text-primary);
 }
 
 .deck-count {
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.5);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
 }
 
 .deck-delete-btn {
@@ -182,11 +210,11 @@
   height: 24px;
   background: transparent;
   border: none;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--text-secondary);
   font-size: 18px;
   cursor: pointer;
   opacity: 0;
-  transition: opacity 0.2s;
+  transition: opacity 0.15s;
 }
 
 .deck-item:hover .deck-delete-btn {
@@ -194,17 +222,17 @@
 }
 
 .deck-delete-btn:hover {
-  color: #ff7675;
+  color: var(--sunset-coral);
 }
 
 /* Deck Contents Panel */
 .deck-contents-panel {
   display: flex;
   flex-direction: column;
-  background: rgba(0, 0, 0, 0.3);
-  border-radius: 12px;
+  background: var(--ocean-cream);
+  border: 2px solid;
+  border-color: var(--bevel-light) var(--bevel-darker) var(--bevel-darker) var(--bevel-light);
   padding: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
   overflow: hidden;
 }
 
@@ -213,24 +241,31 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--bevel-dark);
 }
 
 .deck-contents-header h3 {
   margin: 0;
-  font-size: 18px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary);
 }
 
 .deck-size {
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.5);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
 }
 
 .deck-stats {
   display: flex;
   gap: 16px;
   padding: 12px;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 8px;
+  background: var(--ocean-foam);
+  border: 2px solid;
+  border-color: var(--bevel-darker) var(--bevel-light) var(--bevel-light) var(--bevel-darker);
   margin-bottom: 16px;
 }
 
@@ -241,15 +276,17 @@
 }
 
 .stat-label {
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.5);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--text-secondary);
   text-transform: uppercase;
 }
 
 .stat-value {
-  font-size: 18px;
-  font-weight: 600;
-  color: #B8B4B4;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--ocean-teal);
 }
 
 .deck-cards {
@@ -267,12 +304,13 @@
   align-items: center;
   justify-content: center;
   height: 200px;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-secondary);
   text-align: center;
+  font-family: 'IBM Plex Mono', monospace;
 }
 
 .deck-empty-hint {
-  font-size: 13px;
+  font-size: 0.85rem;
   margin-top: 8px;
   opacity: 0.7;
 }
@@ -282,21 +320,23 @@
   align-items: center;
   gap: 12px;
   padding: 10px;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 10px;
-  transition: all 0.2s;
+  background: var(--ocean-foam);
+  border: 2px solid;
+  border-color: var(--bevel-light) var(--bevel-darker) var(--bevel-darker) var(--bevel-light);
+  transition: none;
 }
 
 .deck-card:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--ocean-sky);
 }
 
 .deck-card-image {
   width: 48px;
   height: 67px;
-  border-radius: 6px;
   overflow: hidden;
-  background: rgba(0, 0, 0, 0.3);
+  background: var(--ocean-mist);
+  border: 2px solid;
+  border-color: var(--bevel-darker) var(--bevel-light) var(--bevel-light) var(--bevel-darker);
 }
 
 .deck-card-image img {
@@ -311,14 +351,17 @@
 
 .deck-card-name {
   display: block;
-  font-weight: 500;
-  font-size: 13px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-weight: 600;
+  font-size: 0.85rem;
   margin-bottom: 2px;
+  color: var(--text-primary);
 }
 
 .deck-card-stats {
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.5);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--text-secondary);
 }
 
 .remove-card-btn {
@@ -327,64 +370,73 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(214, 48, 49, 0.2);
-  border: 1px solid rgba(214, 48, 49, 0.3);
-  border-radius: 6px;
-  color: #ff7675;
+  background: var(--sunset-rose);
+  border: 2px solid;
+  border-color: var(--bevel-sunset-light) var(--bevel-sunset-dark) var(--bevel-sunset-dark) var(--bevel-sunset-light);
+  color: var(--text-primary);
   font-size: 18px;
   cursor: pointer;
   opacity: 0;
-  transition: opacity 0.2s;
+  transition: opacity 0.15s;
 }
 
 .deck-card:hover .remove-card-btn {
   opacity: 1;
 }
 
+.remove-card-btn:hover {
+  background: var(--sunset-coral);
+}
+
 /* Card Library Panel */
 .card-library-panel {
   display: flex;
   flex-direction: column;
-  background: rgba(0, 0, 0, 0.3);
-  border-radius: 12px;
+  background: var(--ocean-cream);
+  border: 2px solid;
+  border-color: var(--bevel-light) var(--bevel-darker) var(--bevel-darker) var(--bevel-light);
   padding: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
   overflow: hidden;
 }
 
 .card-library-panel h3 {
   margin: 0 0 12px 0;
-  font-size: 14px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.85rem;
   text-transform: uppercase;
   letter-spacing: 1px;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--text-secondary);
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--bevel-dark);
 }
 
 .library-search input {
   width: 100%;
   padding: 10px 14px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 8px;
-  color: #fff;
-  font-size: 14px;
+  background: var(--win95-white);
+  border: 2px solid;
+  border-color: var(--bevel-darker) var(--bevel-light) var(--bevel-light) var(--bevel-darker);
+  color: var(--text-primary);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.9rem;
   margin-bottom: 12px;
 }
 
 .library-search input:focus {
   outline: none;
-  border-color: #404565;
+  background: var(--win95-white);
 }
 
 .library-search input::placeholder {
-  color: rgba(255, 255, 255, 0.3);
+  color: var(--text-secondary);
 }
 
 .library-loading,
 .library-empty {
   text-align: center;
   padding: 32px 0;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-secondary);
+  font-family: 'IBM Plex Mono', monospace;
 }
 
 .library-cards {
@@ -400,22 +452,24 @@
   align-items: center;
   gap: 10px;
   padding: 8px;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 8px;
+  background: var(--ocean-foam);
+  border: 2px solid;
+  border-color: var(--bevel-light) var(--bevel-darker) var(--bevel-darker) var(--bevel-light);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: none;
 }
 
 .library-card:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--ocean-sky);
 }
 
 .library-card-image {
   width: 36px;
   height: 50px;
-  border-radius: 4px;
   overflow: hidden;
-  background: rgba(0, 0, 0, 0.3);
+  background: var(--ocean-mist);
+  border: 2px solid;
+  border-color: var(--bevel-darker) var(--bevel-light) var(--bevel-light) var(--bevel-darker);
 }
 
 .library-card-image img {
@@ -426,8 +480,10 @@
 
 .library-card-name {
   flex: 1;
-  font-size: 13px;
-  font-weight: 500;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
 }
 
 .add-card-btn {
@@ -436,18 +492,22 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 184, 148, 0.2);
-  border: 1px solid rgba(0, 184, 148, 0.3);
-  border-radius: 6px;
-  color: #00b894;
+  background: var(--ocean-seafoam);
+  border: 2px solid;
+  border-color: var(--bevel-ocean-light) var(--bevel-ocean-dark) var(--bevel-ocean-dark) var(--bevel-ocean-light);
+  color: var(--text-primary);
   font-size: 16px;
   cursor: pointer;
   opacity: 0;
-  transition: opacity 0.2s;
+  transition: opacity 0.15s;
 }
 
 .library-card:hover .add-card-btn {
   opacity: 1;
+}
+
+.add-card-btn:hover {
+  background: var(--ocean-teal);
 }
 
 /* Connect Prompt */
@@ -456,14 +516,15 @@
   align-items: center;
   justify-content: center;
   height: 300px;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-secondary);
+  font-family: 'IBM Plex Mono', monospace;
 }
 
 /* Modal */
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.6);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -471,33 +532,36 @@
 }
 
 .modal-content {
-  background: #1a1a2e;
-  border-radius: 16px;
+  background: var(--ocean-cream);
+  border: 2px solid;
+  border-color: var(--bevel-light) var(--bevel-darker) var(--bevel-darker) var(--bevel-light);
   padding: 24px;
   width: 90%;
   max-width: 400px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .modal-content h3 {
   margin: 0 0 16px 0;
-  font-size: 18px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary);
 }
 
 .modal-content input {
   width: 100%;
   padding: 12px 14px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 10px;
-  color: #fff;
-  font-size: 14px;
+  background: var(--win95-white);
+  border: 2px solid;
+  border-color: var(--bevel-darker) var(--bevel-light) var(--bevel-light) var(--bevel-darker);
+  color: var(--text-primary);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.9rem;
   margin-bottom: 20px;
 }
 
 .modal-content input:focus {
   outline: none;
-  border-color: #404565;
 }
 
 .modal-actions {
@@ -508,20 +572,40 @@
 
 .cancel-btn {
   padding: 10px 20px;
-  background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 8px;
-  color: #fff;
+  background: var(--win95-gray);
+  border: 2px solid;
+  border-color: var(--bevel-light) var(--bevel-darker) var(--bevel-darker) var(--bevel-light);
+  color: var(--text-primary);
+  font-family: 'IBM Plex Mono', monospace;
+  font-weight: 600;
   cursor: pointer;
+}
+
+.cancel-btn:hover {
+  background: var(--win95-gray-light);
+}
+
+.cancel-btn:active {
+  border-color: var(--bevel-darker) var(--bevel-light) var(--bevel-light) var(--bevel-darker);
 }
 
 .create-btn {
   padding: 10px 20px;
-  background: linear-gradient(135deg, #404565, #2D3047);
-  border: none;
-  border-radius: 8px;
-  color: #fff;
+  background: var(--ocean-teal);
+  border: 2px solid;
+  border-color: var(--bevel-ocean-light) var(--bevel-ocean-dark) var(--bevel-ocean-dark) var(--bevel-ocean-light);
+  color: var(--text-primary);
+  font-family: 'IBM Plex Mono', monospace;
+  font-weight: 700;
   cursor: pointer;
+}
+
+.create-btn:hover {
+  background: var(--ocean-seafoam);
+}
+
+.create-btn:active {
+  border-color: var(--bevel-ocean-dark) var(--bevel-ocean-light) var(--bevel-ocean-light) var(--bevel-ocean-dark);
 }
 
 .create-btn:disabled {
