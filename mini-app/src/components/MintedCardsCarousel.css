@@ -1,24 +1,30 @@
+/* ============================================
+   MINTED CARDS CAROUSEL - WIN95 × PASTEL THEME
+   ============================================ */
+
 .minted-cards-carousel {
   width: 100%;
   max-width: 600px;
   margin: 2rem auto 0;
   padding: 1.5rem;
-  background: rgba(255, 255, 255, 0.03);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--ocean-cream);
+  border: 2px solid;
+  border-color: var(--bevel-light) var(--bevel-darker) var(--bevel-darker) var(--bevel-light);
 }
 
 .carousel-header {
   text-align: center;
   margin-bottom: 1.5rem;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--bevel-dark);
 }
 
 .carousel-header h3 {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #fff;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary);
   margin: 0;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .carousel-container {
@@ -53,8 +59,9 @@
   max-height: 550px;
   display: block;
   object-fit: contain;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-  background: rgba(0, 0, 0, 0.3);
+  border: 3px solid;
+  border-color: var(--bevel-darker) var(--bevel-light) var(--bevel-light) var(--bevel-darker);
+  background: var(--ocean-mist);
 }
 
 .card-placeholder {
@@ -64,64 +71,68 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.05);
-  color: rgba(255, 255, 255, 0.5);
+  background: var(--ocean-foam);
+  border: 2px solid;
+  border-color: var(--bevel-darker) var(--bevel-light) var(--bevel-light) var(--bevel-darker);
+  color: var(--text-secondary);
+  font-family: 'IBM Plex Mono', monospace;
 }
 
 .carousel-info {
   text-align: center;
   padding: 1rem 0;
   margin-top: 1rem;
+  border-top: 2px solid var(--bevel-dark);
 }
 
 .card-name {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #fff;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
   margin: 0 0 0.25rem 0;
   text-align: center;
 }
 
 .card-token-id {
-  font-size: 0.9rem;
-  color: rgba(255, 255, 255, 0.6);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.85rem;
+  color: var(--ocean-teal);
   margin: 0;
   text-align: center;
+  font-weight: 600;
 }
 
 .carousel-nav {
   position: relative;
-  width: 48px;
-  height: 48px;
-  min-width: 48px;
-  border-radius: 50%;
-  border: 2px solid rgba(255, 255, 255, 0.2);
-  background: rgba(0, 82, 255, 0.3);
-  backdrop-filter: blur(10px);
-  color: #fff;
-  font-size: 2rem;
-  font-weight: 300;
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  border: 2px solid;
+  border-color: var(--bevel-light) var(--bevel-darker) var(--bevel-darker) var(--bevel-light);
+  background: var(--win95-gray);
+  color: var(--text-primary);
+  font-size: 1.5rem;
+  font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: none;
   z-index: 10;
   padding: 0;
   line-height: 1;
   flex-shrink: 0;
   justify-self: center;
+  font-family: 'IBM Plex Mono', monospace;
 }
 
 .carousel-nav:hover {
-  background: rgba(0, 82, 255, 0.6);
-  border-color: rgba(255, 255, 255, 0.4);
-  transform: scale(1.1);
-  box-shadow: 0 4px 16px rgba(0, 82, 255, 0.5);
+  background: var(--ocean-sky);
 }
 
 .carousel-nav:active {
-  transform: scale(0.95);
+  border-color: var(--bevel-darker) var(--bevel-light) var(--bevel-light) var(--bevel-darker);
 }
 
 .carousel-nav-left {
@@ -135,7 +146,7 @@
 .carousel-dots {
   display: flex;
   justify-content: center;
-  gap: 8px;
+  gap: 6px;
   margin-top: 1.5rem;
   flex-wrap: wrap;
   max-height: 60px;
@@ -143,34 +154,32 @@
 }
 
 .carousel-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  border: none;
-  background: rgba(255, 255, 255, 0.3);
+  width: 12px;
+  height: 12px;
+  border: 2px solid;
+  border-color: var(--bevel-light) var(--bevel-darker) var(--bevel-darker) var(--bevel-light);
+  background: var(--win95-gray);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: none;
   padding: 0;
 }
 
 .carousel-dot:hover {
-  background: rgba(255, 255, 255, 0.5);
-  transform: scale(1.2);
+  background: var(--ocean-sky);
 }
 
 .carousel-dot.active {
-  background: #0052ff;
-  width: 24px;
-  border-radius: 4px;
-  box-shadow: 0 0 8px rgba(0, 82, 255, 0.6);
+  background: var(--ocean-teal);
+  border-color: var(--bevel-ocean-light) var(--bevel-ocean-dark) var(--bevel-ocean-dark) var(--bevel-ocean-light);
 }
 
 .carousel-counter {
   text-align: center;
   margin-top: 1rem;
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 0.9rem;
-  font-weight: 500;
+  color: var(--text-secondary);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.85rem;
+  font-weight: 600;
 }
 
 /* Mobile responsive */
@@ -199,14 +208,14 @@
   }
 
   .carousel-nav {
-    width: 40px;
-    height: 40px;
-    min-width: 40px;
-    font-size: 1.5rem;
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    font-size: 1.25rem;
   }
 
   .carousel-header h3 {
-    font-size: 1.1rem;
+    font-size: 1rem;
   }
 }
 
@@ -235,17 +244,17 @@
   }
 
   .carousel-nav {
-    width: 36px;
-    height: 36px;
-    min-width: 36px;
-    font-size: 1.25rem;
-  }
-
-  .card-name {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
     font-size: 1rem;
   }
 
+  .card-name {
+    font-size: 0.9rem;
+  }
+
   .card-token-id {
-    font-size: 0.85rem;
+    font-size: 0.8rem;
   }
 }

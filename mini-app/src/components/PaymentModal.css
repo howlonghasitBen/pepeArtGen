@@ -1,181 +1,183 @@
-/* Extends MintingModal.css styles */
+/* ============================================
+   PAYMENT MODAL - WIN95 × PASTEL THEME
+   ============================================ */
 
 .payment-modal {
-  max-width: 500px;
+  max-width: 460px;
   max-height: 90vh;
   overflow-y: auto;
 }
 
 .checking-session {
   text-align: center;
-  padding: 40px 20px;
-  color: #666;
+  padding: 32px 16px;
+  color: var(--text-secondary);
+  font-family: 'IBM Plex Mono', monospace;
 }
 
 .spinner {
-  border: 3px solid #f3f3f3;
-  border-top: 3px solid #667eea;
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  animation: spin 1s linear infinite;
-  margin: 0 auto 20px;
+  border: 3px solid var(--ocean-mist);
+  border-top: 3px solid var(--ocean-teal);
+  width: 32px;
+  height: 32px;
+  animation: win95Spin 1s steps(8) infinite;
+  margin: 0 auto 16px;
 }
 
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
+@keyframes win95Spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 .payment-info {
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 .info-text {
-  color: #666;
-  margin-bottom: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 10px;
   line-height: 1.5;
-  font-size: 0.9rem;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.85rem;
 }
 
 .features-list {
   list-style: none;
   padding: 0;
   margin: 0;
-  background: rgba(0, 0, 0, 0.03);
-  border: 1px solid rgba(0, 0, 0, 0.05);
-  border-radius: 14px;
-  padding: 12px 16px;
+  background: var(--ocean-foam);
+  border: 2px solid;
+  border-color: var(--bevel-darker) var(--bevel-light) var(--bevel-light) var(--bevel-darker);
+  padding: 10px 14px;
 }
 
 .features-list li {
-  padding: 6px 0;
+  padding: 5px 0;
   color: var(--text-primary);
-  font-size: 0.875rem;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.8rem;
   line-height: 1.4;
 }
 
 .features-list strong {
-  color: #667eea;
+  color: var(--ocean-teal);
   font-weight: 700;
 }
 
 .summary-row .price {
-  color: #667eea;
-  font-size: 1.2rem;
+  color: var(--ocean-teal);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 1.1rem;
   font-weight: 700;
 }
 
 .insufficient-balance {
   text-align: center;
-  padding: 16px;
-  background: rgba(255, 149, 0, 0.1);
-  border-radius: 12px;
-  margin-bottom: 15px;
+  padding: 14px;
+  background: var(--sunset-yellow);
+  border: 2px solid;
+  border-color: var(--bevel-sunset-light) var(--bevel-sunset-dark) var(--bevel-sunset-dark) var(--bevel-sunset-light);
+  margin-bottom: 12px;
 }
 
 .insufficient-balance p {
-  color: #ff9500;
-  margin-bottom: 8px;
-  font-size: 0.9rem;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.85rem;
+  font-weight: 600;
 }
 
 .insufficient-balance .help-text {
-  color: #666;
-  font-size: 0.85rem;
-  margin-bottom: 12px;
+  color: var(--text-secondary);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.8rem;
+  margin-bottom: 10px;
 }
 
 .bridge-link {
   display: inline-block;
-  padding: 10px 20px;
-  background: #667eea;
-  color: white;
+  padding: 8px 16px;
+  background: var(--ocean-sky);
+  color: var(--text-primary);
   text-decoration: none;
-  border-radius: 8px;
+  border: 2px solid;
+  border-color: var(--bevel-ocean-light) var(--bevel-ocean-dark) var(--bevel-ocean-dark) var(--bevel-ocean-light);
+  font-family: 'IBM Plex Mono', monospace;
   font-weight: 600;
-  font-size: 0.9rem;
-  transition: all 0.2s;
+  font-size: 0.85rem;
+  transition: none;
 }
 
 .bridge-link:hover {
-  background: #5568d3;
-  transform: translateY(-1px);
+  background: var(--ocean-mist);
+}
+
+.bridge-link:active {
+  border-color: var(--bevel-ocean-dark) var(--bevel-ocean-light) var(--bevel-ocean-light) var(--bevel-ocean-dark);
 }
 
 .modal-actions {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 .btn-primary {
   width: 100%;
-  padding: 14px;
-  border-radius: 14px;
-  font-size: 1rem;
+  padding: 12px;
+  background: var(--sunset-coral);
+  color: var(--text-primary);
+  border: 2px solid;
+  border-color: var(--bevel-sunset-light) var(--bevel-sunset-dark) var(--bevel-sunset-dark) var(--bevel-sunset-light);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.95rem;
   font-weight: 700;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border: none;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+  transition: none;
   position: relative;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .btn-primary::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.2) 0%,
-    rgba(255, 255, 255, 0) 100%
-  );
-  opacity: 0;
-  transition: opacity 0.3s;
-}
-
-.btn-primary:hover:not(:disabled)::before {
-  opacity: 1;
+  display: none;
 }
 
 .btn-primary:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+  background: var(--sunset-blush);
+  transform: none;
+}
+
+.btn-primary:active:not(:disabled) {
+  border-color: var(--bevel-sunset-dark) var(--bevel-sunset-light) var(--bevel-sunset-light) var(--bevel-sunset-dark);
+  padding: 13px 11px 11px 13px;
 }
 
 .btn-primary:disabled {
-  opacity: 0.7;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
 .btn-secondary {
   width: 100%;
-  padding: 12px;
-  border-radius: 12px;
-  font-size: 0.95rem;
+  padding: 10px;
+  background: var(--win95-gray);
+  color: var(--text-primary);
+  border: 2px solid;
+  border-color: var(--bevel-light) var(--bevel-darker) var(--bevel-darker) var(--bevel-light);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.9rem;
   font-weight: 600;
-  background: rgba(0, 0, 0, 0.04);
-  color: var(--text-secondary);
-  border: 1px solid rgba(0, 0, 0, 0.08);
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: none;
 }
 
 .btn-secondary:hover:not(:disabled) {
-  background: rgba(0, 0, 0, 0.08);
-  color: var(--text-primary);
-  transform: translateY(-1px);
+  background: var(--win95-gray-light);
+}
+
+.btn-secondary:active:not(:disabled) {
+  border-color: var(--bevel-darker) var(--bevel-light) var(--bevel-light) var(--bevel-darker);
 }
 
 .btn-secondary:disabled {
@@ -184,39 +186,42 @@
 }
 
 .payment-disclaimer {
-  margin-top: 16px;
-  padding: 12px;
-  background: rgba(102, 126, 234, 0.05);
-  border-radius: 8px;
+  margin-top: 14px;
+  padding: 10px;
+  background: var(--ocean-foam);
+  border: 2px solid;
+  border-color: var(--bevel-darker) var(--bevel-light) var(--bevel-light) var(--bevel-darker);
   text-align: center;
 }
 
 .payment-disclaimer small {
-  color: #666;
+  color: var(--text-secondary);
   line-height: 1.4;
-  font-size: 0.8rem;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.75rem;
 }
 
 .payment-disclaimer strong {
-  color: #667eea;
+  color: var(--ocean-teal);
 }
 
 /* Status message styles */
 .status-message {
   text-align: center;
-  padding: 15px;
-  border-radius: 10px;
-  margin-bottom: 15px;
+  padding: 12px;
+  margin-bottom: 12px;
+  font-family: 'IBM Plex Mono', monospace;
   font-weight: 600;
+  border: 2px solid;
 }
 
 .status-message .status-title {
-  font-size: 1rem;
+  font-size: 0.95rem;
   margin-bottom: 4px;
 }
 
 .status-message .status-description {
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   font-weight: 400;
   opacity: 0.8;
 }
@@ -224,28 +229,32 @@
 .status-message.paying,
 .status-message.creating_session,
 .status-message.verifying_payment {
-  background: rgba(102, 126, 234, 0.1);
-  color: #667eea;
+  background: var(--ocean-sky);
+  color: var(--text-primary);
+  border-color: var(--bevel-ocean-light) var(--bevel-ocean-dark) var(--bevel-ocean-dark) var(--bevel-ocean-light);
 }
 
 .status-message.success {
-  background: rgba(76, 217, 100, 0.1);
-  color: #34c759;
+  background: var(--ocean-seafoam);
+  color: var(--text-primary);
+  border-color: var(--bevel-ocean-light) var(--bevel-ocean-dark) var(--bevel-ocean-dark) var(--bevel-ocean-light);
 }
 
 .status-message.error {
-  background: rgba(255, 59, 48, 0.1);
-  color: #ff3b30;
+  background: var(--sunset-rose);
+  color: var(--text-primary);
+  border-color: var(--bevel-sunset-light) var(--bevel-sunset-dark) var(--bevel-sunset-dark) var(--bevel-sunset-light);
 }
 
 .error-message {
-  background: rgba(255, 59, 48, 0.1);
-  border: 1px solid rgba(255, 59, 48, 0.2);
-  color: #ff3b30;
-  padding: 12px;
-  border-radius: 8px;
-  margin-bottom: 15px;
-  font-size: 0.9rem;
+  background: var(--sunset-rose);
+  border: 2px solid;
+  border-color: var(--bevel-sunset-light) var(--bevel-sunset-dark) var(--bevel-sunset-dark) var(--bevel-sunset-light);
+  color: var(--text-primary);
+  padding: 10px;
+  margin-bottom: 12px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.85rem;
   text-align: center;
 }
 
@@ -256,17 +265,19 @@
 
 .tx-hash {
   text-align: center;
-  margin-bottom: 15px;
-  padding: 10px;
-  background: rgba(102, 126, 234, 0.05);
-  border-radius: 8px;
+  margin-bottom: 12px;
+  padding: 8px;
+  background: var(--ocean-foam);
+  border: 2px solid;
+  border-color: var(--bevel-darker) var(--bevel-light) var(--bevel-light) var(--bevel-darker);
 }
 
 .tx-hash a {
-  color: #667eea;
+  color: var(--ocean-teal);
   text-decoration: none;
+  font-family: 'IBM Plex Mono', monospace;
   font-weight: 500;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
 }
 
 .tx-hash a:hover {
@@ -277,42 +288,42 @@
   .payment-modal {
     max-width: 100%;
     max-height: 95vh;
-    padding: 20px;
+    padding: 16px;
   }
 
   .payment-info {
-    margin-bottom: 16px;
+    margin-bottom: 12px;
   }
 
   .features-list {
-    padding: 10px 14px;
+    padding: 8px 12px;
   }
 
   .features-list li {
-    font-size: 0.825rem;
-    padding: 5px 0;
+    font-size: 0.75rem;
+    padding: 4px 0;
   }
 
   .info-text {
-    font-size: 0.85rem;
+    font-size: 0.8rem;
   }
 
   .btn-primary {
-    padding: 12px;
-    font-size: 0.95rem;
-  }
-
-  .btn-secondary {
     padding: 10px;
     font-size: 0.9rem;
   }
 
+  .btn-secondary {
+    padding: 8px;
+    font-size: 0.85rem;
+  }
+
   .payment-disclaimer {
-    padding: 10px;
-    margin-top: 12px;
+    padding: 8px;
+    margin-top: 10px;
   }
 
   .payment-disclaimer small {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
   }
 }

@@ -1,3 +1,7 @@
+/* ============================================
+   PART SELECTOR - WIN95 × PASTEL THEME
+   ============================================ */
+
 .part-selector {
   display: flex;
   flex-direction: column;
@@ -6,15 +10,17 @@
 
 .part-selector-header {
   padding: 16px 20px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 2px solid var(--bevel-dark);
+  background: var(--ocean-foam);
 }
 
 .part-selector-header h3 {
   margin: 0;
-  font-size: 14px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.85rem;
   text-transform: uppercase;
   letter-spacing: 1px;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--text-secondary);
 }
 
 .part-list {
@@ -29,23 +35,28 @@
   gap: 12px;
   width: 100%;
   padding: 14px 16px;
-  background: transparent;
-  border: none;
-  border-radius: 10px;
-  color: #fff;
+  background: var(--ocean-cream);
+  border: 2px solid;
+  border-color: var(--bevel-light) var(--bevel-darker) var(--bevel-darker) var(--bevel-light);
+  color: var(--text-primary);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: none;
   text-align: left;
   margin-bottom: 4px;
+  font-family: 'IBM Plex Mono', monospace;
 }
 
 .part-item:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--ocean-sky);
+}
+
+.part-item:active {
+  border-color: var(--bevel-darker) var(--bevel-light) var(--bevel-light) var(--bevel-darker);
 }
 
 .part-item.active {
-  background: linear-gradient(135deg, rgba(64, 69, 101, 0.4), rgba(45, 48, 71, 0.3));
-  border: 1px solid rgba(64, 69, 101, 0.5);
+  background: var(--ocean-teal);
+  border-color: var(--bevel-ocean-light) var(--bevel-ocean-dark) var(--bevel-ocean-dark) var(--bevel-ocean-light);
 }
 
 .part-icon {
@@ -55,38 +66,41 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
+  background: var(--win95-gray);
+  border: 2px solid;
+  border-color: var(--bevel-light) var(--bevel-darker) var(--bevel-darker) var(--bevel-light);
 }
 
 .part-item.active .part-icon {
-  background: rgba(64, 69, 101, 0.4);
+  background: var(--ocean-sky);
+  border-color: var(--bevel-ocean-light) var(--bevel-ocean-dark) var(--bevel-ocean-dark) var(--bevel-ocean-light);
 }
 
 .part-label {
   flex: 1;
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 0.9rem;
+  font-weight: 600;
 }
 
 .part-arrow {
   font-size: 18px;
-  color: rgba(255, 255, 255, 0.3);
-  transition: transform 0.2s;
+  color: var(--text-secondary);
+  transition: none;
 }
 
 .part-item.active .part-arrow {
-  color: #B8B4B4;
-  transform: translateX(4px);
+  color: var(--text-primary);
 }
 
 .part-selector-footer {
   padding: 16px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 2px solid var(--bevel-dark);
+  background: var(--ocean-foam);
 }
 
 .part-tip {
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.4);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
   text-align: center;
 }
