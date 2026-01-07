@@ -119,30 +119,30 @@ function PaymentModal({ onClose, onPaymentSuccess }) {
     switch (status) {
       case "paying":
         return {
-          icon: "💰",
+          icon: "[$]",
           text: "Confirm in your wallet...",
           subtext: "Sending USDC payment",
         };
       case "creating_session":
         return {
-          icon: "📝",
+          icon: "[+]",
           text: "Creating session...",
           subtext: "Registering payment",
         };
       case "verifying_payment":
         return {
-          icon: "🔍",
+          icon: "[?]",
           text: "Verifying on-chain...",
           subtext: "This may take 30-60 seconds",
         };
       case "success":
         return {
-          icon: "🎉",
+          icon: "[OK]",
           text: "Payment verified!",
           subtext: "Ready to generate",
         };
       case "error":
-        return { icon: "❌", text: "Payment failed", subtext: null };
+        return { icon: "[X]", text: "Payment failed", subtext: null };
       default:
         return null;
     }
@@ -165,10 +165,10 @@ function PaymentModal({ onClose, onPaymentSuccess }) {
           onClick={handleClose}
           disabled={isProcessing}
         >
-          ✕
+          x
         </button>
 
-        <h2>💰 Pay for Card Generation</h2>
+        <h2>Pay for Card Generation</h2>
 
         {checking ? (
           <div className="checking-session">
@@ -183,12 +183,12 @@ function PaymentModal({ onClose, onPaymentSuccess }) {
               </p>
               <ul className="features-list">
                 <li>
-                  ✨ <strong>1 initial generation</strong>
+                  [*] <strong>1 initial generation</strong>
                 </li>
                 <li>
-                  🔄 <strong>2 re-rolls</strong> to curate the perfect card
+                  [~] <strong>2 re-rolls</strong> to curate the perfect card
                 </li>
-                <li>🎨 AI-generated artwork using Google Imagen</li>
+                <li>[#] AI-generated artwork using Google Imagen</li>
               </ul>
             </div>
 
@@ -219,7 +219,7 @@ function PaymentModal({ onClose, onPaymentSuccess }) {
                     }}
                     title="Refresh balance"
                   >
-                    🔄
+                    [R]
                   </button>
                 </span>
               </div>
@@ -247,14 +247,14 @@ function PaymentModal({ onClose, onPaymentSuccess }) {
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  View transaction on BaseScan ↗
+                  View transaction on BaseScan [^]
                 </a>
               </div>
             )}
 
             {isConnected && !isCorrectChain && (
               <div className="error-message">
-                <strong>⚠️ Wrong Network</strong>
+                <strong>[!] Wrong Network</strong>
                 <p>Please switch to Base (Chain ID: {config.targetChainId})</p>
               </div>
             )}
@@ -278,7 +278,7 @@ function PaymentModal({ onClose, onPaymentSuccess }) {
                 </button>
               ) : !hasSufficientBalance() ? (
                 <div className="insufficient-balance">
-                  <p>⚠️ Insufficient USDC balance</p>
+                  <p>[!] Insufficient USDC balance</p>
                   <p className="help-text">
                     You need {generationFeeUsdc} USDC. Current balance:{" "}
                     {usdcBalanceFormatted} USDC
@@ -289,7 +289,7 @@ function PaymentModal({ onClose, onPaymentSuccess }) {
                     rel="noopener noreferrer"
                     className="bridge-link"
                   >
-                    Bridge to Base ↗
+                    Bridge to Base [^]
                   </a>
                 </div>
               ) : status === "error" && txHash ? (

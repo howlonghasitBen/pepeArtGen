@@ -14,10 +14,10 @@ const getApiBaseUrl = () => {
 export const CARD_PARTS = {
   identity: {
     label: 'Identity',
-    icon: '🏷️',
+    icon: '[ID]',
     fields: {
       name: { type: 'string', label: 'Name', placeholder: 'Card Name' },
-      subtitle: { type: 'string', label: 'Subtitle', placeholder: '⟨Generated⟩' },
+      subtitle: { type: 'string', label: 'Subtitle', placeholder: '<Generated>' },
       type: {
         type: 'select',
         label: 'Type',
@@ -28,7 +28,7 @@ export const CARD_PARTS = {
   },
   stats: {
     label: 'Combat Stats',
-    icon: '⚔️',
+    icon: '[ATK]',
     fields: {
       hp: { type: 'number', label: 'HP', min: 1, max: 20 },
       attack: { type: 'number', label: 'Attack', min: 0, max: 15 },
@@ -39,14 +39,14 @@ export const CARD_PARTS = {
   },
   abilities: {
     label: 'Abilities',
-    icon: '✨',
+    icon: '[*]',
     fields: {
       moveName: { type: 'string', label: 'Move Name', placeholder: 'Shadow Strike' }
     }
   },
   visuals: {
     label: 'Visuals',
-    icon: '🎨',
+    icon: '[#]',
     fields: {
       imageData: { type: 'image', label: 'Card Image' },
       colorPalette: { type: 'palette', label: 'Color Palette' }
@@ -54,7 +54,7 @@ export const CARD_PARTS = {
   },
   flavor: {
     label: 'Flavor',
-    icon: '📜',
+    icon: '[TXT]',
     fields: {
       flavorText: {
         type: 'textarea',
@@ -77,7 +77,7 @@ export const CARD_PARTS = {
  */
 const DEFAULT_CARD = {
   name: 'Untitled Card',
-  subtitle: '⟨Draft⟩',
+  subtitle: '<Draft>',
   type: 'Creature',
   level: 1,
   stats: {

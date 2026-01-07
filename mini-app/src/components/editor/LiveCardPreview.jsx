@@ -80,7 +80,7 @@ function LiveCardPreview({ card }) {
             <img src={card.imageData} alt={card.name} className="preview-image" />
           ) : (
             <div className="preview-image-placeholder">
-              <span>🖼️</span>
+              <span>[IMG]</span>
               <span>No Image</span>
             </div>
           )}
@@ -167,19 +167,19 @@ function LiveCardPreview({ card }) {
 
       <div className="preview-stats-summary">
         <div className="stat-pill">
-          <span className="stat-icon">❤️</span>
+          <span className="stat-icon">HP</span>
           <span>{card.stats?.hp || 0}</span>
         </div>
         <div className="stat-pill">
-          <span className="stat-icon">⚔️</span>
+          <span className="stat-icon">ATK</span>
           <span>{card.stats?.attack || 0}</span>
         </div>
         <div className="stat-pill">
-          <span className="stat-icon">🛡️</span>
+          <span className="stat-icon">DEF</span>
           <span>{card.stats?.defense || 0}</span>
         </div>
         <div className="stat-pill">
-          <span className="stat-icon">💎</span>
+          <span className="stat-icon">MP</span>
           <span>{card.stats?.mana || 0}</span>
         </div>
       </div>

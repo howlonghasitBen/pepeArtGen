@@ -413,16 +413,19 @@ input, textarea, select {
   margin: 20px auto;
 }
 
-/* Alternative hourglass-style loading */
-@keyframes hourglass {
-  0%, 100% { content: '⏳'; }
-  50% { content: '⌛'; }
+/* Alternative text-based loading */
+@keyframes loadingDots {
+  0% { content: 'Loading'; }
+  25% { content: 'Loading.'; }
+  50% { content: 'Loading..'; }
+  75% { content: 'Loading...'; }
 }
 
 .win95-loading::before {
-  content: '⏳';
-  animation: hourglass 1s steps(2) infinite;
-  font-size: 24px;
+  content: 'Loading...';
+  animation: loadingDots 1.5s steps(4) infinite;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 14px;
 }
 
 /* ============================================

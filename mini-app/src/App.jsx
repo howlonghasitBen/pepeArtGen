@@ -318,15 +318,15 @@ function AppContent() {
         <div className={`collapsible-menu ${expandedMenu === 'editor' ? 'expanded' : ''}`}>
           <div className="menu-content">
             <button className="menu-item" onClick={() => handleOpenEditor()}>
-              <span className="menu-icon">✏️</span>
+              <span className="menu-icon">[+]</span>
               <span>New Card</span>
             </button>
             <button className="menu-item" onClick={() => handleOpenEditor()}>
-              <span className="menu-icon">📁</span>
+              <span className="menu-icon">[=]</span>
               <span>Open Drafts</span>
             </button>
             <button className="menu-item" onClick={() => handleOpenEditor()}>
-              <span className="menu-icon">📥</span>
+              <span className="menu-icon">[v]</span>
               <span>Import Card</span>
             </button>
           </div>
@@ -336,11 +336,11 @@ function AppContent() {
         <div className={`collapsible-menu ${expandedMenu === 'deckbuilder' ? 'expanded' : ''}`}>
           <div className="menu-content">
             <button className="menu-item" onClick={handleOpenDeckBuilder}>
-              <span className="menu-icon">📚</span>
+              <span className="menu-icon">[#]</span>
               <span>My Decks</span>
             </button>
             <button className="menu-item" onClick={handleOpenDeckBuilder}>
-              <span className="menu-icon">➕</span>
+              <span className="menu-icon">[+]</span>
               <span>New Deck</span>
             </button>
           </div>

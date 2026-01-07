@@ -274,7 +274,7 @@ function PartEditor({ part, partSchema, card, onUpdateField, onUpdateFields }) {
                 onClick={() => handleRandomize(fieldKey, fieldSchema)}
                 title="Randomize"
               >
-                🎲
+                [?]
               </button>
             </div>
             <div className="slider-labels">
@@ -324,7 +324,7 @@ function PartEditor({ part, partSchema, card, onUpdateField, onUpdateFields }) {
                 onClick={() => handleRandomize(fieldKey, fieldSchema)}
                 title="Randomize"
               >
-                🎲
+                [?]
               </button>
             </div>
           </div>
@@ -338,7 +338,7 @@ function PartEditor({ part, partSchema, card, onUpdateField, onUpdateFields }) {
             {/* AI Art Generation Section */}
             <div className="art-generation-section">
               <div className="art-gen-header">
-                <span className="art-gen-icon">🎨</span>
+                <span className="art-gen-icon">[AI]</span>
                 <span className="art-gen-title">Generate with AI</span>
               </div>
 
@@ -493,7 +493,7 @@ function PartEditor({ part, partSchema, card, onUpdateField, onUpdateFields }) {
                   onClick={() => fileInputRef.current?.click()}
                 >
                   <div className="drop-zone-content">
-                    <span className="drop-icon">🖼️</span>
+                    <span className="drop-icon">[IMG]</span>
                     <span>Click to upload image</span>
                     <span className="drop-hint">PNG, JPG up to 5MB</span>
                   </div>
@@ -538,7 +538,7 @@ function PartEditor({ part, partSchema, card, onUpdateField, onUpdateFields }) {
                 onClick={handleExtractColors}
                 disabled={isExtractingColors}
               >
-                {isExtractingColors ? '⏳ Extracting...' : '🎨 Extract Colors'}
+                {isExtractingColors ? '[~] Extracting...' : '[#] Extract Colors'}
               </button>
             )}
           </div>
@@ -577,7 +577,7 @@ function PartEditor({ part, partSchema, card, onUpdateField, onUpdateFields }) {
               });
             }}
           >
-            🎲 Randomize All Stats
+            [?] Randomize All Stats
           </button>
         )}
       </div>

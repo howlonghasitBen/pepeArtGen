@@ -101,14 +101,14 @@ function CardCarousel({ title, onCardClick }) {
             onClick={() => scroll('left')}
             disabled={!canScrollLeft}
           >
-            ‹
+            &lt;
           </button>
           <button
             className="carousel-nav-btn"
             onClick={() => scroll('right')}
             disabled={!canScrollRight}
           >
-            ›
+            &gt;
           </button>
         </div>
       </div>

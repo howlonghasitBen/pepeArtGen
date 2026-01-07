@@ -34,15 +34,15 @@ function MintingModal({ cards, onClose, onSuccess }) {
   const getStatusMessage = () => {
     switch (status) {
       case "uploading":
-        return "📤 Uploading to IPFS...";
+        return "[^] Uploading to IPFS...";
       case "minting":
-        return "⚡ Minting NFT on BASE...";
+        return "[*] Minting NFT on BASE...";
       case "confirming":
-        return "⏳ Confirming transaction...";
+        return "[~] Confirming transaction...";
       case "success":
-        return "✨ Finalizing...";
+        return "[OK] Finalizing...";
       case "error":
-        return "❌ Minting failed";
+        return "[X] Minting failed";
       default:
         return null;
     }
@@ -62,11 +62,11 @@ function MintingModal({ cards, onClose, onSuccess }) {
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         {canClose && (
           <button className="modal-close" onClick={onClose}>
-            ✕
+            x
           </button>
         )}
 
-        <h2>🪙 Mint NFTs on BASE</h2>
+        <h2>Mint NFTs on BASE</h2>
 
         <div className="mint-summary">
           <div className="summary-row">
@@ -84,8 +84,8 @@ function MintingModal({ cards, onClose, onSuccess }) {
         </div>
 
         <div className="info-note">
-          <p>✅ You already paid $2.50 USDC for generation</p>
-          <p>🆓 Minting is FREE - only gas fees apply</p>
+          <p>[OK] You already paid $2.50 USDC for generation</p>
+          <p>[FREE] Minting is FREE - only gas fees apply</p>
         </div>
 
         {getStatusMessage() && (
@@ -101,7 +101,7 @@ function MintingModal({ cards, onClose, onSuccess }) {
               target="_blank"
               rel="noopener noreferrer"
             >
-              View on BaseScan ↗
+              View on BaseScan [^]
             </a>
           </div>
         )}
@@ -113,12 +113,12 @@ function MintingModal({ cards, onClose, onSuccess }) {
           </div>
         ) : status === "idle" ? (
           <button className="mint-btn" onClick={handleMint}>
-            🪙 Mint {cards.length} Card{cards.length > 1 ? "s" : ""} (FREE)
+            Mint {cards.length} Card{cards.length > 1 ? "s" : ""} (FREE)
           </button>
         ) : status === "error" ? (
           <>
             <button className="mint-btn" onClick={handleMint}>
-              🔄 Try Again
+              [R] Try Again
             </button>
             <button className="secondary-btn" onClick={onClose}>
               Cancel
