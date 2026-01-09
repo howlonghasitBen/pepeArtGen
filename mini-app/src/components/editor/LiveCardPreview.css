@@ -261,7 +261,8 @@
 /* Responsive */
 @media (max-width: 1024px) {
   .preview-card {
-    width: 280px;
+    width: 90vw;
+    max-width: 400px;
     /* aspect-ratio: 3 / 4 is inherited, no need to redefine */
     /* image area height: 40% scales automatically, no override needed */
   }
