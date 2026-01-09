@@ -1,8 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:3001";
-
 export function useAllCards() {
   const [cards, setCards] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -10,6 +7,7 @@ export function useAllCards() {
 
   const NFT_CONTRACT_ADDRESS = import.meta.env.VITE_NFT_CONTRACT_ADDRESS;
   const NETWORK = import.meta.env.VITE_NETWORK || "base";
+  const OPENSEA_API_KEY = import.meta.env.VITE_OPENSEA_API_KEY || "";
 
   /**
    * Get OpenSea URL for a token
@@ -20,63 +18,61 @@ export function useAllCards() {
   };
 
   /**
-   * Fetch all minted cards from backend (Supabase)
+   * Fetch all minted cards from OpenSea
    */
   const fetchCards = useCallback(async () => {
     setLoading(true);
     setError(null);
 
     try {
-      console.log("📋 Fetching all minted cards");
+      console.log("📋 Fetching cards from OpenSea");
 
-      const response = await fetch(`${API_BASE_URL}/api/cards/all`);
+      // Use OpenSea API v2 to fetch NFTs from the collection
+      const chain = NETWORK === "baseSepolia" ? "base_sepolia" : "base";
+      const apiUrl = `https://api.opensea.io/api/v2/chain/${chain}/contract/${NFT_CONTRACT_ADDRESS}/nfts`;
+
+      const headers = {};
+      if (OPENSEA_API_KEY) {
+        headers["X-API-KEY"] = OPENSEA_API_KEY;
+      }
+
+      const response = await fetch(apiUrl, { headers });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || "Failed to fetch cards");
+        throw new Error(`OpenSea API error: ${response.status}`);
       }
 
       const data = await response.json();
-      const backendCards = data.cards || [];
+      const nfts = data.nfts || [];
 
-      if (backendCards.length > 0) {
-        // Format cards for display
-        const formattedCards = backendCards.map((card) => ({
-          id: card.id,
-          tokenId: card.tokenId,
-          name: card.name || "Unknown Card",
-          imageData: card.imageData || card.image,
-          image: card.image || card.imageData,
-          rarity: card.rarity,
-          type: card.type,
-          stats: card.stats,
-          flavorText: card.flavorText,
-          theme: card.theme,
-          minter: card.walletAddress,
-          mintedAt: card.mintedAt,
-          transactionHash: card.transactionHash,
-          openSeaUrl: card.tokenId ? getOpenSeaUrl(card.tokenId) : null,
+      if (nfts.length > 0) {
+        // Format NFTs for display
+        const formattedCards = nfts.map((nft) => ({
+          id: nft.identifier,
+          tokenId: nft.identifier,
+          name: nft.name || `Card #${nft.identifier}`,
+          image: nft.image_url || nft.display_image_url,
+          imageData: nft.image_url || nft.display_image_url,
+          rarity: nft.rarity,
+          type: nft.contract,
+          description: nft.description,
+          openSeaUrl: getOpenSeaUrl(nft.identifier),
         }));
 
-        // Sort by mintedAt (newest first)
-        formattedCards.sort(
-          (a, b) => new Date(b.mintedAt) - new Date(a.mintedAt)
-        );
-
-        console.log(`✅ Found ${formattedCards.length} total minted cards`);
+        console.log(`✅ Found ${formattedCards.length} cards from OpenSea`);
         setCards(formattedCards);
       } else {
-        console.log("ℹ️ No minted cards found");
+        console.log("ℹ️ No cards found in collection");
         setCards([]);
       }
     } catch (err) {
-      console.error("❌ Error fetching cards:", err);
+      console.error("❌ Error fetching from OpenSea:", err);
       setError(err.message);
       setCards([]);
     } finally {
       setLoading(false);
     }
-  }, [NFT_CONTRACT_ADDRESS, NETWORK]);
+  }, [NFT_CONTRACT_ADDRESS, NETWORK, OPENSEA_API_KEY]);
 
   // Fetch cards on mount
   useEffect(() => {
