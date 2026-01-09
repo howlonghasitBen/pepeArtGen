@@ -17,7 +17,6 @@ import openseaLogo from "./public/opensea-logo.svg";
 // Components
 import GeneratorScreen from "./components/GeneratorScreen";
 import CurationScreen from "./components/CurationScreen";
-import MyCardsScreen from "./components/MyCardsScreen";
 import InfoModal from "./components/InfoModal";
 import CardEditorScreen from "./components/editor/CardEditorScreen";
 import DeckBuilder from "./components/deck/DeckBuilder";
@@ -225,11 +224,6 @@ function AppContent() {
     setCardToEdit(null);
   };
 
-  const handleShowMyCards = () => {
-    setScreen(screen === "mycards" ? "generator" : "mycards");
-    setExpandedMenu(null);
-  };
-
   const handleOpenEditor = (card = null) => {
     setCardToEdit(card);
     setScreen("editor");
@@ -288,9 +282,6 @@ function AppContent() {
             onBack={handleBackToGenerator}
             onEditCard={handleOpenEditor}
           />
-        )}
-        {screen === "mycards" && (
-          <MyCardsScreen onBack={handleBackToGenerator} />
         )}
       </main>
 
@@ -382,23 +373,6 @@ function AppContent() {
               <rect x="2" y="7" width="20" height="14" rx="2" />
               <path d="M16 3h4a2 2 0 0 1 2 2v2H2V5a2 2 0 0 1 2-2h4" />
               <path d="M12 3v4" />
-            </svg>
-          </button>
-          <button
-            className={`nav-btn ${screen === "mycards" ? "active" : ""}`}
-            onClick={handleShowMyCards}
-            title="My Cards"
-          >
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <rect x="3" y="3" width="7" height="7" rx="1" />
-              <rect x="14" y="3" width="7" height="7" rx="1" />
-              <rect x="3" y="14" width="7" height="7" rx="1" />
-              <rect x="14" y="14" width="7" height="7" rx="1" />
             </svg>
           </button>
           <a
