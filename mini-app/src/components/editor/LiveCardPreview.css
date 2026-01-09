@@ -95,7 +95,7 @@
 
 /* Image Area */
 .preview-image-area {
-  height: 180px;
+  height: 40%;
   margin: 8px 10px;
   border-radius: 8px;
   overflow: hidden;
@@ -103,6 +103,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 .preview-image {
@@ -262,9 +263,6 @@
   .preview-card {
     width: 280px;
     /* aspect-ratio: 3 / 4 is inherited, no need to redefine */
-  }
-
-  .preview-image-area {
-    height: 150px;
+    /* image area height: 40% scales automatically, no override needed */
   }
 }
