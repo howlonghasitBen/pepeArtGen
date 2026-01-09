@@ -19,6 +19,7 @@
 
 .preview-card {
   width: 320px;
+  aspect-ratio: 3 / 4;
   border: 5px solid #1a1a1a;
   border-radius: 14px;
   overflow: hidden;
@@ -260,6 +261,7 @@
 @media (max-width: 1024px) {
   .preview-card {
     width: 280px;
+    /* aspect-ratio: 3 / 4 is inherited, no need to redefine */
   }
 
   .preview-image-area {
