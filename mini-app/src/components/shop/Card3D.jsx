@@ -8,51 +8,30 @@ function Card3D({ card, position, onClick, index = 0 }) {
   const meshRef = useRef();
   const [hovered, setHovered] = useState(false);
   const [texture, setTexture] = useState(null);
-  const [imageDimensions, setImageDimensions] = useState({ width: 3, height: 4 });
-
   const cardDepth = 0.02;
   const baseScale = 0.9; // Base size for cards
 
-  // Calculate card dimensions from actual image aspect ratio
-  const { cardWidth, cardHeight } = useMemo(() => {
-    const aspectRatio = imageDimensions.width / imageDimensions.height;
-    // Keep height consistent, adjust width based on aspect ratio
-    const height = baseScale;
-    const width = height * aspectRatio;
-    return { cardWidth: width, cardHeight: height };
-  }, [imageDimensions]);
+  // Card dimensions - fixed 3:4 aspect ratio
+  const cardHeight = baseScale;
+  const cardWidth = cardHeight * (3 / 4); // Maintain 3:4 aspect ratio
 
-  // Load card image as texture and get actual dimensions
+  // Load card image as texture
   useEffect(() => {
     if (card?.image || card?.imageData) {
       const imageUrl = card.image || card.imageData;
+      const loader = new THREE.TextureLoader();
 
-      // Load image to get actual dimensions first
-      const img = new Image();
-      img.crossOrigin = "anonymous";
-      img.onload = () => {
-        setImageDimensions({ width: img.naturalWidth, height: img.naturalHeight });
-
-        // Then load as Three.js texture
-        const loader = new THREE.TextureLoader();
-        loader.load(
-          imageUrl,
-          (loadedTexture) => {
-            loadedTexture.colorSpace = THREE.SRGBColorSpace;
-            setTexture(loadedTexture);
-          },
-          undefined,
-          (error) => {
-            console.warn("Failed to load card texture:", error);
-          }
-        );
-      };
-      img.onerror = () => {
-        console.warn("Failed to load image dimensions:", imageUrl);
-        // Fall back to 3:4 ratio
-        setImageDimensions({ width: 3, height: 4 });
-      };
-      img.src = imageUrl;
+      loader.load(
+        imageUrl,
+        (loadedTexture) => {
+          loadedTexture.colorSpace = THREE.SRGBColorSpace;
+          setTexture(loadedTexture);
+        },
+        undefined,
+        (error) => {
+          console.warn("Failed to load card texture:", error);
+        }
+      );
     }
   }, [card]);
 

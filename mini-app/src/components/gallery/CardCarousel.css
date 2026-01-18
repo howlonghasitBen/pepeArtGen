@@ -69,7 +69,7 @@
   cursor: pointer;
   scroll-snap-align: start;
   transition: transform 0.2s;
-  padding: 4px;
+  padding: 8px;
   box-sizing: border-box;
 }
 
