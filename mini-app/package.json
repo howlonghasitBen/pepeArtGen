@@ -42,6 +42,8 @@
     "@farcaster/miniapp-sdk": "^0.2.1",
     "@google/genai": "^1.0.0",
     "@react-spring/web": "9.7.5",
+    "@react-three/drei": "^9.92.7",
+    "@react-three/fiber": "^8.15.19",
     "@reown/appkit": "1.5.0",
     "@reown/appkit-adapter-wagmi": "1.5.0",
     "@supabase/supabase-js": "^2.49.2",
@@ -58,6 +60,7 @@
     "puppeteer": "^24.31.0",
     "react": "18.3.1",
     "react-dom": "18.3.1",
+    "three": "^0.158.0",
     "viem": "^2.21.53",
     "wagmi": "^2.12.33"
   },
