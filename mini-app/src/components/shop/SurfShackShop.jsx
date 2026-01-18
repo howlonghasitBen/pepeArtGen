@@ -1,19 +1,55 @@
-import { Suspense, useState, useCallback } from "react";
+import { Suspense, useState, useCallback, useEffect } from "react";
 import { Canvas } from "@react-three/fiber";
 import { Sky, Environment, Loader } from "@react-three/drei";
 import { useAllCards } from "../../hooks/useAllCards";
 import SurfShack from "./SurfShack";
 import CardBar from "./CardBar";
-import FirstPersonControls from "./FirstPersonControls";
+import ThirdPersonControls from "./ThirdPersonControls";
+import PepeCharacter from "./PepeCharacter";
 import Ocean from "./Ocean";
 import Beach from "./Beach";
 import CardDetailModal from "./CardDetailModal";
+import NameInputModal from "./NameInputModal";
+import MobileControls from "./MobileControls";
 import "./SurfShackShop.css";
 
 function SurfShackShop({ onBack }) {
-  const { cards, loading, error } = useAllCards();
+  const { cards, loading, error, usingSampleData } = useAllCards();
   const [selectedCard, setSelectedCard] = useState(null);
-  const [isLocked, setIsLocked] = useState(false);
+  const [playerName, setPlayerName] = useState(null);
+  const [showNameModal, setShowNameModal] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
+  const [mobileInput, setMobileInput] = useState({ x: 0, y: 0 });
+
+  // Character state
+  const [characterPosition, setCharacterPosition] = useState([0, 0, 6]);
+  const [characterRotation, setCharacterRotation] = useState(0);
+  const [isMoving, setIsMoving] = useState(false);
+
+  // Check for mobile device
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 1024 || "ontouchstart" in window);
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  // Check for stored name
+  useEffect(() => {
+    const storedName = localStorage.getItem("surfShackPlayerName");
+    if (storedName) {
+      setPlayerName(storedName);
+      setShowNameModal(false);
+    }
+  }, []);
+
+  const handleNameSubmit = useCallback((name) => {
+    setPlayerName(name);
+    localStorage.setItem("surfShackPlayerName", name);
+    setShowNameModal(false);
+  }, []);
 
   const handleCardClick = useCallback((card) => {
     setSelectedCard(card);
@@ -23,21 +59,45 @@ function SurfShackShop({ onBack }) {
     setSelectedCard(null);
   }, []);
 
-  const handleLockChange = useCallback((locked) => {
-    setIsLocked(locked);
+  const handleMobileInput = useCallback((input) => {
+    setMobileInput(input);
   }, []);
+
+  // Show name input modal
+  if (showNameModal) {
+    return <NameInputModal onSubmit={handleNameSubmit} />;
+  }
 
   return (
     <div className="surf-shack-shop">
       {/* Instructions overlay */}
-      <div className={`shop-instructions ${isLocked ? "hidden" : ""}`}>
-        <h3>SURF SHACK CARD SHOP</h3>
-        <p>Click anywhere to start exploring</p>
-        <p className="controls-hint">
-          <span>WASD</span> Move
-          <span>MOUSE</span> Look
-          <span>ESC</span> Pause
+      <div className="shop-instructions-minimal">
+        <p>
+          {isMobile ? (
+            <>Use joystick to move, drag right side to look</>
+          ) : (
+            <>
+              <span>WASD</span> Move
+              <span>MOUSE</span> Look around
+              <span>SCROLL</span> Zoom
+            </>
+          )}
         </p>
+      </div>
+
+      {/* Player info */}
+      <div className="player-info">
+        <span className="player-name">{playerName}</span>
+        <button
+          className="change-name-btn"
+          onClick={() => setShowNameModal(true)}
+          title="Change name"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+          </svg>
+        </button>
       </div>
 
       {/* Back button */}
@@ -48,6 +108,18 @@ function SurfShackShop({ onBack }) {
         Back
       </button>
 
+      {/* Sample data warning */}
+      {usingSampleData && (
+        <div className="sample-data-notice">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="12" />
+            <line x1="12" y1="16" x2="12.01" y2="16" />
+          </svg>
+          <span>Showing sample cards (OpenSea API unavailable)</span>
+        </div>
+      )}
+
       {/* Loading state */}
       {loading && (
         <div className="shop-loading">
@@ -56,35 +128,31 @@ function SurfShackShop({ onBack }) {
         </div>
       )}
 
-      {/* Error state */}
-      {error && (
-        <div className="shop-error">
-          <p>Error loading cards: {error}</p>
-          <button onClick={() => window.location.reload()}>Retry</button>
-        </div>
-      )}
-
       {/* 3D Canvas */}
       <Canvas
         shadows
-        camera={{ fov: 75, near: 0.1, far: 1000, position: [0, 1.7, 8] }}
-        onPointerDown={(e) => e.target.requestPointerLock?.()}
+        camera={{ fov: 60, near: 0.1, far: 1000, position: [0, 3, 10] }}
       >
         <Suspense fallback={null}>
           {/* Lighting */}
-          <ambientLight intensity={0.4} />
+          <ambientLight intensity={0.5} />
           <directionalLight
             position={[10, 20, 10]}
-            intensity={1.2}
+            intensity={1.5}
             castShadow
             shadow-mapSize={[2048, 2048]}
-            shadow-camera-far={50}
-            shadow-camera-left={-20}
-            shadow-camera-right={20}
-            shadow-camera-top={20}
-            shadow-camera-bottom={-20}
+            shadow-camera-far={60}
+            shadow-camera-left={-25}
+            shadow-camera-right={25}
+            shadow-camera-top={25}
+            shadow-camera-bottom={-25}
           />
           <pointLight position={[0, 3, 0]} intensity={0.5} color="#ffcc77" />
+          <hemisphereLight
+            skyColor="#87ceeb"
+            groundColor="#f4d58d"
+            intensity={0.3}
+          />
 
           {/* Sky and environment */}
           <Sky
@@ -96,19 +164,45 @@ function SurfShackShop({ onBack }) {
           />
           <Environment preset="sunset" />
 
+          {/* Fog for depth */}
+          <fog attach="fog" args={["#87ceeb", 30, 80]} />
+
           {/* Scene elements */}
           <Beach />
           <Ocean />
           <SurfShack />
           <CardBar cards={cards} onCardClick={handleCardClick} />
 
-          {/* First person controls */}
-          <FirstPersonControls onLockChange={handleLockChange} />
+          {/* Player character */}
+          <PepeCharacter
+            position={characterPosition}
+            rotation={[0, characterRotation, 0]}
+            playerName={playerName}
+            isMoving={isMoving}
+            isLocalPlayer={true}
+          />
+
+          {/* Third person camera controls */}
+          <ThirdPersonControls
+            onPositionChange={(pos) => setCharacterPosition([pos.x, pos.y, pos.z])}
+            onRotationChange={setCharacterRotation}
+            onMovingChange={setIsMoving}
+            mobileInput={isMobile ? mobileInput : null}
+            enabled={!selectedCard && !showNameModal}
+          />
         </Suspense>
       </Canvas>
 
       {/* Loading indicator for Three.js */}
       <Loader />
+
+      {/* Mobile controls */}
+      {isMobile && !selectedCard && (
+        <MobileControls
+          onInputChange={handleMobileInput}
+          visible={!selectedCard}
+        />
+      )}
 
       {/* Card detail modal */}
       {selectedCard && (

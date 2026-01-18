@@ -1,0 +1,237 @@
+.name-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: linear-gradient(180deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.name-modal {
+  background: rgba(26, 26, 46, 0.95);
+  border: 2px solid rgba(0, 255, 136, 0.3);
+  border-radius: 24px;
+  padding: 32px;
+  max-width: 420px;
+  width: 100%;
+  box-shadow:
+    0 0 60px rgba(0, 255, 136, 0.15),
+    0 20px 60px rgba(0, 0, 0, 0.5);
+  animation: modalSlideIn 0.4s ease;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.name-modal-header {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.pepe-icon {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 16px;
+  animation: pepeBounce 2s ease-in-out infinite;
+}
+
+@keyframes pepeBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.pepe-icon svg {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 4px 12px rgba(124, 179, 66, 0.4));
+}
+
+.name-modal-header h2 {
+  font-size: 24px;
+  color: #00ff88;
+  margin: 0 0 8px 0;
+  font-family: monospace;
+  text-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
+  letter-spacing: 1px;
+}
+
+.name-modal-header p {
+  color: #aaa;
+  font-size: 14px;
+  margin: 0;
+}
+
+.name-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.input-group {
+  display: flex;
+  gap: 12px;
+}
+
+.input-group input {
+  flex: 1;
+  padding: 14px 18px;
+  font-size: 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  color: white;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.input-group input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.input-group input:focus {
+  border-color: rgba(0, 255, 136, 0.5);
+  background: rgba(0, 255, 136, 0.05);
+  box-shadow: 0 0 20px rgba(0, 255, 136, 0.1);
+}
+
+.input-group input.has-error {
+  border-color: #ff5050;
+  background: rgba(255, 50, 50, 0.05);
+}
+
+.random-btn {
+  width: 50px;
+  height: 50px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.random-btn:hover {
+  background: rgba(0, 255, 136, 0.2);
+  border-color: rgba(0, 255, 136, 0.5);
+  transform: rotate(180deg);
+}
+
+.random-btn svg {
+  width: 24px;
+  height: 24px;
+  color: #aaa;
+}
+
+.random-btn:hover svg {
+  color: #00ff88;
+}
+
+.error-message {
+  color: #ff5050;
+  font-size: 13px;
+  margin: -8px 0 0 0;
+  padding-left: 4px;
+}
+
+.char-count {
+  text-align: right;
+  font-size: 12px;
+  color: #666;
+  margin-top: -8px;
+}
+
+.submit-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 16px 24px;
+  font-size: 18px;
+  font-weight: bold;
+  background: linear-gradient(135deg, #00ff88 0%, #00cc6a 100%);
+  color: #1a1a2e;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 8px;
+}
+
+.submit-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 255, 136, 0.4);
+}
+
+.submit-btn:active {
+  transform: translateY(0);
+}
+
+.submit-btn svg {
+  width: 22px;
+  height: 22px;
+}
+
+.name-modal-footer {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.name-modal-footer p {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: #666;
+  font-size: 13px;
+  margin: 0;
+}
+
+.name-modal-footer svg {
+  width: 18px;
+  height: 18px;
+  color: #888;
+}
+
+/* Mobile responsive */
+@media (max-width: 480px) {
+  .name-modal {
+    padding: 24px;
+    margin: 10px;
+  }
+
+  .pepe-icon {
+    width: 60px;
+    height: 60px;
+  }
+
+  .name-modal-header h2 {
+    font-size: 20px;
+  }
+
+  .input-group input {
+    padding: 12px 14px;
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+
+  .submit-btn {
+    padding: 14px 20px;
+    font-size: 16px;
+  }
+}
