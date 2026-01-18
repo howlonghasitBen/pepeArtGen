@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect, useMemo } from "react";
+import { useRef, useState, useEffect } from "react";
 import { useFrame, useLoader } from "@react-three/fiber";
 import { TextureLoader } from "three";
 import * as THREE from "three";
@@ -8,48 +8,30 @@ function Card3D({ card, position, onClick, index = 0 }) {
   const meshRef = useRef();
   const [hovered, setHovered] = useState(false);
   const [texture, setTexture] = useState(null);
-  const [imageAspect, setImageAspect] = useState(3 / 4); // Default 3:4
 
+  // Card dimensions - fixed 3:4 aspect ratio (width:height)
+  // 3:4 means width = height * 0.75
+  const cardHeight = 1.0;
+  const cardWidth = cardHeight * 0.75; // 0.75 for 3:4 ratio
   const cardDepth = 0.02;
-  const baseHeight = 0.9; // Base height for cards
 
-  // Calculate dimensions based on actual image aspect ratio
-  const { cardWidth, cardHeight } = useMemo(() => {
-    const height = baseHeight;
-    const width = height * imageAspect;
-    return { cardWidth: width, cardHeight: height };
-  }, [imageAspect]);
-
-  // Load card image as texture and get its aspect ratio
+  // Load card image as texture
   useEffect(() => {
     if (card?.image || card?.imageData) {
       const imageUrl = card.image || card.imageData;
+      const loader = new THREE.TextureLoader();
 
-      // First load the image to get its natural dimensions
-      const img = new Image();
-      img.crossOrigin = "anonymous";
-      img.onload = () => {
-        const aspect = img.width / img.height;
-        setImageAspect(aspect);
-
-        // Then load as texture
-        const loader = new THREE.TextureLoader();
-        loader.load(
-          imageUrl,
-          (loadedTexture) => {
-            loadedTexture.colorSpace = THREE.SRGBColorSpace;
-            setTexture(loadedTexture);
-          },
-          undefined,
-          (error) => {
-            console.warn("Failed to load card texture:", error);
-          }
-        );
-      };
-      img.onerror = () => {
-        console.warn("Failed to load image for aspect ratio:", imageUrl);
-      };
-      img.src = imageUrl;
+      loader.load(
+        imageUrl,
+        (loadedTexture) => {
+          loadedTexture.colorSpace = THREE.SRGBColorSpace;
+          setTexture(loadedTexture);
+        },
+        undefined,
+        (error) => {
+          console.warn("Failed to load card texture:", error);
+        }
+      );
     }
   }, [card]);
 
