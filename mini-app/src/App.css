@@ -319,6 +319,20 @@
   border-color: var(--bevel-darker) var(--bevel-light) var(--bevel-light) var(--bevel-darker);
 }
 
+/* Shop Button - Surf Shack */
+.nav-btn.shop-btn {
+  background: linear-gradient(180deg, var(--ocean-teal) 0%, var(--ocean-seafoam) 100%);
+  border-color: var(--bevel-ocean-light) var(--bevel-ocean-dark) var(--bevel-ocean-dark) var(--bevel-ocean-light);
+}
+
+.nav-btn.shop-btn:hover {
+  background: linear-gradient(180deg, var(--ocean-seafoam) 0%, var(--ocean-teal) 100%);
+}
+
+.nav-btn.shop-btn svg {
+  color: var(--text-primary);
+}
+
 /* OpenSea Button */
 .opensea-btn {
   width: 40px;

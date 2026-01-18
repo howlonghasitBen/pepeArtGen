@@ -20,6 +20,7 @@ import CurationScreen from "./components/CurationScreen";
 import InfoModal from "./components/InfoModal";
 import CardEditorScreen from "./components/editor/CardEditorScreen";
 import DeckBuilder from "./components/deck/DeckBuilder";
+import SurfShackShop from "./components/shop/SurfShackShop";
 import "./App.css";
 
 // Configuration
@@ -235,6 +236,11 @@ function AppContent() {
     setExpandedMenu(null);
   };
 
+  const handleOpenShop = () => {
+    setScreen("shop");
+    setExpandedMenu(null);
+  };
+
   const handleEditorSave = (card) => {
     // Card saved, return to generator
     setCardToEdit(null);
@@ -303,6 +309,11 @@ function AppContent() {
         </div>
       )}
 
+      {/* 3D Surf Shack Shop */}
+      {screen === "shop" && (
+        <SurfShackShop onBack={handleCloseFullscreen} />
+      )}
+
       {/* Collapsible Menus */}
       <div className={`collapsible-menus ${expandedMenu ? 'has-expanded' : ''}`}>
         {/* Editor Menu */}
@@ -339,11 +350,26 @@ function AppContent() {
       </div>
 
       {/* Bottom Bar */}
-      <div className={`bottom-bar ${screen === 'editor' || screen === 'deckbuilder' ? 'hidden' : ''}`}>
+      <div className={`bottom-bar ${screen === 'editor' || screen === 'deckbuilder' || screen === 'shop' ? 'hidden' : ''}`}>
         <div className="wallet-container">
           <WalletButtonWrapper />
         </div>
         <div className="bottom-bar-actions">
+          <button
+            className="nav-btn shop-btn"
+            onClick={handleOpenShop}
+            title="3D Card Shop"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+              <polyline points="9 22 9 12 15 12 15 22" />
+            </svg>
+          </button>
           <button
             className={`nav-btn ${screen === "editor" || expandedMenu === 'editor' ? "active" : ""}`}
             onClick={() => toggleMenu('editor')}
