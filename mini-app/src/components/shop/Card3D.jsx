@@ -101,9 +101,9 @@ function Card3D({ card, position, onClick, index = 0 }) {
         <meshStandardMaterial color="#1a1a2e" roughness={0.3} metalness={0.1} />
       </mesh>
 
-      {/* Card front face with image */}
+      {/* Card front face with image - full size to show borders */}
       <mesh position={[0, 0, cardDepth / 2 + 0.001]}>
-        <planeGeometry args={[cardWidth - 0.04, cardHeight - 0.04]} />
+        <planeGeometry args={[cardWidth - 0.02, cardHeight - 0.02]} />
         {texture ? (
           <meshStandardMaterial
             map={texture}
@@ -115,23 +115,45 @@ function Card3D({ card, position, onClick, index = 0 }) {
         )}
       </mesh>
 
-      {/* Card frame/border */}
-      <mesh position={[0, 0, cardDepth / 2 + 0.002]}>
-        <ringGeometry args={[
-          Math.min(cardWidth, cardHeight) / 2 - 0.02,
-          Math.min(cardWidth, cardHeight) / 2,
-          4,
-          1,
-          Math.PI / 4
-        ]} />
-        <meshStandardMaterial
-          color={hovered ? "#00ff88" : "#ffd700"}
-          emissive={hovered ? "#00ff88" : "#ffd700"}
-          emissiveIntensity={hovered ? 0.8 : 0.3}
-          transparent
-          opacity={0.8}
-        />
-      </mesh>
+      {/* Card frame/border - properly sized to show full borders */}
+      <group position={[0, 0, cardDepth / 2 + 0.003]}>
+        {/* Top border */}
+        <mesh position={[0, cardHeight / 2 - 0.01, 0]}>
+          <planeGeometry args={[cardWidth - 0.02, 0.02]} />
+          <meshStandardMaterial
+            color={hovered ? "#00ff88" : "#ffd700"}
+            emissive={hovered ? "#00ff88" : "#ffd700"}
+            emissiveIntensity={hovered ? 0.8 : 0.3}
+          />
+        </mesh>
+        {/* Bottom border */}
+        <mesh position={[0, -cardHeight / 2 + 0.01, 0]}>
+          <planeGeometry args={[cardWidth - 0.02, 0.02]} />
+          <meshStandardMaterial
+            color={hovered ? "#00ff88" : "#ffd700"}
+            emissive={hovered ? "#00ff88" : "#ffd700"}
+            emissiveIntensity={hovered ? 0.8 : 0.3}
+          />
+        </mesh>
+        {/* Left border */}
+        <mesh position={[-cardWidth / 2 + 0.01, 0, 0]}>
+          <planeGeometry args={[0.02, cardHeight - 0.02]} />
+          <meshStandardMaterial
+            color={hovered ? "#00ff88" : "#ffd700"}
+            emissive={hovered ? "#00ff88" : "#ffd700"}
+            emissiveIntensity={hovered ? 0.8 : 0.3}
+          />
+        </mesh>
+        {/* Right border */}
+        <mesh position={[cardWidth / 2 - 0.01, 0, 0]}>
+          <planeGeometry args={[0.02, cardHeight - 0.02]} />
+          <meshStandardMaterial
+            color={hovered ? "#00ff88" : "#ffd700"}
+            emissive={hovered ? "#00ff88" : "#ffd700"}
+            emissiveIntensity={hovered ? 0.8 : 0.3}
+          />
+        </mesh>
+      </group>
 
       {/* Glow effect when hovered */}
       {hovered && (
