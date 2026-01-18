@@ -48,20 +48,20 @@
   align-items: center;
   user-select: none;
   width: 100%;
-  max-width: 100%;
+  max-width: 400px;
   padding: 4px;
   box-sizing: border-box;
 }
 
 .card-image {
-  width: auto;
+  width: 100%;
   height: auto;
-  max-width: 450px;
-  max-height: 600px;
+  max-width: 400px;
+  aspect-ratio: 3 / 4;
   display: block;
   object-fit: contain;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-  background: rgba(0, 0, 0, 0.3);
+  border-radius: 14px;
 }
 
 .card-placeholder {
@@ -193,12 +193,12 @@
   }
 
   .carousel-card-wrapper {
-    max-width: 100%;
+    max-width: 320px;
   }
 
   .card-image {
     max-width: 320px;
-    max-height: 450px;
+    aspect-ratio: 3 / 4;
   }
 
   .card-placeholder {
@@ -230,12 +230,12 @@
   }
 
   .carousel-card-wrapper {
-    max-width: 100%;
+    max-width: 260px;
   }
 
   .card-image {
-    max-width: 280px;
-    max-height: 380px;
+    max-width: 260px;
+    aspect-ratio: 3 / 4;
   }
 
   .card-placeholder {

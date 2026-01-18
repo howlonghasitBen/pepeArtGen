@@ -16,14 +16,14 @@ function CardBar({ cards = [], onCardClick }) {
     neon: "#00ff88",
   };
 
-  // Rotate cards every 5 seconds
+  // Rotate cards every 30 seconds
   const maxCounterCards = 6;
   useEffect(() => {
     if (cards.length <= maxCounterCards) return;
 
     const interval = setInterval(() => {
       setDisplayOffset((prev) => (prev + 1) % cards.length);
-    }, 5000);
+    }, 30000);
 
     return () => clearInterval(interval);
   }, [cards.length]);
