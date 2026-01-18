@@ -142,6 +142,8 @@
 /* Image Area */
 .image-area {
   height: 40%;
+  width: 100%;
+  aspect-ratio: 16 / 9;
   margin: min(0.8vw, 8px);
   border-radius: min(1vw, 8px);
   position: relative;

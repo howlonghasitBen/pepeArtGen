@@ -96,6 +96,8 @@
 /* Image Area */
 .preview-image-area {
   height: 40%;
+  width: 100%;
+  aspect-ratio: 16 / 9;
   margin: 8px 10px;
   border-radius: 8px;
   overflow: hidden;
