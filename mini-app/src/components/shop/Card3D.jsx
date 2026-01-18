@@ -9,9 +9,9 @@ function Card3D({ card, position, onClick, index = 0 }) {
   const [hovered, setHovered] = useState(false);
   const [texture, setTexture] = useState(null);
 
-  // Card dimensions (roughly trading card proportions)
+  // Card dimensions (3:4 aspect ratio to match SwipeableCard)
   const cardWidth = 0.6;
-  const cardHeight = 0.84;
+  const cardHeight = 0.8;
   const cardDepth = 0.02;
 
   // Load card image as texture

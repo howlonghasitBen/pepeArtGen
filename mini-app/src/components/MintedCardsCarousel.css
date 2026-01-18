@@ -59,7 +59,7 @@
 
 .card-placeholder {
   width: 100%;
-  aspect-ratio: 5 / 7;
+  aspect-ratio: 3 / 4;
   min-height: 400px;
   display: flex;
   align-items: center;
