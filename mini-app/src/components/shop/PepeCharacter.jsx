@@ -72,141 +72,251 @@ function PepeCharacter({ position, rotation, playerName, isMoving, isLocalPlayer
       )}
 
       <group ref={bodyRef}>
-        {/* Main body/torso */}
+        {/* Main body/torso - higher poly for smoother look */}
         <mesh castShadow position={[0, 0.6, 0]}>
-          <sphereGeometry args={[0.3, 8, 8]} />
+          <sphereGeometry args={[0.3, 16, 12]} />
           <meshStandardMaterial color={colors.skinGreen} roughness={0.8} />
         </mesh>
 
-        {/* Belly */}
-        <mesh position={[0, 0.55, 0.15]}>
-          <sphereGeometry args={[0.22, 8, 8]} />
+        {/* Belly with better shape */}
+        <mesh position={[0, 0.55, 0.15]} scale={[0.88, 1, 0.8]}>
+          <sphereGeometry args={[0.25, 12, 10]} />
           <meshStandardMaterial color={colors.belly} roughness={0.9} />
+        </mesh>
+
+        {/* Chest highlight */}
+        <mesh position={[0, 0.7, 0.12]}>
+          <sphereGeometry args={[0.18, 12, 8]} />
+          <meshStandardMaterial color={colors.skinLightGreen} roughness={0.85} transparent opacity={0.4} />
         </mesh>
 
         {/* Head */}
         <group position={[0, 1.05, 0]}>
-          {/* Main head - wider, flatter frog shape */}
-          <mesh castShadow>
-            <sphereGeometry args={[0.35, 8, 6]} />
+          {/* Main head - wider, flatter frog shape with more detail */}
+          <mesh castShadow scale={[1, 1.09, 0.86]}>
+            <sphereGeometry args={[0.38, 16, 14]} />
             <meshStandardMaterial color={colors.skinGreen} roughness={0.8} />
           </mesh>
 
           {/* Head top (slightly darker) */}
-          <mesh position={[0, 0.1, 0]}>
-            <sphereGeometry args={[0.32, 8, 6]} />
+          <mesh position={[0, 0.1, -0.05]} scale={[1, 1.09, 0.88]}>
+            <sphereGeometry args={[0.35, 14, 12]} />
             <meshStandardMaterial color={colors.skinDarkGreen} roughness={0.8} />
           </mesh>
 
-          {/* Left eye bulge */}
+          {/* Forehead highlight */}
+          <mesh position={[0, 0.2, -0.1]}>
+            <sphereGeometry args={[0.18, 10, 8]} />
+            <meshStandardMaterial color={colors.skinLightGreen} roughness={0.7} transparent opacity={0.3} />
+          </mesh>
+
+          {/* Left eye bulge - more detailed */}
           <group position={[-0.15, 0.15, 0.2]}>
             <mesh castShadow>
-              <sphereGeometry args={[0.15, 8, 8]} />
+              <sphereGeometry args={[0.15, 12, 10]} />
               <meshStandardMaterial color={colors.skinLightGreen} roughness={0.7} />
             </mesh>
-            {/* Eye white */}
+            {/* Eye white with iris ring */}
             <mesh position={[0, 0, 0.1]}>
-              <sphereGeometry args={[0.1, 8, 8]} />
-              <meshStandardMaterial color={colors.eyeWhite} roughness={0.3} />
+              <sphereGeometry args={[0.1, 12, 10]} />
+              <meshStandardMaterial color={colors.eyeWhite} roughness={0.2} metalness={0.1} />
+            </mesh>
+            {/* Iris */}
+            <mesh position={[0, 0, 0.13]}>
+              <sphereGeometry args={[0.07, 10, 8]} />
+              <meshStandardMaterial color="#4a7c59" roughness={0.6} />
             </mesh>
             {/* Pupil */}
-            <mesh position={[0, 0, 0.15]}>
-              <sphereGeometry args={[0.05, 6, 6]} />
-              <meshStandardMaterial color={colors.pupil} roughness={0.5} />
+            <mesh position={[0, 0, 0.16]}>
+              <sphereGeometry args={[0.05, 8, 8]} />
+              <meshStandardMaterial color={colors.pupil} roughness={0.3} />
+            </mesh>
+            {/* Eye shine */}
+            <mesh position={[-0.02, 0.02, 0.17]}>
+              <sphereGeometry args={[0.015, 6, 6]} />
+              <meshStandardMaterial color="#ffffff" roughness={0.1} />
             </mesh>
           </group>
 
-          {/* Right eye bulge */}
+          {/* Right eye bulge - more detailed */}
           <group position={[0.15, 0.15, 0.2]}>
             <mesh castShadow>
-              <sphereGeometry args={[0.15, 8, 8]} />
+              <sphereGeometry args={[0.15, 12, 10]} />
               <meshStandardMaterial color={colors.skinLightGreen} roughness={0.7} />
             </mesh>
-            {/* Eye white */}
+            {/* Eye white with iris ring */}
             <mesh position={[0, 0, 0.1]}>
-              <sphereGeometry args={[0.1, 8, 8]} />
-              <meshStandardMaterial color={colors.eyeWhite} roughness={0.3} />
+              <sphereGeometry args={[0.1, 12, 10]} />
+              <meshStandardMaterial color={colors.eyeWhite} roughness={0.2} metalness={0.1} />
+            </mesh>
+            {/* Iris */}
+            <mesh position={[0, 0, 0.13]}>
+              <sphereGeometry args={[0.07, 10, 8]} />
+              <meshStandardMaterial color="#4a7c59" roughness={0.6} />
             </mesh>
             {/* Pupil */}
-            <mesh position={[0, 0, 0.15]}>
-              <sphereGeometry args={[0.05, 6, 6]} />
-              <meshStandardMaterial color={colors.pupil} roughness={0.5} />
+            <mesh position={[0, 0, 0.16]}>
+              <sphereGeometry args={[0.05, 8, 8]} />
+              <meshStandardMaterial color={colors.pupil} roughness={0.3} />
+            </mesh>
+            {/* Eye shine */}
+            <mesh position={[0.02, 0.02, 0.17]}>
+              <sphereGeometry args={[0.015, 6, 6]} />
+              <meshStandardMaterial color="#ffffff" roughness={0.1} />
             </mesh>
           </group>
 
-          {/* Wide frog mouth */}
+          {/* Nostrils */}
+          <mesh position={[-0.06, 0.05, 0.22]}>
+            <sphereGeometry args={[0.025, 6, 6]} />
+            <meshStandardMaterial color={colors.skinDarkGreen} roughness={0.9} />
+          </mesh>
+          <mesh position={[0.06, 0.05, 0.22]}>
+            <sphereGeometry args={[0.025, 6, 6]} />
+            <meshStandardMaterial color={colors.skinDarkGreen} roughness={0.9} />
+          </mesh>
+
+          {/* Wide frog mouth - more detailed */}
           <mesh position={[0, -0.12, 0.25]} rotation={[0.2, 0, 0]}>
             <boxGeometry args={[0.35, 0.08, 0.1]} />
             <meshStandardMaterial color={colors.mouth} roughness={0.9} />
           </mesh>
 
-          {/* Red lips (signature Pepe smile) */}
-          <mesh position={[0, -0.15, 0.28]} rotation={[0.3, 0, 0]}>
-            <torusGeometry args={[0.12, 0.03, 4, 12, Math.PI]} />
-            <meshStandardMaterial color={colors.lipRed} roughness={0.6} />
+          {/* Mouth interior (tongue/teeth hint) */}
+          <mesh position={[0, -0.12, 0.28]} rotation={[0.25, 0, 0]}>
+            <boxGeometry args={[0.3, 0.06, 0.04]} />
+            <meshStandardMaterial color="#2a5a32" roughness={0.95} />
           </mesh>
 
-          {/* Chin */}
-          <mesh position={[0, -0.2, 0.1]}>
-            <sphereGeometry args={[0.15, 6, 6]} />
+          {/* Red lips (signature Pepe smile) - more detailed */}
+          <mesh position={[0, -0.15, 0.28]} rotation={[0.3, 0, 0]}>
+            <torusGeometry args={[0.12, 0.035, 6, 16, Math.PI]} />
+            <meshStandardMaterial color={colors.lipRed} roughness={0.5} metalness={0.2} />
+          </mesh>
+
+          {/* Lip highlight */}
+          <mesh position={[0, -0.14, 0.29]} rotation={[0.32, 0, 0]}>
+            <torusGeometry args={[0.12, 0.015, 4, 12, Math.PI]} />
+            <meshStandardMaterial color="#ff4444" roughness={0.3} metalness={0.3} transparent opacity={0.6} />
+          </mesh>
+
+          {/* Chin - more rounded */}
+          <mesh position={[0, -0.2, 0.1]} scale={[1, 0.8, 0.53]}>
+            <sphereGeometry args={[0.15, 10, 8]} />
             <meshStandardMaterial color={colors.belly} roughness={0.9} />
           </mesh>
         </group>
 
-        {/* Left arm */}
+        {/* Left arm - more detailed */}
         <group ref={leftArmRef} position={[-0.35, 0.65, 0]}>
           {/* Upper arm */}
           <mesh castShadow rotation={[0, 0, 0.3]}>
-            <capsuleGeometry args={[0.06, 0.2, 4, 8]} />
+            <capsuleGeometry args={[0.06, 0.2, 6, 10]} />
             <meshStandardMaterial color={colors.skinGreen} roughness={0.8} />
           </mesh>
-          {/* Hand */}
-          <mesh position={[-0.15, -0.15, 0]}>
-            <sphereGeometry args={[0.08, 6, 6]} />
-            <meshStandardMaterial color={colors.skinLightGreen} roughness={0.8} />
+          {/* Forearm */}
+          <mesh position={[-0.12, -0.1, 0]} rotation={[0, 0, 0.2]}>
+            <capsuleGeometry args={[0.055, 0.16, 6, 10]} />
+            <meshStandardMaterial color={colors.skinGreen} roughness={0.8} />
           </mesh>
+          {/* Hand - more detailed */}
+          <group position={[-0.15, -0.15, 0]}>
+            <mesh castShadow scale={[1, 1.125, 0.75]}>
+              <sphereGeometry args={[0.09, 8, 8]} />
+              <meshStandardMaterial color={colors.skinLightGreen} roughness={0.8} />
+            </mesh>
+            {/* Fingers hint */}
+            {[0, 1, 2].map((i) => (
+              <mesh key={i} position={[-0.03 + i * 0.03, 0.05, 0]}>
+                <sphereGeometry args={[0.015, 4, 4]} />
+                <meshStandardMaterial color={colors.skinLightGreen} roughness={0.85} />
+              </mesh>
+            ))}
+          </group>
         </group>
 
-        {/* Right arm */}
+        {/* Right arm - more detailed */}
         <group ref={rightArmRef} position={[0.35, 0.65, 0]}>
           {/* Upper arm */}
           <mesh castShadow rotation={[0, 0, -0.3]}>
-            <capsuleGeometry args={[0.06, 0.2, 4, 8]} />
+            <capsuleGeometry args={[0.06, 0.2, 6, 10]} />
             <meshStandardMaterial color={colors.skinGreen} roughness={0.8} />
           </mesh>
-          {/* Hand */}
-          <mesh position={[0.15, -0.15, 0]}>
-            <sphereGeometry args={[0.08, 6, 6]} />
-            <meshStandardMaterial color={colors.skinLightGreen} roughness={0.8} />
+          {/* Forearm */}
+          <mesh position={[0.12, -0.1, 0]} rotation={[0, 0, -0.2]}>
+            <capsuleGeometry args={[0.055, 0.16, 6, 10]} />
+            <meshStandardMaterial color={colors.skinGreen} roughness={0.8} />
           </mesh>
+          {/* Hand - more detailed */}
+          <group position={[0.15, -0.15, 0]}>
+            <mesh castShadow scale={[1, 1.125, 0.75]}>
+              <sphereGeometry args={[0.09, 8, 8]} />
+              <meshStandardMaterial color={colors.skinLightGreen} roughness={0.8} />
+            </mesh>
+            {/* Fingers hint */}
+            {[0, 1, 2].map((i) => (
+              <mesh key={i} position={[0.03 - i * 0.03, 0.05, 0]}>
+                <sphereGeometry args={[0.015, 4, 4]} />
+                <meshStandardMaterial color={colors.skinLightGreen} roughness={0.85} />
+              </mesh>
+            ))}
+          </group>
         </group>
 
-        {/* Left leg */}
+        {/* Left leg - more detailed */}
         <group ref={leftLegRef} position={[-0.12, 0.25, 0]}>
           {/* Thigh */}
           <mesh castShadow>
-            <capsuleGeometry args={[0.08, 0.15, 4, 8]} />
+            <capsuleGeometry args={[0.08, 0.15, 6, 10]} />
             <meshStandardMaterial color={colors.skinGreen} roughness={0.8} />
           </mesh>
-          {/* Foot */}
-          <mesh position={[0, -0.2, 0.08]}>
-            <boxGeometry args={[0.12, 0.05, 0.2]} />
-            <meshStandardMaterial color={colors.skinLightGreen} roughness={0.8} />
+          {/* Calf */}
+          <mesh position={[0, -0.08, 0]}>
+            <capsuleGeometry args={[0.075, 0.14, 6, 10]} />
+            <meshStandardMaterial color={colors.skinGreen} roughness={0.8} />
           </mesh>
+          {/* Foot - more detailed webbed foot */}
+          <group position={[0, -0.2, 0.08]}>
+            <mesh castShadow>
+              <boxGeometry args={[0.12, 0.05, 0.2]} />
+              <meshStandardMaterial color={colors.skinLightGreen} roughness={0.8} />
+            </mesh>
+            {/* Toe webbing hint */}
+            {[-0.04, 0, 0.04].map((x, i) => (
+              <mesh key={i} position={[x, 0.03, 0.1]}>
+                <boxGeometry args={[0.02, 0.02, 0.08]} />
+                <meshStandardMaterial color={colors.skinLightGreen} roughness={0.85} />
+              </mesh>
+            ))}
+          </group>
         </group>
 
-        {/* Right leg */}
+        {/* Right leg - more detailed */}
         <group ref={rightLegRef} position={[0.12, 0.25, 0]}>
           {/* Thigh */}
           <mesh castShadow>
-            <capsuleGeometry args={[0.08, 0.15, 4, 8]} />
+            <capsuleGeometry args={[0.08, 0.15, 6, 10]} />
             <meshStandardMaterial color={colors.skinGreen} roughness={0.8} />
           </mesh>
-          {/* Foot */}
-          <mesh position={[0, -0.2, 0.08]}>
-            <boxGeometry args={[0.12, 0.05, 0.2]} />
-            <meshStandardMaterial color={colors.skinLightGreen} roughness={0.8} />
+          {/* Calf */}
+          <mesh position={[0, -0.08, 0]}>
+            <capsuleGeometry args={[0.075, 0.14, 6, 10]} />
+            <meshStandardMaterial color={colors.skinGreen} roughness={0.8} />
           </mesh>
+          {/* Foot - more detailed webbed foot */}
+          <group position={[0, -0.2, 0.08]}>
+            <mesh castShadow>
+              <boxGeometry args={[0.12, 0.05, 0.2]} />
+              <meshStandardMaterial color={colors.skinLightGreen} roughness={0.8} />
+            </mesh>
+            {/* Toe webbing hint */}
+            {[-0.04, 0, 0.04].map((x, i) => (
+              <mesh key={i} position={[x, 0.03, 0.1]}>
+                <boxGeometry args={[0.02, 0.02, 0.08]} />
+                <meshStandardMaterial color={colors.skinLightGreen} roughness={0.85} />
+              </mesh>
+            ))}
+          </group>
         </group>
       </group>
 
