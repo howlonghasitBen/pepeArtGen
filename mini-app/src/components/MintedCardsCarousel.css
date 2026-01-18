@@ -51,7 +51,7 @@
   max-width: 400px;
   aspect-ratio: 3 / 4;
   padding: 8px;
-  box-sizing: border-box;
+  box-sizing: fit-content !important;
 }
 
 .card-image {
