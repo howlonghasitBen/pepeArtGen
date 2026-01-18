@@ -27,7 +27,7 @@ function CardBar({ cards = [], onCardClick }) {
       card,
       position: [
         -barWidth / 2 + spacing * (i + 1),
-        1.4,
+        1.7,
         -3,
       ],
       rotation: [0, 0, 0],

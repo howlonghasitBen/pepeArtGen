@@ -79,6 +79,8 @@
 /* Image Area */
 .minted-image-area {
   height: 42%;
+  width: 100%;
+  aspect-ratio: 16 / 9;
   margin: 6px;
   border-radius: 8px;
   position: relative;

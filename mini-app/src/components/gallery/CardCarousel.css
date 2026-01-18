@@ -65,9 +65,12 @@
 .carousel-card {
   flex: 0 0 auto;
   width: 160px;
+  aspect-ratio: 3 / 4;
   cursor: pointer;
   scroll-snap-align: start;
   transition: transform 0.2s;
+  padding: 4px;
+  box-sizing: border-box;
 }
 
 .carousel-card:hover {
@@ -76,11 +79,12 @@
 
 .carousel-card-image {
   width: 100%;
-  aspect-ratio: 3/4;
+  aspect-ratio: 3 / 4;
   border-radius: 12px;
-  overflow: hidden;
+  overflow: visible;
   background: rgba(255, 255, 255, 0.05);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  position: relative;
 }
 
 .carousel-card-image img {
