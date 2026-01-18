@@ -45,6 +45,7 @@
   align-items: center;
   user-select: none;
   max-width: 400px;
+  aspect-ratio: 3 / 4;
 }
 
 .card-image {

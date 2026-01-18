@@ -65,6 +65,7 @@
 .carousel-card {
   flex: 0 0 auto;
   width: 160px;
+  aspect-ratio: 3 / 4;
   cursor: pointer;
   scroll-snap-align: start;
   transition: transform 0.2s;
