@@ -40,30 +40,6 @@ function Card3D({ card, position, onClick, index = 0, scale = 1.0 }) {
           return;
         }
         loadedTexture.colorSpace = THREE.SRGBColorSpace;
-
-        // Adjust UV mapping for non-3:4 images (like OpenSea's square thumbnails)
-        // This acts like CSS object-fit: cover - crops to fill 3:4 space
-        const img = loadedTexture.image;
-        if (img && img.width && img.height) {
-          const sourceAspect = img.width / img.height;
-          const targetAspect = CARD_LAYOUT.ASPECT_RATIO; // 0.75 (3:4)
-
-          if (Math.abs(sourceAspect - targetAspect) > 0.01) {
-            // Image aspect differs from target - need to crop
-            if (sourceAspect > targetAspect) {
-              // Source is wider (e.g., square) - crop sides
-              const scale = targetAspect / sourceAspect;
-              loadedTexture.repeat.set(scale, 1);
-              loadedTexture.offset.set((1 - scale) / 2, 0);
-            } else {
-              // Source is taller - crop top/bottom
-              const scale = sourceAspect / targetAspect;
-              loadedTexture.repeat.set(1, scale);
-              loadedTexture.offset.set(0, (1 - scale) / 2);
-            }
-          }
-        }
-
         // Dispose previous texture if exists
         if (textureRef.current) {
           textureRef.current.dispose();
