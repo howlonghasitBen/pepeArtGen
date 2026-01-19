@@ -153,17 +153,33 @@ export function useAllCards() {
 
       if (nfts.length > 0) {
         // Format NFTs for display
-        const formattedCards = nfts.map((nft) => ({
-          id: nft.identifier,
-          tokenId: nft.identifier,
-          name: nft.name || `Card #${nft.identifier}`,
-          image: nft.image_url || nft.display_image_url,
-          imageData: nft.image_url || nft.display_image_url,
-          rarity: nft.rarity,
-          type: nft.contract,
-          description: nft.description,
-          openSeaUrl: getOpenSeaUrl(nft.identifier),
-        }));
+        const formattedCards = nfts.map((nft) => {
+          // Try to get higher resolution image from OpenSea CDN
+          // OpenSea CDN URLs often have ?w=500 parameter - we can request larger
+          let imageUrl = nft.image_url || nft.display_image_url;
+          if (imageUrl && imageUrl.includes('i.seadn.io')) {
+            // Request 1200px wide image for better quality in 3:4 display
+            imageUrl = imageUrl.replace(/[?&]w=\d+/, '?w=1200');
+            // If no w param existed, add it
+            if (!imageUrl.includes('w=')) {
+              imageUrl += (imageUrl.includes('?') ? '&' : '?') + 'w=1200';
+            }
+          }
+
+          return {
+            id: nft.identifier,
+            tokenId: nft.identifier,
+            name: nft.name || `Card #${nft.identifier}`,
+            image: imageUrl,
+            imageData: imageUrl,
+            // Store original metadata URL for potential IPFS fallback
+            metadataUrl: nft.metadata_url,
+            rarity: nft.rarity,
+            type: nft.contract,
+            description: nft.description,
+            openSeaUrl: getOpenSeaUrl(nft.identifier),
+          };
+        });
 
         console.log(`✅ Found ${formattedCards.length} cards from OpenSea`);
         setCards(formattedCards);
