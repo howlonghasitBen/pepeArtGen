@@ -85,6 +85,24 @@ async function getOriginalImageFromMetadata(metadataUrl, apiBaseUrl) {
   }
 }
 
+/**
+ * Process NFTs in batches to avoid rate limiting
+ */
+async function processBatch(items, batchSize, delayMs, processor) {
+  const results = [];
+  for (let i = 0; i < items.length; i += batchSize) {
+    const batch = items.slice(i, i + batchSize);
+    const batchResults = await Promise.all(batch.map(processor));
+    results.push(...batchResults);
+
+    // Delay between batches (except for last batch)
+    if (i + batchSize < items.length) {
+      await new Promise(resolve => setTimeout(resolve, delayMs));
+    }
+  }
+  return results;
+}
+
 export function useAllCards() {
   const [cards, setCards] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -156,54 +174,53 @@ export function useAllCards() {
       });
 
       // Merge: prefer backend data (has Pinata URLs), supplement with OpenSea
-      const mergedCards = await Promise.all(
-        openSeaNfts.map(async (nft) => {
-          const tokenId = nft.identifier;
+      // Process in batches of 5 with 500ms delay to avoid rate limiting
+      const mergedCards = await processBatch(openSeaNfts, 5, 500, async (nft) => {
+        const tokenId = nft.identifier;
 
-          // Check if we have this card from backend
-          const backendCard = backendMap.get(tokenId);
-          if (backendCard && backendCard.image) {
-            return {
-              id: backendCard.id,
-              tokenId: tokenId,
-              name: backendCard.name,
-              image: backendCard.image,
-              imageData: backendCard.imageData || backendCard.image,
-              rarity: backendCard.rarity,
-              type: backendCard.type || "Creature — Generated",
-              description: backendCard.flavorText,
-              stats: backendCard.stats,
-              theme: backendCard.theme,
-              openSeaUrl: getOpenSeaUrl(tokenId),
-              mintedAt: backendCard.mintedAt,
-              walletAddress: backendCard.walletAddress,
-            };
-          }
-
-          // Not in backend - try to get original image from OpenSea's metadata_url
-          let imageUrl = nft.image_url || nft.display_image_url;
-
-          // Try to get original 3:4 image from IPFS metadata via backend proxy
-          if (nft.metadata_url) {
-            const originalImage = await getOriginalImageFromMetadata(nft.metadata_url, API_BASE_URL);
-            if (originalImage) {
-              imageUrl = originalImage;
-            }
-          }
-
+        // Check if we have this card from backend
+        const backendCard = backendMap.get(tokenId);
+        if (backendCard && backendCard.image) {
           return {
-            id: tokenId,
+            id: backendCard.id,
             tokenId: tokenId,
-            name: nft.name || `Card #${tokenId}`,
-            image: imageUrl,
-            imageData: imageUrl,
-            rarity: nft.rarity,
-            type: "Creature — Generated",
-            description: nft.description,
+            name: backendCard.name,
+            image: backendCard.image,
+            imageData: backendCard.imageData || backendCard.image,
+            rarity: backendCard.rarity,
+            type: backendCard.type || "Creature — Generated",
+            description: backendCard.flavorText,
+            stats: backendCard.stats,
+            theme: backendCard.theme,
             openSeaUrl: getOpenSeaUrl(tokenId),
+            mintedAt: backendCard.mintedAt,
+            walletAddress: backendCard.walletAddress,
           };
-        })
-      );
+        }
+
+        // Not in backend - try to get original image from OpenSea's metadata_url
+        let imageUrl = nft.image_url || nft.display_image_url;
+
+        // Try to get original 3:4 image from IPFS metadata via backend proxy
+        if (nft.metadata_url) {
+          const originalImage = await getOriginalImageFromMetadata(nft.metadata_url, API_BASE_URL);
+          if (originalImage) {
+            imageUrl = originalImage;
+          }
+        }
+
+        return {
+          id: tokenId,
+          tokenId: tokenId,
+          name: nft.name || `Card #${tokenId}`,
+          image: imageUrl,
+          imageData: imageUrl,
+          rarity: nft.rarity,
+          type: "Creature — Generated",
+          description: nft.description,
+          openSeaUrl: getOpenSeaUrl(tokenId),
+        };
+      });
 
       // Add any backend cards not in OpenSea (edge case)
       backendCards.forEach(card => {
