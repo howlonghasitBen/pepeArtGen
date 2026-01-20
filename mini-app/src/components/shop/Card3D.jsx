@@ -11,57 +11,32 @@ function Card3D({ card, position, onClick, index = 0, scale = 1.0 }) {
   const meshRef = useRef();
   const [hovered, setHovered] = useState(false);
   const [texture, setTexture] = useState(null);
-  const textureRef = useRef(null);
+  const cardDepth = 0.02;
+  const baseScale = 0.9; // Base size for cards
 
-  // Card dimensions - enforced 3:4 aspect ratio
-  const { cardWidth, cardHeight, cardDepth } = useMemo(() => {
-    const height = CARD_LAYOUT.CARD_3D.BASE_HEIGHT * scale;
-    const width = height * CARD_LAYOUT.ASPECT_RATIO;
-    return {
-      cardWidth: width,
-      cardHeight: height,
-      cardDepth: CARD_LAYOUT.CARD_3D.CARD_DEPTH,
-    };
-  }, [scale]);
+  // Card dimensions - fixed 3:4 aspect ratio
+  const cardHeight = baseScale;
+  const cardWidth = cardHeight * (3 / 4); // Maintain 3:4 aspect ratio
 
-  // Load card image as texture with cleanup
+  // Load card image as texture
   useEffect(() => {
-    const imageUrl = card?.image || card?.imageData;
-    if (!imageUrl) return;
+    if (card?.image || card?.imageData) {
+      const imageUrl = card.image || card.imageData;
+      const loader = new THREE.TextureLoader();
 
-    let isMounted = true;
-    const loader = new THREE.TextureLoader();
-
-    loader.load(
-      imageUrl,
-      (loadedTexture) => {
-        if (!isMounted) {
-          loadedTexture.dispose();
-          return;
+      loader.load(
+        imageUrl,
+        (loadedTexture) => {
+          loadedTexture.colorSpace = THREE.SRGBColorSpace;
+          setTexture(loadedTexture);
+        },
+        undefined,
+        (error) => {
+          console.warn("Failed to load card texture:", error);
         }
-        loadedTexture.colorSpace = THREE.SRGBColorSpace;
-        // Dispose previous texture if exists
-        if (textureRef.current) {
-          textureRef.current.dispose();
-        }
-        textureRef.current = loadedTexture;
-        setTexture(loadedTexture);
-      },
-      undefined,
-      (error) => {
-        console.warn("Failed to load card texture:", error);
-      }
-    );
-
-    // Cleanup on unmount or when card changes
-    return () => {
-      isMounted = false;
-      if (textureRef.current) {
-        textureRef.current.dispose();
-        textureRef.current = null;
-      }
-    };
-  }, [card?.image, card?.imageData]);
+      );
+    }
+  }, [card]);
 
   // Animation
   useFrame((state) => {
