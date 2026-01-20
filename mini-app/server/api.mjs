@@ -72,6 +72,43 @@ app.use("/api/drafts", draftRoutes);
 // Mount deck routes
 app.use("/api/decks", deckRoutes);
 
+// IPFS metadata proxy endpoint (avoids CORS issues with Pinata gateway)
+app.get("/api/ipfs/metadata", async (req, res) => {
+  try {
+    const { url } = req.query;
+    if (!url) {
+      return res.status(400).json({ error: "URL parameter required" });
+    }
+
+    // Convert ipfs:// to gateway URL if needed
+    let fetchUrl = url;
+    if (url.startsWith('ipfs://')) {
+      const cid = url.replace('ipfs://', '');
+      fetchUrl = `https://gateway.pinata.cloud/ipfs/${cid}`;
+    }
+
+    console.log(`📦 Proxying IPFS metadata: ${fetchUrl}`);
+    const response = await fetch(fetchUrl);
+
+    if (!response.ok) {
+      return res.status(response.status).json({ error: `Failed to fetch: ${response.status}` });
+    }
+
+    const metadata = await response.json();
+
+    // Convert ipfs:// image URL to gateway URL
+    if (metadata.image && metadata.image.startsWith('ipfs://')) {
+      const cid = metadata.image.replace('ipfs://', '');
+      metadata.image = `https://gateway.pinata.cloud/ipfs/${cid}`;
+    }
+
+    res.json(metadata);
+  } catch (error) {
+    console.error("❌ IPFS proxy error:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Extract colors from image endpoint
 app.post("/api/extract-colors", async (req, res) => {
   try {
