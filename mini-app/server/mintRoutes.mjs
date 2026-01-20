@@ -4,6 +4,8 @@ import {
   mintService,
   cardService,
   analyticsService,
+  syncedNftService,
+  ipfsService,
   isSupabaseConfigured,
 } from './supabaseClient.mjs';
 import { createPublicClient, http } from 'viem';
@@ -232,6 +234,44 @@ router.post('/record', requireSupabase, requireContract, async (req, res) => {
       token_ids: verifiedTokenIds,
       network: NETWORK,
     });
+
+    // Sync newly minted NFTs to synced_nfts table for fast display
+    for (const mint of recordedMints) {
+      try {
+        // Get the card's IPFS links to find the proper image URL
+        const ipfsLinks = await ipfsService.getCardLinks(mint.card_id);
+        const styledCardLink = ipfsLinks?.find((l) => l.type === "styled_card");
+        const rawImageLink = ipfsLinks?.find((l) => l.type === "raw_image");
+        const imageUrl = styledCardLink?.gateway_url || rawImageLink?.gateway_url;
+
+        // Get the card details for metadata
+        const card = await cardService.getCard(mint.card_id);
+
+        await syncedNftService.upsertNft({
+          tokenId: mint.token_id,
+          contractAddress: mint.contract_address,
+          name: card?.name || `Card #${mint.token_id}`,
+          description: card?.flavor_text,
+          imageUrl: imageUrl,
+          openseaImageUrl: null, // Will be populated on next sync
+          metadata: {
+            name: card?.name,
+            description: card?.flavor_text,
+            attributes: [
+              { trait_type: "Attack", value: String(card?.attack || 0) },
+              { trait_type: "Defense", value: String(card?.defense || 0) },
+              { trait_type: "HP", value: String(card?.hp || 0) },
+              { trait_type: "Rarity", value: card?.rarity || "1/1" }
+            ]
+          },
+          openseaData: null,
+          cardId: mint.card_id
+        });
+        console.log(`🔄 Synced NFT ${mint.token_id} to synced_nfts`);
+      } catch (syncErr) {
+        console.warn(`Failed to sync NFT ${mint.token_id}:`, syncErr.message);
+      }
+    }
 
     // Return results
     if (recordedMints.length === 0) {

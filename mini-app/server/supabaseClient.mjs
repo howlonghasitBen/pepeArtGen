@@ -317,4 +317,101 @@ export const analyticsService = {
   }
 };
 
+// Synced NFTs helpers - for caching OpenSea/IPFS data
+export const syncedNftService = {
+  // Get all synced NFTs
+  async getAllNfts() {
+    if (!supabaseServiceRole) throw new Error('Supabase not configured');
+
+    const { data, error } = await supabaseServiceRole
+      .from('synced_nfts')
+      .select('*')
+      .order('token_id', { ascending: true });
+
+    if (error) throw error;
+    return data || [];
+  },
+
+  // Get synced NFT by token ID
+  async getNftByTokenId(tokenId) {
+    if (!supabaseServiceRole) throw new Error('Supabase not configured');
+
+    const { data, error } = await supabaseServiceRole
+      .from('synced_nfts')
+      .select('*')
+      .eq('token_id', tokenId)
+      .single();
+
+    if (error && error.code !== 'PGRST116') throw error;
+    return data || null;
+  },
+
+  // Get list of already synced token IDs
+  async getSyncedTokenIds() {
+    if (!supabaseServiceRole) throw new Error('Supabase not configured');
+
+    const { data, error } = await supabaseServiceRole
+      .from('synced_nfts')
+      .select('token_id');
+
+    if (error) throw error;
+    return (data || []).map(d => d.token_id);
+  },
+
+  // Upsert (insert or update) an NFT
+  async upsertNft(nftData) {
+    if (!supabaseServiceRole) throw new Error('Supabase not configured');
+
+    const { data, error } = await supabaseServiceRole
+      .from('synced_nfts')
+      .upsert({
+        token_id: nftData.tokenId,
+        contract_address: nftData.contractAddress,
+        name: nftData.name,
+        description: nftData.description,
+        image_url: nftData.imageUrl,
+        opensea_image_url: nftData.openseaImageUrl,
+        metadata: nftData.metadata,
+        opensea_data: nftData.openseaData,
+        card_id: nftData.cardId || null,
+        last_updated: new Date().toISOString()
+      }, {
+        onConflict: 'token_id'
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
+  // Bulk upsert NFTs
+  async bulkUpsertNfts(nftsData) {
+    if (!supabaseServiceRole) throw new Error('Supabase not configured');
+
+    const records = nftsData.map(nft => ({
+      token_id: nft.tokenId,
+      contract_address: nft.contractAddress,
+      name: nft.name,
+      description: nft.description,
+      image_url: nft.imageUrl,
+      opensea_image_url: nft.openseaImageUrl,
+      metadata: nft.metadata,
+      opensea_data: nft.openseaData,
+      card_id: nft.cardId || null,
+      last_updated: new Date().toISOString()
+    }));
+
+    const { data, error } = await supabaseServiceRole
+      .from('synced_nfts')
+      .upsert(records, {
+        onConflict: 'token_id'
+      })
+      .select();
+
+    if (error) throw error;
+    return data;
+  }
+};
+
 export default supabase;

@@ -22,6 +22,7 @@ import {
   cardService,
   ipfsService,
   analyticsService,
+  syncedNftService,
   isSupabaseConfigured,
 } from "./supabaseClient.mjs";
 import paymentRoutes from "./paymentRoutes.mjs";
@@ -105,6 +106,250 @@ app.get("/api/ipfs/metadata", async (req, res) => {
     res.json(metadata);
   } catch (error) {
     console.error("❌ IPFS proxy error:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Helper: Convert ipfs:// URL to gateway URL
+function ipfsToGatewayUrl(ipfsUrl) {
+  if (!ipfsUrl) return null;
+  if (ipfsUrl.startsWith('ipfs://')) {
+    const cid = ipfsUrl.replace('ipfs://', '');
+    return `https://gateway.pinata.cloud/ipfs/${cid}`;
+  }
+  return ipfsUrl;
+}
+
+// Helper: Fetch IPFS metadata and extract image URL
+async function fetchIpfsMetadata(metadataUrl) {
+  try {
+    const gatewayUrl = ipfsToGatewayUrl(metadataUrl);
+    if (!gatewayUrl) return null;
+
+    const response = await fetch(gatewayUrl);
+    if (!response.ok) return null;
+
+    const metadata = await response.json();
+    return {
+      ...metadata,
+      image: ipfsToGatewayUrl(metadata.image)
+    };
+  } catch (err) {
+    console.warn(`Failed to fetch IPFS metadata: ${err.message}`);
+    return null;
+  }
+}
+
+// Get all NFTs from Supabase (fast, cached data)
+app.get("/api/nfts/all", async (req, res) => {
+  try {
+    if (!isSupabaseConfigured()) {
+      return res.status(503).json({ error: "Database not configured" });
+    }
+
+    const nfts = await syncedNftService.getAllNfts();
+    console.log(`📋 Returning ${nfts.length} NFTs from Supabase`);
+
+    // Format for frontend consumption
+    const formattedNfts = nfts.map(nft => ({
+      id: nft.id,
+      tokenId: nft.token_id,
+      name: nft.name,
+      description: nft.description,
+      // Prefer original IPFS image (3:4), fallback to OpenSea
+      image: nft.image_url || nft.opensea_image_url,
+      imageUrl: nft.image_url,
+      openseaImageUrl: nft.opensea_image_url,
+      metadata: nft.metadata,
+      cardId: nft.card_id,
+      syncedAt: nft.synced_at,
+      lastUpdated: nft.last_updated
+    }));
+
+    res.json({ nfts: formattedNfts, count: formattedNfts.length });
+  } catch (error) {
+    console.error("❌ Error fetching NFTs:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Sync all NFTs from OpenSea to Supabase (only syncs new/updated)
+app.post("/api/nfts/sync", async (req, res) => {
+  try {
+    if (!isSupabaseConfigured()) {
+      return res.status(503).json({ error: "Database not configured" });
+    }
+
+    const contractAddress = process.env.NFT_CONTRACT_ADDRESS || req.body.contractAddress;
+    const network = process.env.NETWORK || req.body.network || "base";
+
+    if (!contractAddress) {
+      return res.status(400).json({ error: "Contract address required" });
+    }
+
+    console.log(`🔄 Starting NFT sync for contract ${contractAddress}`);
+
+    // Get already synced token IDs
+    const syncedTokenIds = await syncedNftService.getSyncedTokenIds();
+    console.log(`📊 Already synced: ${syncedTokenIds.length} NFTs`);
+
+    // Fetch NFTs from OpenSea
+    const chain = network === "baseSepolia" ? "base_sepolia" : "base";
+    const apiUrl = `https://api.opensea.io/api/v2/chain/${chain}/contract/${contractAddress}/nfts?limit=200`;
+
+    const headers = { "Accept": "application/json" };
+    if (process.env.OPENSEA_API_KEY) {
+      headers["X-API-KEY"] = process.env.OPENSEA_API_KEY;
+    }
+
+    const osResponse = await fetch(apiUrl, { headers });
+    if (!osResponse.ok) {
+      throw new Error(`OpenSea API error: ${osResponse.status}`);
+    }
+
+    const osData = await osResponse.json();
+    const openSeaNfts = osData.nfts || [];
+    console.log(`🌊 OpenSea returned ${openSeaNfts.length} NFTs`);
+
+    // Filter to only unsynced NFTs
+    const unsyncedNfts = openSeaNfts.filter(
+      nft => !syncedTokenIds.includes(parseInt(nft.identifier))
+    );
+    console.log(`🆕 ${unsyncedNfts.length} new NFTs to sync`);
+
+    if (unsyncedNfts.length === 0) {
+      return res.json({
+        message: "All NFTs already synced",
+        total: openSeaNfts.length,
+        synced: 0
+      });
+    }
+
+    // Fetch IPFS metadata and prepare records
+    const nftsToSync = [];
+    for (const nft of unsyncedNfts) {
+      let metadata = null;
+      let imageUrl = null;
+
+      // Fetch original metadata from IPFS to get 3:4 image
+      if (nft.metadata_url) {
+        metadata = await fetchIpfsMetadata(nft.metadata_url);
+        if (metadata) {
+          imageUrl = metadata.image;
+        }
+      }
+
+      nftsToSync.push({
+        tokenId: parseInt(nft.identifier),
+        contractAddress: contractAddress,
+        name: nft.name || metadata?.name || `Card #${nft.identifier}`,
+        description: nft.description || metadata?.description,
+        imageUrl: imageUrl, // Original 3:4 from IPFS
+        openseaImageUrl: nft.image_url || nft.display_image_url,
+        metadata: metadata,
+        openseaData: {
+          identifier: nft.identifier,
+          name: nft.name,
+          description: nft.description,
+          image_url: nft.image_url,
+          metadata_url: nft.metadata_url
+        }
+      });
+
+      // Small delay between IPFS fetches to avoid rate limiting
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+
+    // Bulk insert to Supabase
+    const syncedNfts = await syncedNftService.bulkUpsertNfts(nftsToSync);
+    console.log(`✅ Synced ${syncedNfts.length} NFTs to Supabase`);
+
+    res.json({
+      message: "Sync complete",
+      total: openSeaNfts.length,
+      synced: syncedNfts.length,
+      alreadySynced: syncedTokenIds.length
+    });
+  } catch (error) {
+    console.error("❌ Sync error:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Sync a single NFT (called after mint)
+app.post("/api/nfts/sync/:tokenId", async (req, res) => {
+  try {
+    if (!isSupabaseConfigured()) {
+      return res.status(503).json({ error: "Database not configured" });
+    }
+
+    const tokenId = parseInt(req.params.tokenId);
+    const { contractAddress, imageUrl, metadata, cardId } = req.body;
+
+    console.log(`🔄 Syncing single NFT: token ${tokenId}`);
+
+    // If imageUrl and metadata provided (from mint flow), use those
+    if (imageUrl) {
+      const nft = await syncedNftService.upsertNft({
+        tokenId,
+        contractAddress: contractAddress || process.env.NFT_CONTRACT_ADDRESS,
+        name: metadata?.name || `Card #${tokenId}`,
+        description: metadata?.description,
+        imageUrl: imageUrl,
+        openseaImageUrl: null, // Will be populated on next full sync
+        metadata: metadata,
+        openseaData: null,
+        cardId: cardId
+      });
+
+      return res.json({ success: true, nft });
+    }
+
+    // Otherwise fetch from OpenSea
+    const contract = contractAddress || process.env.NFT_CONTRACT_ADDRESS;
+    const network = process.env.NETWORK || "base";
+    const chain = network === "baseSepolia" ? "base_sepolia" : "base";
+
+    const apiUrl = `https://api.opensea.io/api/v2/chain/${chain}/contract/${contract}/nfts/${tokenId}`;
+    const headers = { "Accept": "application/json" };
+    if (process.env.OPENSEA_API_KEY) {
+      headers["X-API-KEY"] = process.env.OPENSEA_API_KEY;
+    }
+
+    const osResponse = await fetch(apiUrl, { headers });
+    if (!osResponse.ok) {
+      throw new Error(`OpenSea API error: ${osResponse.status}`);
+    }
+
+    const osData = await osResponse.json();
+    const nftData = osData.nft;
+
+    // Fetch IPFS metadata
+    let ipfsMetadata = null;
+    let originalImageUrl = null;
+    if (nftData.metadata_url) {
+      ipfsMetadata = await fetchIpfsMetadata(nftData.metadata_url);
+      if (ipfsMetadata) {
+        originalImageUrl = ipfsMetadata.image;
+      }
+    }
+
+    const nft = await syncedNftService.upsertNft({
+      tokenId,
+      contractAddress: contract,
+      name: nftData.name || ipfsMetadata?.name || `Card #${tokenId}`,
+      description: nftData.description || ipfsMetadata?.description,
+      imageUrl: originalImageUrl,
+      openseaImageUrl: nftData.image_url || nftData.display_image_url,
+      metadata: ipfsMetadata,
+      openseaData: nftData,
+      cardId: cardId
+    });
+
+    console.log(`✅ Synced NFT ${tokenId}`);
+    res.json({ success: true, nft });
+  } catch (error) {
+    console.error(`❌ Error syncing NFT ${req.params.tokenId}:`, error);
     res.status(500).json({ error: error.message });
   }
 });
