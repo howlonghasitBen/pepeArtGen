@@ -75,6 +75,48 @@ app.use("/api/drafts", draftRoutes);
 // Mount deck routes
 app.use("/api/decks", deckRoutes);
 
+// IPFS image proxy endpoint (avoids CORS issues with Pinata gateway)
+app.get("/api/ipfs/image", async (req, res) => {
+  try {
+    const { cid, url } = req.query;
+    if (!cid && !url) {
+      return res.status(400).json({ error: "CID or URL parameter required" });
+    }
+
+    // Build the fetch URL
+    const gateway = process.env.PINATA_GATEWAY_URL || 'https://gateway.pinata.cloud/ipfs/';
+    const baseGateway = gateway.endsWith('/') ? gateway : `${gateway}/`;
+
+    let fetchUrl;
+    if (url) {
+      fetchUrl = url.startsWith('ipfs://')
+        ? `${baseGateway}${url.replace('ipfs://', '')}`
+        : url;
+    } else {
+      fetchUrl = `${baseGateway}${cid}`;
+    }
+
+    const response = await fetch(fetchUrl);
+
+    if (!response.ok) {
+      return res.status(response.status).json({ error: `Failed to fetch: ${response.status}` });
+    }
+
+    const contentType = response.headers.get('content-type') || 'image/png';
+    const buffer = await response.arrayBuffer();
+
+    res.set({
+      'Content-Type': contentType,
+      'Cache-Control': 'public, max-age=31536000', // Cache for 1 year
+      'Access-Control-Allow-Origin': '*'
+    });
+    res.send(Buffer.from(buffer));
+  } catch (error) {
+    console.error("❌ IPFS image proxy error:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // IPFS metadata proxy endpoint (avoids CORS issues with Pinata gateway)
 app.get("/api/ipfs/metadata", async (req, res) => {
   try {

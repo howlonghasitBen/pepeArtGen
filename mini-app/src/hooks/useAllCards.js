@@ -76,6 +76,33 @@ export function useAllCards() {
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3001";
 
   /**
+   * Convert a Pinata gateway URL to our proxy URL to avoid CORS issues
+   */
+  const toProxyUrl = (url) => {
+    if (!url) return null;
+
+    // Extract CID from Pinata gateway URLs
+    const pinataMatch = url.match(/gateway\.pinata\.cloud\/ipfs\/([a-zA-Z0-9]+)/);
+    if (pinataMatch) {
+      return `${API_BASE_URL}/api/ipfs/image?cid=${pinataMatch[1]}`;
+    }
+
+    // Extract CID from ipfs:// URLs
+    if (url.startsWith('ipfs://')) {
+      const cid = url.replace('ipfs://', '');
+      return `${API_BASE_URL}/api/ipfs/image?cid=${cid}`;
+    }
+
+    // For other URLs, pass through the proxy with full URL
+    if (url.includes('ipfs') || url.includes('pinata')) {
+      return `${API_BASE_URL}/api/ipfs/image?url=${encodeURIComponent(url)}`;
+    }
+
+    // Return as-is for non-IPFS URLs
+    return url;
+  };
+
+  /**
    * Get OpenSea URL for a token
    */
   const getOpenSeaUrl = (tokenId) => {
@@ -132,21 +159,26 @@ export function useAllCards() {
         const nfts = data.nfts || [];
 
         if (nfts.length > 0) {
-          // Format for display
-          const formattedCards = nfts.map((nft) => ({
-            id: nft.id,
-            tokenId: nft.tokenId,
-            name: nft.name,
-            // Use the cached Pinata gateway URL (proper 3:4 aspect ratio)
-            image: nft.image || nft.imageUrl || nft.openseaImageUrl,
-            imageData: nft.image || nft.imageUrl || nft.openseaImageUrl,
-            rarity: nft.metadata?.attributes?.find(a => a.trait_type === "Edition")?.value || "1/1",
-            type: "Creature — Generated",
-            description: nft.description,
-            metadata: nft.metadata,
-            openSeaUrl: getOpenSeaUrl(nft.tokenId),
-            syncedAt: nft.syncedAt
-          }));
+          // Format for display - route images through proxy to avoid CORS
+          const formattedCards = nfts.map((nft) => {
+            const rawImageUrl = nft.image || nft.imageUrl || nft.openseaImageUrl;
+            const proxiedImage = toProxyUrl(rawImageUrl);
+            return {
+              id: nft.id,
+              tokenId: nft.tokenId,
+              name: nft.name,
+              // Use proxied URL to avoid CORS issues with Pinata
+              image: proxiedImage,
+              imageData: proxiedImage,
+              rawImageUrl, // Keep original for reference
+              rarity: nft.metadata?.attributes?.find(a => a.trait_type === "Edition")?.value || "1/1",
+              type: "Creature — Generated",
+              description: nft.description,
+              metadata: nft.metadata,
+              openSeaUrl: getOpenSeaUrl(nft.tokenId),
+              syncedAt: nft.syncedAt
+            };
+          });
 
           console.log(`✅ Loaded ${formattedCards.length} NFTs from Supabase`);
           setCards(formattedCards);
@@ -165,19 +197,24 @@ export function useAllCards() {
             const retryNfts = retryData.nfts || [];
 
             if (retryNfts.length > 0) {
-              const formattedCards = retryNfts.map((nft) => ({
-                id: nft.id,
-                tokenId: nft.tokenId,
-                name: nft.name,
-                image: nft.image || nft.imageUrl || nft.openseaImageUrl,
-                imageData: nft.image || nft.imageUrl || nft.openseaImageUrl,
-                rarity: nft.metadata?.attributes?.find(a => a.trait_type === "Edition")?.value || "1/1",
-                type: "Creature — Generated",
-                description: nft.description,
-                metadata: nft.metadata,
-                openSeaUrl: getOpenSeaUrl(nft.tokenId),
-                syncedAt: nft.syncedAt
-              }));
+              const formattedCards = retryNfts.map((nft) => {
+                const rawImageUrl = nft.image || nft.imageUrl || nft.openseaImageUrl;
+                const proxiedImage = toProxyUrl(rawImageUrl);
+                return {
+                  id: nft.id,
+                  tokenId: nft.tokenId,
+                  name: nft.name,
+                  image: proxiedImage,
+                  imageData: proxiedImage,
+                  rawImageUrl,
+                  rarity: nft.metadata?.attributes?.find(a => a.trait_type === "Edition")?.value || "1/1",
+                  type: "Creature — Generated",
+                  description: nft.description,
+                  metadata: nft.metadata,
+                  openSeaUrl: getOpenSeaUrl(nft.tokenId),
+                  syncedAt: nft.syncedAt
+                };
+              });
 
               console.log(`✅ Loaded ${formattedCards.length} NFTs after sync`);
               setCards(formattedCards);
