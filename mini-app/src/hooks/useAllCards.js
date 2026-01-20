@@ -65,33 +65,20 @@ const SAMPLE_CARDS = [
 ];
 
 /**
- * Extract original image URL from IPFS metadata
- * Converts ipfs:// URLs to gateway URLs
+ * Extract original image URL from IPFS metadata via backend proxy
+ * This avoids CORS issues with Pinata gateway
  */
-async function getOriginalImageFromMetadata(metadataUrl) {
+async function getOriginalImageFromMetadata(metadataUrl, apiBaseUrl) {
   if (!metadataUrl) return null;
 
   try {
-    // Convert ipfs:// to gateway URL
-    let fetchUrl = metadataUrl;
-    if (metadataUrl.startsWith('ipfs://')) {
-      const cid = metadataUrl.replace('ipfs://', '');
-      fetchUrl = `https://gateway.pinata.cloud/ipfs/${cid}`;
-    }
-
-    const response = await fetch(fetchUrl);
+    // Use backend proxy to fetch IPFS metadata (avoids CORS)
+    const proxyUrl = `${apiBaseUrl}/api/ipfs/metadata?url=${encodeURIComponent(metadataUrl)}`;
+    const response = await fetch(proxyUrl);
     if (!response.ok) return null;
 
     const metadata = await response.json();
-    let imageUrl = metadata.image;
-
-    // Convert ipfs:// image URL to gateway URL
-    if (imageUrl && imageUrl.startsWith('ipfs://')) {
-      const cid = imageUrl.replace('ipfs://', '');
-      imageUrl = `https://gateway.pinata.cloud/ipfs/${cid}`;
-    }
-
-    return imageUrl;
+    return metadata.image || null;
   } catch (err) {
     console.warn('Failed to fetch metadata:', err);
     return null;
@@ -196,9 +183,9 @@ export function useAllCards() {
           // Not in backend - try to get original image from OpenSea's metadata_url
           let imageUrl = nft.image_url || nft.display_image_url;
 
-          // Try to get original 3:4 image from IPFS metadata
+          // Try to get original 3:4 image from IPFS metadata via backend proxy
           if (nft.metadata_url) {
-            const originalImage = await getOriginalImageFromMetadata(nft.metadata_url);
+            const originalImage = await getOriginalImageFromMetadata(nft.metadata_url, API_BASE_URL);
             if (originalImage) {
               imageUrl = originalImage;
             }
