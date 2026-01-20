@@ -64,37 +64,16 @@ const SAMPLE_CARDS = [
   },
 ];
 
-/**
- * Extract original image URL from IPFS metadata via backend proxy
- * This avoids CORS issues with Pinata gateway
- */
-async function getOriginalImageFromMetadata(metadataUrl, apiBaseUrl) {
-  if (!metadataUrl) return null;
-
-  try {
-    // Use backend proxy to fetch IPFS metadata (avoids CORS)
-    const proxyUrl = `${apiBaseUrl}/api/ipfs/metadata?url=${encodeURIComponent(metadataUrl)}`;
-    const response = await fetch(proxyUrl);
-    if (!response.ok) return null;
-
-    const metadata = await response.json();
-    return metadata.image || null;
-  } catch (err) {
-    console.warn('Failed to fetch metadata:', err);
-    return null;
-  }
-}
-
 export function useAllCards() {
   const [cards, setCards] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [usingSampleData, setUsingSampleData] = useState(false);
+  const [syncing, setSyncing] = useState(false);
 
   const NFT_CONTRACT_ADDRESS = import.meta.env.VITE_NFT_CONTRACT_ADDRESS;
   const NETWORK = import.meta.env.VITE_NETWORK || "base";
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3001";
-  const OPENSEA_API_KEY = import.meta.env.VITE_OPENSEA_API_KEY || "";
 
   /**
    * Get OpenSea URL for a token
@@ -105,7 +84,37 @@ export function useAllCards() {
   };
 
   /**
-   * Fetch cards - tries backend first, falls back to OpenSea with IPFS metadata
+   * Trigger a sync of NFTs from OpenSea to Supabase
+   */
+  const syncNfts = useCallback(async () => {
+    try {
+      setSyncing(true);
+      console.log("🔄 Triggering NFT sync...");
+
+      const response = await fetch(`${API_BASE_URL}/api/nfts/sync`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contractAddress: NFT_CONTRACT_ADDRESS,
+          network: NETWORK
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log(`✅ Sync complete: ${data.synced} new NFTs`);
+        return data;
+      }
+    } catch (err) {
+      console.warn("Sync failed:", err);
+    } finally {
+      setSyncing(false);
+    }
+    return null;
+  }, [API_BASE_URL, NFT_CONTRACT_ADDRESS, NETWORK]);
+
+  /**
+   * Fetch cards from Supabase (primary source)
    */
   const fetchCards = useCallback(async () => {
     setLoading(true);
@@ -113,155 +122,84 @@ export function useAllCards() {
     setUsingSampleData(false);
 
     try {
-      // First try backend API (has Pinata gateway URLs)
-      console.log("📋 Fetching cards from backend API");
-      let backendCards = [];
+      console.log("📋 Fetching NFTs from Supabase...");
 
-      try {
-        const response = await fetch(`${API_BASE_URL}/api/cards/all`);
-        if (response.ok) {
-          const data = await response.json();
-          backendCards = data.cards || [];
-          console.log(`Backend returned ${backendCards.length} cards`);
-        }
-      } catch (err) {
-        console.warn("Backend API unavailable:", err);
-      }
+      // Fetch from Supabase (cached data with proper 3:4 images)
+      const response = await fetch(`${API_BASE_URL}/api/nfts/all`);
 
-      // Also fetch from OpenSea to get all NFTs
-      const chain = NETWORK === "baseSepolia" ? "base_sepolia" : "base";
-      const apiUrl = `https://api.opensea.io/api/v2/chain/${chain}/contract/${NFT_CONTRACT_ADDRESS}/nfts`;
+      if (response.ok) {
+        const data = await response.json();
+        const nfts = data.nfts || [];
 
-      const headers = { "Accept": "application/json" };
-      if (OPENSEA_API_KEY) {
-        headers["X-API-KEY"] = OPENSEA_API_KEY;
-      }
-
-      let openSeaNfts = [];
-      try {
-        const osResponse = await fetch(apiUrl, { headers });
-        if (osResponse.ok) {
-          const osData = await osResponse.json();
-          openSeaNfts = osData.nfts || [];
-          console.log(`OpenSea returned ${openSeaNfts.length} NFTs`);
-        }
-      } catch (err) {
-        console.warn("OpenSea API unavailable:", err);
-      }
-
-      // Create a map of backend cards by tokenId for quick lookup
-      const backendMap = new Map();
-      backendCards.forEach(card => {
-        if (card.tokenId) backendMap.set(String(card.tokenId), card);
-      });
-
-      // Merge: prefer backend data (has Pinata URLs), supplement with OpenSea
-      const mergedCards = await Promise.all(
-        openSeaNfts.map(async (nft) => {
-          const tokenId = nft.identifier;
-
-          // Check if we have this card from backend
-          const backendCard = backendMap.get(tokenId);
-          if (backendCard && backendCard.image) {
-            return {
-              id: backendCard.id,
-              tokenId: tokenId,
-              name: backendCard.name,
-              image: backendCard.image,
-              imageData: backendCard.imageData || backendCard.image,
-              rarity: backendCard.rarity,
-              type: backendCard.type || "Creature — Generated",
-              description: backendCard.flavorText,
-              stats: backendCard.stats,
-              theme: backendCard.theme,
-              openSeaUrl: getOpenSeaUrl(tokenId),
-              mintedAt: backendCard.mintedAt,
-              walletAddress: backendCard.walletAddress,
-            };
-          }
-
-          // Not in backend - try to get original image from OpenSea's metadata_url
-          let imageUrl = nft.image_url || nft.display_image_url;
-
-          // Try to get original 3:4 image from IPFS metadata via backend proxy
-          if (nft.metadata_url) {
-            const originalImage = await getOriginalImageFromMetadata(nft.metadata_url, API_BASE_URL);
-            if (originalImage) {
-              imageUrl = originalImage;
-            }
-          }
-
-          return {
-            id: tokenId,
-            tokenId: tokenId,
-            name: nft.name || `Card #${tokenId}`,
-            image: imageUrl,
-            imageData: imageUrl,
-            rarity: nft.rarity,
+        if (nfts.length > 0) {
+          // Format for display
+          const formattedCards = nfts.map((nft) => ({
+            id: nft.id,
+            tokenId: nft.tokenId,
+            name: nft.name,
+            // Use the cached Pinata gateway URL (proper 3:4 aspect ratio)
+            image: nft.image || nft.imageUrl || nft.openseaImageUrl,
+            imageData: nft.image || nft.imageUrl || nft.openseaImageUrl,
+            rarity: nft.metadata?.attributes?.find(a => a.trait_type === "Edition")?.value || "1/1",
             type: "Creature — Generated",
             description: nft.description,
-            openSeaUrl: getOpenSeaUrl(tokenId),
-          };
-        })
-      );
+            metadata: nft.metadata,
+            openSeaUrl: getOpenSeaUrl(nft.tokenId),
+            syncedAt: nft.syncedAt
+          }));
 
-      // Add any backend cards not in OpenSea (edge case)
-      backendCards.forEach(card => {
-        if (!mergedCards.find(c => String(c.tokenId) === String(card.tokenId))) {
-          mergedCards.push({
-            id: card.id,
-            tokenId: card.tokenId,
-            name: card.name,
-            image: card.image,
-            imageData: card.imageData || card.image,
-            rarity: card.rarity,
-            type: card.type || "Creature — Generated",
-            description: card.flavorText,
-            stats: card.stats,
-            theme: card.theme,
-            openSeaUrl: getOpenSeaUrl(card.tokenId),
-            mintedAt: card.mintedAt,
-            walletAddress: card.walletAddress,
-          });
+          console.log(`✅ Loaded ${formattedCards.length} NFTs from Supabase`);
+          setCards(formattedCards);
+          return;
         }
-      });
 
-      if (mergedCards.length > 0) {
-        console.log(`✅ Loaded ${mergedCards.length} cards total`);
-        setCards(mergedCards);
-      } else if (backendCards.length > 0) {
-        // Fallback to just backend cards
-        const formattedCards = backendCards.map((card) => ({
-          id: card.id,
-          tokenId: card.tokenId,
-          name: card.name,
-          image: card.image,
-          imageData: card.imageData || card.image,
-          rarity: card.rarity,
-          type: card.type || "Creature — Generated",
-          description: card.flavorText,
-          stats: card.stats,
-          theme: card.theme,
-          openSeaUrl: getOpenSeaUrl(card.tokenId),
-          mintedAt: card.mintedAt,
-          walletAddress: card.walletAddress,
-        }));
-        console.log(`✅ Loaded ${formattedCards.length} cards from backend`);
-        setCards(formattedCards);
-      } else {
-        console.log("ℹ️ No cards found, using sample cards");
-        setCards(SAMPLE_CARDS);
-        setUsingSampleData(true);
+        // No NFTs in Supabase - trigger sync and retry
+        console.log("ℹ️ No NFTs in Supabase, triggering sync...");
+        const syncResult = await syncNfts();
+
+        if (syncResult && syncResult.synced > 0) {
+          // Retry fetch after sync
+          const retryResponse = await fetch(`${API_BASE_URL}/api/nfts/all`);
+          if (retryResponse.ok) {
+            const retryData = await retryResponse.json();
+            const retryNfts = retryData.nfts || [];
+
+            if (retryNfts.length > 0) {
+              const formattedCards = retryNfts.map((nft) => ({
+                id: nft.id,
+                tokenId: nft.tokenId,
+                name: nft.name,
+                image: nft.image || nft.imageUrl || nft.openseaImageUrl,
+                imageData: nft.image || nft.imageUrl || nft.openseaImageUrl,
+                rarity: nft.metadata?.attributes?.find(a => a.trait_type === "Edition")?.value || "1/1",
+                type: "Creature — Generated",
+                description: nft.description,
+                metadata: nft.metadata,
+                openSeaUrl: getOpenSeaUrl(nft.tokenId),
+                syncedAt: nft.syncedAt
+              }));
+
+              console.log(`✅ Loaded ${formattedCards.length} NFTs after sync`);
+              setCards(formattedCards);
+              return;
+            }
+          }
+        }
       }
+
+      // Fallback to sample cards
+      console.log("ℹ️ No NFTs found, using sample cards");
+      setCards(SAMPLE_CARDS);
+      setUsingSampleData(true);
     } catch (err) {
-      console.error("❌ Error fetching cards:", err);
+      console.error("❌ Error fetching NFTs:", err);
       setCards(SAMPLE_CARDS);
       setUsingSampleData(true);
       setError(err.message);
     } finally {
       setLoading(false);
     }
-  }, [API_BASE_URL, NFT_CONTRACT_ADDRESS, NETWORK, OPENSEA_API_KEY]);
+  }, [API_BASE_URL, syncNfts]);
 
   // Fetch cards on mount
   useEffect(() => {
@@ -272,8 +210,10 @@ export function useAllCards() {
     cards,
     loading,
     error,
+    syncing,
     usingSampleData,
     refetch: fetchCards,
+    syncNfts,
     getOpenSeaUrl,
   };
 }
