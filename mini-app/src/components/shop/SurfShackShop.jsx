@@ -171,7 +171,7 @@ function SurfShackShop({ onBack }) {
           {/* Scene elements */}
           <Beach />
           <Ocean />
-          <MeshySurfShack position={[0, 2, 0]} scale={7} />
+          <MeshySurfShack position={[0, 3, 0]} scale={7.5} />
           <CardBar cards={cards} onCardClick={handleCardClick} />
 
           {/* Meshy AI generated props (neon sign, shelves) */}
