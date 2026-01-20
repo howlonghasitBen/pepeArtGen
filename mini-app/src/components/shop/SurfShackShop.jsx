@@ -2,10 +2,10 @@ import { Suspense, useState, useCallback, useEffect } from "react";
 import { Canvas } from "@react-three/fiber";
 import { Sky, Environment, Loader } from "@react-three/drei";
 import { useAllCards } from "../../hooks/useAllCards";
-import SurfShack from "./SurfShack";
+import MeshySurfShack from "./MeshySurfShack";
 import CardBar from "./CardBar";
 import ThirdPersonControls from "./ThirdPersonControls";
-import PepeCharacter from "./PepeCharacter";
+import MeshyPepeCharacter from "./MeshyPepeCharacter";
 import Ocean from "./Ocean";
 import Beach from "./Beach";
 import ShopProps from "./ShopProps";
@@ -171,19 +171,20 @@ function SurfShackShop({ onBack }) {
           {/* Scene elements */}
           <Beach />
           <Ocean />
-          <SurfShack />
+          <MeshySurfShack position={[0, 0, 0]} scale={1} />
           <CardBar cards={cards} onCardClick={handleCardClick} />
 
-          {/* Meshy AI generated props */}
+          {/* Meshy AI generated props (neon sign, shelves) */}
           <ShopProps onPropClick={(prop) => console.log('Clicked prop:', prop.id)} />
 
-          {/* Player character */}
-          <PepeCharacter
+          {/* Player character - Meshy AI Pepe with animations */}
+          <MeshyPepeCharacter
             position={characterPosition}
             rotation={[0, characterRotation, 0]}
             playerName={playerName}
             isMoving={isMoving}
             isLocalPlayer={true}
+            scale={1}
           />
 
           {/* Third person camera controls */}
