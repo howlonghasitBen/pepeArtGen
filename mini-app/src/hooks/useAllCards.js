@@ -152,20 +152,53 @@ export function useAllCards() {
       const nfts = data.nfts || [];
 
       if (nfts.length > 0) {
-        // Format NFTs for display
-        const formattedCards = nfts.map((nft) => ({
-          id: nft.identifier,
-          tokenId: nft.identifier,
-          name: nft.name || `Card #${nft.identifier}`,
-          image: nft.image_url || nft.display_image_url,
-          imageData: nft.image_url || nft.display_image_url,
-          rarity: nft.rarity,
-          type: nft.contract,
-          description: nft.description,
-          openSeaUrl: getOpenSeaUrl(nft.identifier),
-        }));
+        console.log(`📋 Found ${nfts.length} NFTs, fetching full details...`);
 
-        console.log(`✅ Found ${formattedCards.length} cards from OpenSea`);
+        // Fetch full details for each NFT to get proper image URLs
+        // The list endpoint returns deprecated image_url, Get NFT returns the correct one
+        const formattedCards = await Promise.all(
+          nfts.map(async (nft) => {
+            try {
+              // Fetch individual NFT details for proper image URL
+              const nftUrl = `https://api.opensea.io/api/v2/chain/${chain}/contract/${NFT_CONTRACT_ADDRESS}/nfts/${nft.identifier}`;
+              const nftResponse = await fetch(nftUrl, { headers });
+
+              if (nftResponse.ok) {
+                const nftData = await nftResponse.json();
+                const fullNft = nftData.nft;
+                return {
+                  id: fullNft.identifier,
+                  tokenId: fullNft.identifier,
+                  name: fullNft.name || `Card #${fullNft.identifier}`,
+                  image: fullNft.image_url || fullNft.display_image_url,
+                  imageData: fullNft.image_url || fullNft.display_image_url,
+                  animationUrl: fullNft.animation_url,
+                  rarity: fullNft.rarity,
+                  type: fullNft.contract,
+                  description: fullNft.description,
+                  openSeaUrl: getOpenSeaUrl(fullNft.identifier),
+                };
+              }
+            } catch (err) {
+              console.warn(`Failed to fetch NFT ${nft.identifier}:`, err);
+            }
+
+            // Fallback to list data if individual fetch fails
+            return {
+              id: nft.identifier,
+              tokenId: nft.identifier,
+              name: nft.name || `Card #${nft.identifier}`,
+              image: nft.image_url || nft.display_image_url,
+              imageData: nft.image_url || nft.display_image_url,
+              rarity: nft.rarity,
+              type: nft.contract,
+              description: nft.description,
+              openSeaUrl: getOpenSeaUrl(nft.identifier),
+            };
+          })
+        );
+
+        console.log(`✅ Loaded ${formattedCards.length} cards with full details`);
         setCards(formattedCards);
       } else {
         console.log("ℹ️ No cards found in collection, using sample cards");

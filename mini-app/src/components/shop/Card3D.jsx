@@ -1,10 +1,13 @@
 import { useRef, useState, useEffect, useMemo } from "react";
-import { useFrame, useLoader } from "@react-three/fiber";
-import { TextureLoader } from "three";
+import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
+import { CARD_LAYOUT } from "../../constants/cardLayout";
 
-// Individual 3D card with hover animation and click handling
-function Card3D({ card, position, onClick, index = 0 }) {
+/**
+ * Individual 3D card with hover animation and click handling
+ * Enforces 3:4 aspect ratio to match cardHTMLGenerator output
+ */
+function Card3D({ card, position, onClick, index = 0, scale = 1.0 }) {
   const meshRef = useRef();
   const [hovered, setHovered] = useState(false);
   const [texture, setTexture] = useState(null);
@@ -40,21 +43,32 @@ function Card3D({ card, position, onClick, index = 0 }) {
     if (!meshRef.current) return;
 
     const time = state.clock.elapsedTime;
+    const { FLOAT_AMPLITUDE, FLOAT_SPEED, HOVER_SCALE } = CARD_LAYOUT.CARD_3D;
 
     // Gentle floating animation
-    meshRef.current.position.y = position[1] + Math.sin(time * 1.5 + index * 0.5) * 0.02;
+    meshRef.current.position.y =
+      position[1] + Math.sin(time * FLOAT_SPEED + index * 0.5) * FLOAT_AMPLITUDE;
 
-    // Hover effect - slight rotation toward camera
+    // Hover effect
+    const targetScale = hovered ? HOVER_SCALE : 1;
+    meshRef.current.scale.lerp(
+      new THREE.Vector3(targetScale, targetScale, targetScale),
+      0.1
+    );
+
+    // Slight rotation on hover
     if (hovered) {
       meshRef.current.rotation.y = THREE.MathUtils.lerp(
         meshRef.current.rotation.y,
-        Math.sin(time * 2) * 0.1,
+        Math.sin(time * 2) * 0.08,
         0.1
       );
-      meshRef.current.scale.lerp(new THREE.Vector3(1.15, 1.15, 1.15), 0.1);
     } else {
-      meshRef.current.rotation.y = THREE.MathUtils.lerp(meshRef.current.rotation.y, 0, 0.1);
-      meshRef.current.scale.lerp(new THREE.Vector3(1, 1, 1), 0.1);
+      meshRef.current.rotation.y = THREE.MathUtils.lerp(
+        meshRef.current.rotation.y,
+        0,
+        0.1
+      );
     }
   });
 
@@ -77,15 +91,15 @@ function Card3D({ card, position, onClick, index = 0 }) {
   return (
     <group ref={meshRef} position={position}>
       {/* Card stand/easel */}
-      <group position={[0, -cardHeight / 2 - 0.05, 0.1]}>
+      <group position={[0, -cardHeight / 2 - 0.03, 0.08]}>
         {/* Stand base */}
         <mesh castShadow>
-          <boxGeometry args={[0.4, 0.05, 0.3]} />
+          <boxGeometry args={[cardWidth * 0.6, 0.04, 0.2]} />
           <meshStandardMaterial color="#2a2a2a" metalness={0.5} roughness={0.5} />
         </mesh>
         {/* Stand back support */}
-        <mesh position={[0, 0.2, -0.1]} rotation={[-0.3, 0, 0]} castShadow>
-          <boxGeometry args={[0.3, 0.4, 0.02]} />
+        <mesh position={[0, 0.15, -0.08]} rotation={[-0.3, 0, 0]} castShadow>
+          <boxGeometry args={[cardWidth * 0.4, 0.3, 0.015]} />
           <meshStandardMaterial color="#333" metalness={0.4} roughness={0.6} />
         </mesh>
       </group>
@@ -102,15 +116,11 @@ function Card3D({ card, position, onClick, index = 0 }) {
         <meshStandardMaterial color="#1a1a2e" roughness={0.3} metalness={0.1} />
       </mesh>
 
-      {/* Card front face with image - full size, no frame */}
+      {/* Card front face with image */}
       <mesh position={[0, 0, cardDepth / 2 + 0.001]}>
         <planeGeometry args={[cardWidth, cardHeight]} />
         {texture ? (
-          <meshStandardMaterial
-            map={texture}
-            roughness={0.4}
-            metalness={0.1}
-          />
+          <meshStandardMaterial map={texture} roughness={0.4} metalness={0.1} />
         ) : (
           <meshStandardMaterial color="#2a2a4e" roughness={0.5} />
         )}
@@ -120,24 +130,10 @@ function Card3D({ card, position, onClick, index = 0 }) {
       {hovered && (
         <pointLight
           position={[0, 0, 0.3]}
-          intensity={0.5}
+          intensity={0.4}
           color="#00ff88"
-          distance={1}
+          distance={0.8}
         />
-      )}
-
-      {/* Card name label (floating below) */}
-      {card?.name && (
-        <group position={[0, -cardHeight / 2 - 0.15, 0.1]}>
-          <mesh>
-            <planeGeometry args={[0.5, 0.1]} />
-            <meshStandardMaterial
-              color="#000"
-              transparent
-              opacity={0.7}
-            />
-          </mesh>
-        </group>
       )}
     </group>
   );
