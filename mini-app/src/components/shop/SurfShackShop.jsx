@@ -8,6 +8,7 @@ import ThirdPersonControls from "./ThirdPersonControls";
 import PepeCharacter from "./PepeCharacter";
 import Ocean from "./Ocean";
 import Beach from "./Beach";
+import ShopProps from "./ShopProps";
 import CardDetailModal from "./CardDetailModal";
 import NameInputModal from "./NameInputModal";
 import MobileControls from "./MobileControls";
@@ -172,6 +173,9 @@ function SurfShackShop({ onBack }) {
           <Ocean />
           <SurfShack />
           <CardBar cards={cards} onCardClick={handleCardClick} />
+
+          {/* Meshy AI generated props */}
+          <ShopProps onPropClick={(prop) => console.log('Clicked prop:', prop.id)} />
 
           {/* Player character */}
           <PepeCharacter
