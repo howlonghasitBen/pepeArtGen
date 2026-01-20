@@ -30,6 +30,8 @@ import mintRoutes from "./mintRoutes.mjs";
 import screenshotRoutes from "./screenshotRoutes.mjs";
 import draftRoutes from "./draftRoutes.mjs";
 import deckRoutes from "./deckRoutes.mjs";
+import { createPublicClient, http } from "viem";
+import { base, baseSepolia } from "viem/chains";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -110,14 +112,23 @@ app.get("/api/ipfs/metadata", async (req, res) => {
   }
 });
 
-// Helper: Convert ipfs:// URL to gateway URL
+// Helper: Convert ipfs:// URL to Pinata gateway URL
 function ipfsToGatewayUrl(ipfsUrl) {
   if (!ipfsUrl) return null;
+  // Use configured Pinata gateway or default
+  const gateway = process.env.PINATA_GATEWAY_URL || 'https://gateway.pinata.cloud/ipfs/';
+  const baseGateway = gateway.endsWith('/') ? gateway : `${gateway}/`;
+
   if (ipfsUrl.startsWith('ipfs://')) {
     const cid = ipfsUrl.replace('ipfs://', '');
-    return `https://gateway.pinata.cloud/ipfs/${cid}`;
+    return `${baseGateway}${cid}`;
   }
-  return ipfsUrl;
+  // Already a full URL
+  if (ipfsUrl.startsWith('http')) {
+    return ipfsUrl;
+  }
+  // Assume it's just a CID
+  return `${baseGateway}${ipfsUrl}`;
 }
 
 // Helper: Fetch IPFS metadata and extract image URL
@@ -173,7 +184,25 @@ app.get("/api/nfts/all", async (req, res) => {
   }
 });
 
-// Sync all NFTs from OpenSea to Supabase (only syncs new/updated)
+// ERC721 ABI for tokenURI and totalSupply
+const ERC721_ABI = [
+  {
+    inputs: [{ name: "tokenId", type: "uint256" }],
+    name: "tokenURI",
+    outputs: [{ name: "", type: "string" }],
+    stateMutability: "view",
+    type: "function"
+  },
+  {
+    inputs: [],
+    name: "totalSupply",
+    outputs: [{ name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function"
+  }
+];
+
+// Sync all NFTs from on-chain to Supabase (queries contract directly, uses Pinata gateway)
 app.post("/api/nfts/sync", async (req, res) => {
   try {
     if (!isSupabaseConfigured()) {
@@ -182,82 +211,105 @@ app.post("/api/nfts/sync", async (req, res) => {
 
     const contractAddress = process.env.NFT_CONTRACT_ADDRESS || req.body.contractAddress;
     const network = process.env.NETWORK || req.body.network || "base";
+    const rpcUrl = process.env.BASE_RPC_URL || (network === "baseSepolia" ? "https://sepolia.base.org" : "https://mainnet.base.org");
 
     if (!contractAddress) {
       return res.status(400).json({ error: "Contract address required" });
     }
 
-    console.log(`🔄 Starting NFT sync for contract ${contractAddress}`);
+    console.log(`🔄 Starting on-chain NFT sync for contract ${contractAddress}`);
+
+    // Create viem client
+    const chain = network === "baseSepolia" ? baseSepolia : base;
+    const client = createPublicClient({
+      chain,
+      transport: http(rpcUrl)
+    });
+
+    // Get total supply from contract
+    let totalSupply;
+    try {
+      totalSupply = await client.readContract({
+        address: contractAddress,
+        abi: ERC721_ABI,
+        functionName: "totalSupply"
+      });
+      totalSupply = Number(totalSupply);
+      console.log(`📊 Total supply on-chain: ${totalSupply}`);
+    } catch (err) {
+      console.error("Failed to get totalSupply:", err);
+      return res.status(500).json({ error: "Failed to query contract totalSupply" });
+    }
+
+    if (totalSupply === 0) {
+      return res.json({ message: "No NFTs minted yet", total: 0, synced: 0 });
+    }
 
     // Get already synced token IDs
     const syncedTokenIds = await syncedNftService.getSyncedTokenIds();
-    console.log(`📊 Already synced: ${syncedTokenIds.length} NFTs`);
+    console.log(`📊 Already synced in DB: ${syncedTokenIds.length} NFTs`);
 
-    // Fetch NFTs from OpenSea
-    const chain = network === "baseSepolia" ? "base_sepolia" : "base";
-    const apiUrl = `https://api.opensea.io/api/v2/chain/${chain}/contract/${contractAddress}/nfts?limit=200`;
-
-    const headers = { "Accept": "application/json" };
-    if (process.env.OPENSEA_API_KEY) {
-      headers["X-API-KEY"] = process.env.OPENSEA_API_KEY;
+    // Find unsynced token IDs (tokens are 1-indexed typically)
+    const unsyncedTokenIds = [];
+    for (let i = 1; i <= totalSupply; i++) {
+      if (!syncedTokenIds.includes(i)) {
+        unsyncedTokenIds.push(i);
+      }
     }
+    console.log(`🆕 ${unsyncedTokenIds.length} new NFTs to sync`);
 
-    const osResponse = await fetch(apiUrl, { headers });
-    if (!osResponse.ok) {
-      throw new Error(`OpenSea API error: ${osResponse.status}`);
-    }
-
-    const osData = await osResponse.json();
-    const openSeaNfts = osData.nfts || [];
-    console.log(`🌊 OpenSea returned ${openSeaNfts.length} NFTs`);
-
-    // Filter to only unsynced NFTs
-    const unsyncedNfts = openSeaNfts.filter(
-      nft => !syncedTokenIds.includes(parseInt(nft.identifier))
-    );
-    console.log(`🆕 ${unsyncedNfts.length} new NFTs to sync`);
-
-    if (unsyncedNfts.length === 0) {
+    if (unsyncedTokenIds.length === 0) {
       return res.json({
         message: "All NFTs already synced",
-        total: openSeaNfts.length,
-        synced: 0
+        total: totalSupply,
+        synced: 0,
+        alreadySynced: syncedTokenIds.length
       });
     }
 
-    // Fetch IPFS metadata and prepare records
+    // Fetch tokenURI and metadata for each unsynced NFT
     const nftsToSync = [];
-    for (const nft of unsyncedNfts) {
-      let metadata = null;
-      let imageUrl = null;
+    for (const tokenId of unsyncedTokenIds) {
+      try {
+        // Get tokenURI from contract
+        const tokenURI = await client.readContract({
+          address: contractAddress,
+          abi: ERC721_ABI,
+          functionName: "tokenURI",
+          args: [BigInt(tokenId)]
+        });
 
-      // Fetch original metadata from IPFS to get 3:4 image
-      if (nft.metadata_url) {
-        metadata = await fetchIpfsMetadata(nft.metadata_url);
-        if (metadata) {
-          imageUrl = metadata.image;
-        }
+        console.log(`📦 Token ${tokenId} URI: ${tokenURI}`);
+
+        // Fetch metadata from Pinata gateway
+        const metadata = await fetchIpfsMetadata(tokenURI);
+        const imageUrl = metadata?.image || null;
+
+        nftsToSync.push({
+          tokenId,
+          contractAddress,
+          name: metadata?.name || `Card #${tokenId}`,
+          description: metadata?.description,
+          imageUrl, // Original 3:4 from Pinata
+          openseaImageUrl: null,
+          metadata,
+          openseaData: null
+        });
+
+        // Small delay to avoid rate limiting Pinata
+        await new Promise(resolve => setTimeout(resolve, 50));
+      } catch (err) {
+        console.warn(`Failed to sync token ${tokenId}:`, err.message);
       }
+    }
 
-      nftsToSync.push({
-        tokenId: parseInt(nft.identifier),
-        contractAddress: contractAddress,
-        name: nft.name || metadata?.name || `Card #${nft.identifier}`,
-        description: nft.description || metadata?.description,
-        imageUrl: imageUrl, // Original 3:4 from IPFS
-        openseaImageUrl: nft.image_url || nft.display_image_url,
-        metadata: metadata,
-        openseaData: {
-          identifier: nft.identifier,
-          name: nft.name,
-          description: nft.description,
-          image_url: nft.image_url,
-          metadata_url: nft.metadata_url
-        }
+    if (nftsToSync.length === 0) {
+      return res.json({
+        message: "No NFTs could be synced",
+        total: totalSupply,
+        synced: 0,
+        errors: unsyncedTokenIds.length
       });
-
-      // Small delay between IPFS fetches to avoid rate limiting
-      await new Promise(resolve => setTimeout(resolve, 100));
     }
 
     // Bulk insert to Supabase
@@ -266,7 +318,7 @@ app.post("/api/nfts/sync", async (req, res) => {
 
     res.json({
       message: "Sync complete",
-      total: openSeaNfts.length,
+      total: totalSupply,
       synced: syncedNfts.length,
       alreadySynced: syncedTokenIds.length
     });
@@ -276,7 +328,7 @@ app.post("/api/nfts/sync", async (req, res) => {
   }
 });
 
-// Sync a single NFT (called after mint)
+// Sync a single NFT (called after mint) - queries on-chain, uses Pinata gateway
 app.post("/api/nfts/sync/:tokenId", async (req, res) => {
   try {
     if (!isSupabaseConfigured()) {
@@ -285,68 +337,70 @@ app.post("/api/nfts/sync/:tokenId", async (req, res) => {
 
     const tokenId = parseInt(req.params.tokenId);
     const { contractAddress, imageUrl, metadata, cardId } = req.body;
+    const contract = contractAddress || process.env.NFT_CONTRACT_ADDRESS;
 
     console.log(`🔄 Syncing single NFT: token ${tokenId}`);
 
-    // If imageUrl and metadata provided (from mint flow), use those
+    // If imageUrl and metadata provided (from mint flow), use those directly
     if (imageUrl) {
       const nft = await syncedNftService.upsertNft({
         tokenId,
-        contractAddress: contractAddress || process.env.NFT_CONTRACT_ADDRESS,
+        contractAddress: contract,
         name: metadata?.name || `Card #${tokenId}`,
         description: metadata?.description,
         imageUrl: imageUrl,
-        openseaImageUrl: null, // Will be populated on next full sync
+        openseaImageUrl: null,
         metadata: metadata,
         openseaData: null,
         cardId: cardId
       });
 
+      console.log(`✅ Synced NFT ${tokenId} from mint flow`);
       return res.json({ success: true, nft });
     }
 
-    // Otherwise fetch from OpenSea
-    const contract = contractAddress || process.env.NFT_CONTRACT_ADDRESS;
+    // Otherwise query on-chain tokenURI and fetch from Pinata
     const network = process.env.NETWORK || "base";
-    const chain = network === "baseSepolia" ? "base_sepolia" : "base";
+    const rpcUrl = process.env.BASE_RPC_URL || (network === "baseSepolia" ? "https://sepolia.base.org" : "https://mainnet.base.org");
+    const chain = network === "baseSepolia" ? baseSepolia : base;
 
-    const apiUrl = `https://api.opensea.io/api/v2/chain/${chain}/contract/${contract}/nfts/${tokenId}`;
-    const headers = { "Accept": "application/json" };
-    if (process.env.OPENSEA_API_KEY) {
-      headers["X-API-KEY"] = process.env.OPENSEA_API_KEY;
+    const client = createPublicClient({
+      chain,
+      transport: http(rpcUrl)
+    });
+
+    // Get tokenURI from contract
+    let tokenURI;
+    try {
+      tokenURI = await client.readContract({
+        address: contract,
+        abi: ERC721_ABI,
+        functionName: "tokenURI",
+        args: [BigInt(tokenId)]
+      });
+      console.log(`📦 Token ${tokenId} URI: ${tokenURI}`);
+    } catch (err) {
+      console.error(`Failed to get tokenURI for ${tokenId}:`, err.message);
+      return res.status(500).json({ error: `Failed to query tokenURI: ${err.message}` });
     }
 
-    const osResponse = await fetch(apiUrl, { headers });
-    if (!osResponse.ok) {
-      throw new Error(`OpenSea API error: ${osResponse.status}`);
-    }
-
-    const osData = await osResponse.json();
-    const nftData = osData.nft;
-
-    // Fetch IPFS metadata
-    let ipfsMetadata = null;
-    let originalImageUrl = null;
-    if (nftData.metadata_url) {
-      ipfsMetadata = await fetchIpfsMetadata(nftData.metadata_url);
-      if (ipfsMetadata) {
-        originalImageUrl = ipfsMetadata.image;
-      }
-    }
+    // Fetch metadata from Pinata gateway
+    const ipfsMetadata = await fetchIpfsMetadata(tokenURI);
+    const originalImageUrl = ipfsMetadata?.image || null;
 
     const nft = await syncedNftService.upsertNft({
       tokenId,
       contractAddress: contract,
-      name: nftData.name || ipfsMetadata?.name || `Card #${tokenId}`,
-      description: nftData.description || ipfsMetadata?.description,
+      name: ipfsMetadata?.name || `Card #${tokenId}`,
+      description: ipfsMetadata?.description,
       imageUrl: originalImageUrl,
-      openseaImageUrl: nftData.image_url || nftData.display_image_url,
+      openseaImageUrl: null,
       metadata: ipfsMetadata,
-      openseaData: nftData,
+      openseaData: null,
       cardId: cardId
     });
 
-    console.log(`✅ Synced NFT ${tokenId}`);
+    console.log(`✅ Synced NFT ${tokenId} from on-chain`);
     res.json({ success: true, nft });
   } catch (error) {
     console.error(`❌ Error syncing NFT ${req.params.tokenId}:`, error);
