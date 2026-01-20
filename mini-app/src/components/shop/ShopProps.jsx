@@ -2,14 +2,7 @@
  * ShopProps.jsx
  *
  * Container component for all Meshy AI generated props in the shop.
- * Add new props here as you create them in Meshy AI.
- *
- * Model Directory Structure:
- *   /public/models/
- *     /props/        - Shop items (arcade machines, furniture, decor)
- *     /environment/  - Beach/outdoor items (palm trees, rocks, boats)
- *     /displays/     - Card display items (pedestals, frames, cases)
- *     /characters/   - Character items (hats, accessories)
+ * Includes neon sign and card shelf configurations.
  */
 
 import { Suspense } from 'react';
@@ -17,76 +10,109 @@ import MeshyModel, { preloadModel } from './MeshyModel';
 
 // ============================================
 // PROP CONFIGURATIONS
-// Add your Meshy AI models here after exporting
 // ============================================
 
 const SHOP_PROPS = [
-  // Example configurations (uncomment when you have the models):
-
-  // {
-  //   id: 'arcade-machine-1',
-  //   url: '/models/props/arcade-machine.glb',
-  //   position: [8, 0, -5],
-  //   rotation: [0, -Math.PI / 4, 0],
-  //   scale: 1.5,
-  //   category: 'props',
-  // },
-  // {
-  //   id: 'jukebox',
-  //   url: '/models/props/jukebox.glb',
-  //   position: [-6, 0, -4],
-  //   rotation: [0, Math.PI / 6, 0],
-  //   scale: 1.2,
-  //   emissiveIntensity: 0.5,
-  //   emissiveColor: '#ff00ff',
-  //   category: 'props',
-  // },
-];
-
-const ENVIRONMENT_PROPS = [
-  // {
-  //   id: 'palm-tree-1',
-  //   url: '/models/environment/palm-tree.glb',
-  //   position: [15, 0, 5],
-  //   scale: 2,
-  //   category: 'environment',
-  // },
-  // {
-  //   id: 'beach-umbrella',
-  //   url: '/models/environment/beach-umbrella.glb',
-  //   position: [10, 0, 8],
-  //   rotation: [0, Math.PI / 3, 0],
-  //   scale: 1,
-  //   category: 'environment',
-  // },
+  // Neon "OPEN" sign - centered above the entrance
+  {
+    id: 'neon-open-sign',
+    url: '/models/props/neonOpenSign.glb',
+    position: [0, 4, 5],  // Above entrance (adjust Y for height, Z for door position)
+    rotation: [0, Math.PI, 0],  // Face outward toward visitors
+    scale: 0.5,  // Adjust based on model size
+    emissiveIntensity: 1.5,
+    emissiveColor: '#ff00ff',  // Neon pink glow
+    category: 'props',
+  },
 ];
 
 const DISPLAY_PROPS = [
-  // {
-  //   id: 'card-pedestal-1',
-  //   url: '/models/displays/card-pedestal.glb',
-  //   position: [0, 0, -8],
-  //   scale: 0.8,
-  //   animate: true,
-  //   floatAmplitude: 0,
-  //   rotateSpeed: 0.5,
-  //   category: 'displays',
-  // },
-  // {
-  //   id: 'trophy-case',
-  //   url: '/models/displays/trophy-case.glb',
-  //   position: [-4, 0, -6],
-  //   scale: 1,
-  //   emissiveIntensity: 0.3,
-  //   emissiveColor: '#ffd700',
-  //   category: 'displays',
-  // },
+  // ============================================
+  // WALL SHELVES - Along the back and side walls
+  // ============================================
+
+  // Back wall - left shelf
+  {
+    id: 'shelf-wall-back-left',
+    url: '/models/props/cardShelf.glb',
+    position: [-4, 1.5, -4.5],  // Against back wall, left side
+    rotation: [0, 0, 0],  // Facing forward
+    scale: 0.3,
+    category: 'displays',
+  },
+  // Back wall - right shelf
+  {
+    id: 'shelf-wall-back-right',
+    url: '/models/props/cardShelf.glb',
+    position: [4, 1.5, -4.5],  // Against back wall, right side
+    rotation: [0, 0, 0],  // Facing forward
+    scale: 0.3,
+    category: 'displays',
+  },
+  // Left wall shelf
+  {
+    id: 'shelf-wall-left',
+    url: '/models/props/cardShelf.glb',
+    position: [-5.5, 1.5, 0],  // Against left wall
+    rotation: [0, Math.PI / 2, 0],  // Rotated to face inward
+    scale: 0.3,
+    category: 'displays',
+  },
+  // Right wall shelf
+  {
+    id: 'shelf-wall-right',
+    url: '/models/props/cardShelf.glb',
+    position: [5.5, 1.5, 0],  // Against right wall
+    rotation: [0, -Math.PI / 2, 0],  // Rotated to face inward
+    scale: 0.3,
+    category: 'displays',
+  },
+
+  // ============================================
+  // FLOOR SHELVES - 2 sets of 2 back-to-back
+  // ============================================
+
+  // Floor set 1 - Left side of shop
+  {
+    id: 'shelf-floor-1a',
+    url: '/models/props/cardShelf.glb',
+    position: [-2, 0, -1],  // Left floor area, facing one way
+    rotation: [0, 0, 0],
+    scale: 0.25,
+    category: 'displays',
+  },
+  {
+    id: 'shelf-floor-1b',
+    url: '/models/props/cardShelf.glb',
+    position: [-2, 0, -1.5],  // Back-to-back with 1a
+    rotation: [0, Math.PI, 0],  // Facing opposite direction
+    scale: 0.25,
+    category: 'displays',
+  },
+
+  // Floor set 2 - Right side of shop
+  {
+    id: 'shelf-floor-2a',
+    url: '/models/props/cardShelf.glb',
+    position: [2, 0, -1],  // Right floor area, facing one way
+    rotation: [0, 0, 0],
+    scale: 0.25,
+    category: 'displays',
+  },
+  {
+    id: 'shelf-floor-2b',
+    url: '/models/props/cardShelf.glb',
+    position: [2, 0, -1.5],  // Back-to-back with 2a
+    rotation: [0, Math.PI, 0],  // Facing opposite direction
+    scale: 0.25,
+    category: 'displays',
+  },
 ];
 
 // Combine all props
-const ALL_PROPS = [...SHOP_PROPS, ...ENVIRONMENT_PROPS, ...DISPLAY_PROPS];
+const ALL_PROPS = [...SHOP_PROPS, ...DISPLAY_PROPS];
 
-// Preload all models (call this once)
+// Preload all models
 export function preloadAllModels() {
   ALL_PROPS.forEach(prop => {
     if (prop.url) {
@@ -96,7 +122,6 @@ export function preloadAllModels() {
 }
 
 function ShopProps({ onPropClick }) {
-  // If no props defined yet, return null
   if (ALL_PROPS.length === 0) {
     return null;
   }
@@ -122,6 +147,22 @@ function ShopProps({ onPropClick }) {
           />
         </Suspense>
       ))}
+
+      {/* Add point light for neon sign glow effect */}
+      <pointLight
+        position={[0, 4, 5.5]}
+        intensity={2}
+        color="#ff00ff"
+        distance={8}
+        decay={2}
+      />
+      <pointLight
+        position={[0, 4, 5.5]}
+        intensity={1}
+        color="#00ffff"
+        distance={6}
+        decay={2}
+      />
     </group>
   );
 }
@@ -129,33 +170,22 @@ function ShopProps({ onPropClick }) {
 export default ShopProps;
 
 // ============================================
-// QUICK REFERENCE: How to add a new prop
+// POSITION ADJUSTMENT GUIDE
 // ============================================
 /*
-1. Create model in Meshy AI (Image-to-3D)
-2. Export as GLB format
-3. Place file in appropriate /public/models/ subfolder
-4. Add configuration to the relevant array above:
+If models appear in wrong positions, adjust these values:
 
-{
-  id: 'unique-id',           // Unique identifier
-  url: '/models/props/x.glb', // Path to GLB file
-  position: [x, y, z],        // World position
-  rotation: [x, y, z],        // Rotation in radians (optional)
-  scale: 1,                   // Scale factor (optional)
+NEON SIGN:
+- position[1] (Y): Raise/lower the sign
+- position[2] (Z): Move closer/further from building
+- scale: Make bigger/smaller
 
-  // Animation options (optional)
-  animate: true,              // Enable animations
-  floatAmplitude: 0.1,        // Vertical bob amount
-  floatSpeed: 1,              // Bob speed
-  rotateSpeed: 0.5,           // Auto-rotation speed
+SHELVES:
+- Wall shelves position[1] (Y): Height on wall
+- Floor shelves: Currently at Y=0 (floor level)
+- scale: Adjust size to fit space
+- rotation[1] (Y): Rotate to face different direction
 
-  // Material overrides (optional)
-  emissiveIntensity: 0.5,     // Glow amount
-  emissiveColor: '#ff00ff',   // Glow color
-  metalness: 0.8,             // Metal look
-  roughness: 0.2,             // Surface smoothness
-
-  category: 'props',          // For filtering
-}
+After running the app, check the console for any loading errors
+and visually confirm positions, then adjust values here.
 */
