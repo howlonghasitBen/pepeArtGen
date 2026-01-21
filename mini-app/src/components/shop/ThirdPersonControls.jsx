@@ -7,6 +7,7 @@ function ThirdPersonControls({
   onRotationChange,
   onMovingChange,
   mobileInput,
+  cameraInput,
   enabled = true
 }) {
   const { camera } = useThree();
@@ -238,6 +239,18 @@ function ThirdPersonControls({
   // Main update loop
   useFrame((state, delta) => {
     if (!enabled) return;
+
+    // Handle camera joystick input
+    if (cameraInput) {
+      const camX = cameraInput.x || 0;
+      const camY = cameraInput.y || 0;
+
+      if (Math.abs(camX) > 0.1 || Math.abs(camY) > 0.1) {
+        // Rotate camera based on joystick
+        cameraYaw.current -= camX * 0.03;
+        cameraPitch.current = Math.max(0.1, Math.min(0.8, cameraPitch.current + camY * 0.02));
+      }
+    }
 
     // Get movement input (keyboard or mobile)
     let inputX = 0;
