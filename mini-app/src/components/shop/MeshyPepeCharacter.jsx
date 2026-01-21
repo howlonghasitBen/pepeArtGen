@@ -72,11 +72,16 @@ function MeshyPepeCharacter({
     };
   }, [actions, isMoving, isRunning]);
 
-  // Idle bobbing when not moving
+  // Update position and idle bobbing
   const idleTime = useRef(0);
   useFrame((state, delta) => {
     if (!groupRef.current) return;
 
+    // Always sync position from props (X and Z from controls)
+    groupRef.current.position.x = position[0];
+    groupRef.current.position.z = position[2];
+
+    // Handle Y position with idle bob when not moving
     if (!isMoving) {
       idleTime.current += delta;
       // Subtle idle bob
@@ -85,6 +90,9 @@ function MeshyPepeCharacter({
       idleTime.current = 0;
       groupRef.current.position.y = position[1];
     }
+
+    // Sync rotation from props
+    groupRef.current.rotation.y = rotation[1];
   });
 
   return (
