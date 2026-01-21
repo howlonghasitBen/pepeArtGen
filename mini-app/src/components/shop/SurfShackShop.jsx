@@ -177,6 +177,16 @@ function SurfShackShop({ onBack }) {
           {/* Meshy AI generated props (neon sign, shelves) */}
           <ShopProps onPropClick={(prop) => console.log('Clicked prop:', prop.id)} />
 
+          {/* Shopkeeper Pepe - stationary behind the counter */}
+          <MeshyPepeCharacter
+            position={[0, 0, -3]}
+            rotation={[0, Math.PI, 0]}
+            playerName="Shopkeeper"
+            isMoving={false}
+            isLocalPlayer={false}
+            scale={1}
+          />
+
           {/* Player character - Meshy AI Pepe with animations */}
           <MeshyPepeCharacter
             position={characterPosition}

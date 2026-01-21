@@ -37,7 +37,7 @@ const DISPLAY_PROPS = [
     url: '/models/props/cardShelf.glb',
     position: [-4, 1.5, -4.5],  // Against back wall, left side
     rotation: [0, 0, 0],  // Facing forward
-    scale: 0.3,
+    scale: 1.2,
     category: 'displays',
   },
   // Back wall - right shelf
@@ -46,7 +46,7 @@ const DISPLAY_PROPS = [
     url: '/models/props/cardShelf.glb',
     position: [4, 1.5, -4.5],  // Against back wall, right side
     rotation: [0, 0, 0],  // Facing forward
-    scale: 0.3,
+    scale: 1.2,
     category: 'displays',
   },
   // Left wall shelf
@@ -55,7 +55,7 @@ const DISPLAY_PROPS = [
     url: '/models/props/cardShelf.glb',
     position: [-5.5, 1.5, 0],  // Against left wall
     rotation: [0, Math.PI / 2, 0],  // Rotated to face inward
-    scale: 0.3,
+    scale: 1.2,
     category: 'displays',
   },
   // Right wall shelf
@@ -64,7 +64,7 @@ const DISPLAY_PROPS = [
     url: '/models/props/cardShelf.glb',
     position: [5.5, 1.5, 0],  // Against right wall
     rotation: [0, -Math.PI / 2, 0],  // Rotated to face inward
-    scale: 0.3,
+    scale: 1.2,
     category: 'displays',
   },
 
@@ -76,17 +76,17 @@ const DISPLAY_PROPS = [
   {
     id: 'shelf-floor-1a',
     url: '/models/props/cardShelf.glb',
-    position: [-2, 0, -1],  // Left floor area, facing one way
+    position: [-3, 0, -1],  // Left floor area, facing one way
     rotation: [0, 0, 0],
-    scale: 0.25,
+    scale: 1.0,
     category: 'displays',
   },
   {
     id: 'shelf-floor-1b',
     url: '/models/props/cardShelf.glb',
-    position: [-2, 0, -1.5],  // Back-to-back with 1a
+    position: [-3, 0, -2],  // Back-to-back with 1a
     rotation: [0, Math.PI, 0],  // Facing opposite direction
-    scale: 0.25,
+    scale: 1.0,
     category: 'displays',
   },
 
@@ -94,17 +94,17 @@ const DISPLAY_PROPS = [
   {
     id: 'shelf-floor-2a',
     url: '/models/props/cardShelf.glb',
-    position: [2, 0, -1],  // Right floor area, facing one way
+    position: [3, 0, -1],  // Right floor area, facing one way
     rotation: [0, 0, 0],
-    scale: 0.25,
+    scale: 1.0,
     category: 'displays',
   },
   {
     id: 'shelf-floor-2b',
     url: '/models/props/cardShelf.glb',
-    position: [2, 0, -1.5],  // Back-to-back with 2a
+    position: [3, 0, -2],  // Back-to-back with 2a
     rotation: [0, Math.PI, 0],  // Facing opposite direction
-    scale: 0.25,
+    scale: 1.0,
     category: 'displays',
   },
 ];
