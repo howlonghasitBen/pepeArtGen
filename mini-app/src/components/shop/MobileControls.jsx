@@ -1,38 +1,45 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import "./MobileControls.css";
 
-function MobileControls({ onInputChange, visible = true }) {
-  const joystickRef = useRef(null);
-  const knobRef = useRef(null);
-  const [isActive, setIsActive] = useState(false);
-  const touchId = useRef(null);
-  const centerPos = useRef({ x: 0, y: 0 });
+function MobileControls({ onInputChange, onCameraChange, visible = true }) {
+  // Movement joystick state
+  const moveJoystickRef = useRef(null);
+  const moveKnobRef = useRef(null);
+  const [isMoveActive, setIsMoveActive] = useState(false);
+  const moveTouchId = useRef(null);
+  const moveCenterPos = useRef({ x: 0, y: 0 });
+
+  // Camera joystick state
+  const camJoystickRef = useRef(null);
+  const camKnobRef = useRef(null);
+  const [isCamActive, setIsCamActive] = useState(false);
+  const camTouchId = useRef(null);
+  const camCenterPos = useRef({ x: 0, y: 0 });
 
   const joystickRadius = 50;
   const knobRadius = 25;
   const maxDistance = joystickRadius - knobRadius;
 
-  const handleStart = useCallback((clientX, clientY, identifier) => {
-    if (!joystickRef.current) return;
+  // Movement joystick handlers
+  const handleMoveStart = useCallback((clientX, clientY, identifier) => {
+    if (!moveJoystickRef.current) return;
 
-    const rect = joystickRef.current.getBoundingClientRect();
-    centerPos.current = {
+    const rect = moveJoystickRef.current.getBoundingClientRect();
+    moveCenterPos.current = {
       x: rect.left + rect.width / 2,
       y: rect.top + rect.height / 2,
     };
 
-    touchId.current = identifier;
-    setIsActive(true);
-
-    // Calculate initial position
-    handleMove(clientX, clientY);
+    moveTouchId.current = identifier;
+    setIsMoveActive(true);
+    handleMoveUpdate(clientX, clientY);
   }, []);
 
-  const handleMove = useCallback((clientX, clientY) => {
-    if (!knobRef.current || !isActive) return;
+  const handleMoveUpdate = useCallback((clientX, clientY) => {
+    if (!moveKnobRef.current) return;
 
-    const deltaX = clientX - centerPos.current.x;
-    const deltaY = clientY - centerPos.current.y;
+    const deltaX = clientX - moveCenterPos.current.x;
+    const deltaY = clientY - moveCenterPos.current.y;
     const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
 
     let clampedX = deltaX;
@@ -44,66 +51,115 @@ function MobileControls({ onInputChange, visible = true }) {
       clampedY = Math.sin(angle) * maxDistance;
     }
 
-    // Update knob position
-    knobRef.current.style.transform = `translate(${clampedX}px, ${clampedY}px)`;
+    moveKnobRef.current.style.transform = `translate(${clampedX}px, ${clampedY}px)`;
 
-    // Normalize input to -1 to 1 range
     const normalizedX = clampedX / maxDistance;
-    const normalizedY = -clampedY / maxDistance; // Invert Y for forward/backward
+    const normalizedY = -clampedY / maxDistance;
 
     onInputChange?.({ x: normalizedX, y: normalizedY });
-  }, [isActive, maxDistance, onInputChange]);
+  }, [maxDistance, onInputChange]);
 
-  const handleEnd = useCallback(() => {
-    touchId.current = null;
-    setIsActive(false);
+  const handleMoveEnd = useCallback(() => {
+    moveTouchId.current = null;
+    setIsMoveActive(false);
 
-    if (knobRef.current) {
-      knobRef.current.style.transform = "translate(0px, 0px)";
+    if (moveKnobRef.current) {
+      moveKnobRef.current.style.transform = "translate(0px, 0px)";
     }
 
     onInputChange?.({ x: 0, y: 0 });
   }, [onInputChange]);
+
+  // Camera joystick handlers
+  const handleCamStart = useCallback((clientX, clientY, identifier) => {
+    if (!camJoystickRef.current) return;
+
+    const rect = camJoystickRef.current.getBoundingClientRect();
+    camCenterPos.current = {
+      x: rect.left + rect.width / 2,
+      y: rect.top + rect.height / 2,
+    };
+
+    camTouchId.current = identifier;
+    setIsCamActive(true);
+    handleCamUpdate(clientX, clientY);
+  }, []);
+
+  const handleCamUpdate = useCallback((clientX, clientY) => {
+    if (!camKnobRef.current) return;
+
+    const deltaX = clientX - camCenterPos.current.x;
+    const deltaY = clientY - camCenterPos.current.y;
+    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+
+    let clampedX = deltaX;
+    let clampedY = deltaY;
+
+    if (distance > maxDistance) {
+      const angle = Math.atan2(deltaY, deltaX);
+      clampedX = Math.cos(angle) * maxDistance;
+      clampedY = Math.sin(angle) * maxDistance;
+    }
+
+    camKnobRef.current.style.transform = `translate(${clampedX}px, ${clampedY}px)`;
+
+    const normalizedX = clampedX / maxDistance;
+    const normalizedY = clampedY / maxDistance;
+
+    onCameraChange?.({ x: normalizedX, y: normalizedY });
+  }, [maxDistance, onCameraChange]);
+
+  const handleCamEnd = useCallback(() => {
+    camTouchId.current = null;
+    setIsCamActive(false);
+
+    if (camKnobRef.current) {
+      camKnobRef.current.style.transform = "translate(0px, 0px)";
+    }
+
+    onCameraChange?.({ x: 0, y: 0 });
+  }, [onCameraChange]);
 
   // Touch event handlers
   useEffect(() => {
     if (!visible) return;
 
     const handleTouchStart = (e) => {
-      // Only handle touches on the left side of the screen
       for (const touch of e.changedTouches) {
-        if (touch.clientX < window.innerWidth / 2 && touchId.current === null) {
+        const isLeftSide = touch.clientX < window.innerWidth / 2;
+
+        if (isLeftSide && moveTouchId.current === null) {
           e.preventDefault();
-          handleStart(touch.clientX, touch.clientY, touch.identifier);
-          break;
+          handleMoveStart(touch.clientX, touch.clientY, touch.identifier);
+        } else if (!isLeftSide && camTouchId.current === null) {
+          e.preventDefault();
+          handleCamStart(touch.clientX, touch.clientY, touch.identifier);
         }
       }
     };
 
     const handleTouchMove = (e) => {
-      if (touchId.current === null) return;
-
       for (const touch of e.changedTouches) {
-        if (touch.identifier === touchId.current) {
+        if (touch.identifier === moveTouchId.current) {
           e.preventDefault();
-          handleMove(touch.clientX, touch.clientY);
-          break;
+          handleMoveUpdate(touch.clientX, touch.clientY);
+        } else if (touch.identifier === camTouchId.current) {
+          e.preventDefault();
+          handleCamUpdate(touch.clientX, touch.clientY);
         }
       }
     };
 
     const handleTouchEnd = (e) => {
-      if (touchId.current === null) return;
-
       for (const touch of e.changedTouches) {
-        if (touch.identifier === touchId.current) {
-          handleEnd();
-          break;
+        if (touch.identifier === moveTouchId.current) {
+          handleMoveEnd();
+        } else if (touch.identifier === camTouchId.current) {
+          handleCamEnd();
         }
       }
     };
 
-    // Add listeners to document to capture all touches
     document.addEventListener("touchstart", handleTouchStart, { passive: false });
     document.addEventListener("touchmove", handleTouchMove, { passive: false });
     document.addEventListener("touchend", handleTouchEnd, { passive: false });
@@ -115,42 +171,40 @@ function MobileControls({ onInputChange, visible = true }) {
       document.removeEventListener("touchend", handleTouchEnd);
       document.removeEventListener("touchcancel", handleTouchEnd);
     };
-  }, [visible, handleStart, handleMove, handleEnd]);
+  }, [visible, handleMoveStart, handleMoveUpdate, handleMoveEnd, handleCamStart, handleCamUpdate, handleCamEnd]);
 
   if (!visible) return null;
 
   return (
     <div className="mobile-controls">
-      {/* Movement joystick */}
+      {/* Movement joystick - Left side */}
       <div
-        ref={joystickRef}
-        className={`joystick-base ${isActive ? "active" : ""}`}
+        ref={moveJoystickRef}
+        className={`joystick-base move-joystick ${isMoveActive ? "active" : ""}`}
       >
-        <div ref={knobRef} className="joystick-knob" />
+        <div ref={moveKnobRef} className="joystick-knob move-knob" />
         <div className="joystick-directions">
           <span className="dir-up">W</span>
           <span className="dir-down">S</span>
           <span className="dir-left">A</span>
           <span className="dir-right">D</span>
         </div>
+        <span className="joystick-label">MOVE</span>
       </div>
 
-      {/* Camera hint */}
-      <div className="camera-hint">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <circle cx="12" cy="12" r="10" />
-          <path d="M12 8v8M8 12h8" />
-        </svg>
-        <span>Drag right side to look</span>
-      </div>
-
-      {/* Action button */}
-      <div className="action-buttons">
-        <button className="action-btn interact-btn">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M13.8 12H3" />
-          </svg>
-        </button>
+      {/* Camera joystick - Right side */}
+      <div
+        ref={camJoystickRef}
+        className={`joystick-base camera-joystick ${isCamActive ? "active" : ""}`}
+      >
+        <div ref={camKnobRef} className="joystick-knob camera-knob" />
+        <div className="joystick-directions">
+          <span className="dir-up">↑</span>
+          <span className="dir-down">↓</span>
+          <span className="dir-left">←</span>
+          <span className="dir-right">→</span>
+        </div>
+        <span className="joystick-label">LOOK</span>
       </div>
     </div>
   );

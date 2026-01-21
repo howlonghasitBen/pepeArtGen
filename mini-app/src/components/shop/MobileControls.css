@@ -8,11 +8,10 @@
   z-index: 100;
 }
 
-/* Joystick */
+/* Joystick base */
 .joystick-base {
   position: absolute;
-  bottom: 100px;
-  left: 40px;
+  bottom: 80px;
   width: 120px;
   height: 120px;
   background: rgba(0, 0, 0, 0.4);
@@ -27,20 +26,46 @@
 }
 
 .joystick-base.active {
-  border-color: rgba(0, 255, 136, 0.8);
   background: rgba(0, 0, 0, 0.5);
 }
 
+/* Movement joystick - left side */
+.move-joystick {
+  left: 40px;
+}
+
+.move-joystick.active {
+  border-color: rgba(0, 255, 136, 0.8);
+}
+
+/* Camera joystick - right side */
+.camera-joystick {
+  right: 40px;
+}
+
+.camera-joystick.active {
+  border-color: rgba(255, 136, 0, 0.8);
+}
+
+/* Joystick knobs */
 .joystick-knob {
   width: 50px;
   height: 50px;
-  background: linear-gradient(145deg, rgba(0, 255, 136, 0.8), rgba(0, 200, 100, 0.9));
   border: 2px solid rgba(255, 255, 255, 0.5);
   border-radius: 50%;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
   transition: transform 0.05s ease-out;
 }
 
+.move-knob {
+  background: linear-gradient(145deg, rgba(0, 255, 136, 0.8), rgba(0, 200, 100, 0.9));
+}
+
+.camera-knob {
+  background: linear-gradient(145deg, rgba(255, 136, 0, 0.8), rgba(200, 100, 0, 0.9));
+}
+
+/* Joystick direction labels */
 .joystick-directions {
   position: absolute;
   width: 100%;
@@ -80,66 +105,18 @@
   transform: translateY(-50%);
 }
 
-/* Camera hint */
-.camera-hint {
+/* Joystick label */
+.joystick-label {
   position: absolute;
-  bottom: 40px;
-  right: 40px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 16px;
-  background: rgba(0, 0, 0, 0.5);
-  border-radius: 20px;
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 12px;
+  bottom: -25px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 11px;
+  font-weight: bold;
+  color: rgba(255, 255, 255, 0.6);
+  text-transform: uppercase;
+  letter-spacing: 1px;
   pointer-events: none;
-}
-
-.camera-hint svg {
-  width: 20px;
-  height: 20px;
-  opacity: 0.7;
-}
-
-/* Action buttons */
-.action-buttons {
-  position: absolute;
-  bottom: 120px;
-  right: 40px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  pointer-events: auto;
-}
-
-.action-btn {
-  width: 60px;
-  height: 60px;
-  background: rgba(0, 0, 0, 0.5);
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.action-btn:active {
-  transform: scale(0.95);
-  background: rgba(0, 255, 136, 0.3);
-  border-color: rgba(0, 255, 136, 0.8);
-}
-
-.action-btn svg {
-  width: 28px;
-  height: 28px;
-  color: white;
-}
-
-.interact-btn {
-  background: linear-gradient(145deg, rgba(0, 150, 255, 0.5), rgba(0, 100, 200, 0.5));
 }
 
 /* Tablet/Desktop - hide mobile controls */
@@ -149,13 +126,12 @@
   }
 }
 
-/* Small phones */
-@media (max-width: 380px) {
+/* Landscape adjustments */
+@media (max-height: 500px) and (orientation: landscape) {
   .joystick-base {
+    bottom: 30px;
     width: 100px;
     height: 100px;
-    bottom: 80px;
-    left: 20px;
   }
 
   .joystick-knob {
@@ -163,20 +139,42 @@
     height: 40px;
   }
 
-  .action-buttons {
-    bottom: 100px;
-    right: 20px;
+  .move-joystick {
+    left: 30px;
   }
 
-  .action-btn {
-    width: 50px;
-    height: 50px;
+  .camera-joystick {
+    right: 30px;
   }
 
-  .camera-hint {
-    bottom: 20px;
-    right: 20px;
-    padding: 8px 12px;
+  .joystick-label {
+    bottom: -20px;
     font-size: 10px;
+  }
+}
+
+/* Small phones */
+@media (max-width: 380px) {
+  .joystick-base {
+    width: 100px;
+    height: 100px;
+    bottom: 60px;
+  }
+
+  .move-joystick {
+    left: 20px;
+  }
+
+  .camera-joystick {
+    right: 20px;
+  }
+
+  .joystick-knob {
+    width: 40px;
+    height: 40px;
+  }
+
+  .joystick-label {
+    font-size: 9px;
   }
 }
