@@ -7,8 +7,9 @@
 
 import { useRef, useEffect, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { useGLTF, useAnimations, Text } from '@react-three/drei';
+import { useGLTF, Text } from '@react-three/drei';
 import * as THREE from 'three';
+import { clone as SkeletonUtilsClone } from 'three/examples/jsm/utils/SkeletonUtils.js';
 
 // Preload the model
 useGLTF.preload('/models/props/pepeBlueAlohaShirtAnimations.glb');
@@ -23,17 +24,18 @@ function MeshyPepeCharacter({
   isLocalPlayer = true,
 }) {
   const groupRef = useRef();
-  const { scene, animations } = useGLTF('/models/props/pepeBlueAlohaShirtAnimations.glb');
-  const { actions, mixer } = useAnimations(animations, groupRef);
+  const mixerRef = useRef();
+  const actionsRef = useRef({});
 
-  // Clone the scene to allow multiple instances
+  const { scene, animations } = useGLTF('/models/props/pepeBlueAlohaShirtAnimations.glb');
+
+  // Clone the scene properly for skinned meshes
   const clonedScene = useMemo(() => {
-    const clone = scene.clone();
+    const clone = SkeletonUtilsClone(scene);
     clone.traverse((child) => {
       if (child.isMesh) {
         child.castShadow = true;
         child.receiveShadow = true;
-        // Clone materials to prevent shared state
         if (child.material) {
           child.material = child.material.clone();
         }
@@ -42,9 +44,30 @@ function MeshyPepeCharacter({
     return clone;
   }, [scene]);
 
+  // Set up animation mixer for this instance
+  useEffect(() => {
+    if (!clonedScene || !animations.length) return;
+
+    const mixer = new THREE.AnimationMixer(clonedScene);
+    mixerRef.current = mixer;
+
+    // Create actions for each animation
+    const actions = {};
+    animations.forEach((clip) => {
+      actions[clip.name] = mixer.clipAction(clip);
+    });
+    actionsRef.current = actions;
+
+    return () => {
+      mixer.stopAllAction();
+      mixer.uncacheRoot(clonedScene);
+    };
+  }, [clonedScene, animations]);
+
   // Handle animation transitions
   useEffect(() => {
-    if (!actions) return;
+    const actions = actionsRef.current;
+    if (!actions || Object.keys(actions).length === 0) return;
 
     const walkAction = actions['Walking'];
     const runAction = actions['Running'];
@@ -63,19 +86,17 @@ function MeshyPepeCharacter({
         activeAction.play();
       }
     }
+  }, [isMoving, isRunning]);
 
-    return () => {
-      // Cleanup on unmount
-      Object.values(actions).forEach(action => {
-        if (action) action.stop();
-      });
-    };
-  }, [actions, isMoving, isRunning]);
-
-  // Update position and idle bobbing
+  // Update position, rotation, and animation mixer
   const idleTime = useRef(0);
   useFrame((state, delta) => {
     if (!groupRef.current) return;
+
+    // Update animation mixer
+    if (mixerRef.current) {
+      mixerRef.current.update(delta);
+    }
 
     // Always sync position from props (X and Z from controls)
     groupRef.current.position.x = position[0];
@@ -84,7 +105,6 @@ function MeshyPepeCharacter({
     // Handle Y position with idle bob when not moving
     if (!isMoving) {
       idleTime.current += delta;
-      // Subtle idle bob
       groupRef.current.position.y = position[1] + Math.sin(idleTime.current * 2) * 0.02;
     } else {
       idleTime.current = 0;
