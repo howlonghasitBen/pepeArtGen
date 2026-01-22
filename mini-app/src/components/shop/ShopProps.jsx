@@ -2,7 +2,7 @@
  * ShopProps.jsx
  *
  * Container component for Meshy AI generated props and card displays.
- * Shelves are positioned inside the shack with cards displayed on them.
+ * Shelves are positioned inside the double shack with cards displayed on them.
  */
 
 import { Suspense, useMemo } from 'react';
@@ -13,66 +13,95 @@ import Card3D from './Card3D';
 // CONFIGURATION
 // ============================================
 
-// Shelf configuration - unified sizing
+// Shelf configuration - larger shelves for better visibility
 const SHELF_CONFIG = {
-  scale: 1.2,              // Reduced scale to fit interior
-  cardScale: 0.55,         // Card scale to fit shelves
-  cardsPerShelf: 3,        // Cards per shelf row (reduced for tighter fit)
-  cardSpacing: 0.75,       // Horizontal spacing between cards
-  cardYOffset: 0.6,        // Height offset for cards on shelf surface
+  scale: 2.0,              // Larger scale for bigger shelves
+  cardScale: 0.7,          // Card scale to fit shelves
+  cardsPerShelf: 4,        // Cards per shelf row
+  cardSpacing: 1.0,        // Horizontal spacing between cards
+  cardYOffset: 0.9,        // Height offset for cards on shelf surface
 };
 
-// Shack interior dimensions - adjusted based on visual feedback
-// Shack is at [0, 0, -5] with scale 7.5
-// Interior is narrower than expected from screenshots
+// Double shack interior dimensions
+// Front shack at [0, 2.5, -3], back shack at [0, 2.5, -9]
+// Combined interior spans roughly Z = -2 to -10
 const SHACK_INTERIOR = {
   centerX: 0,
   floorY: 0,
-  backZ: -5.5,    // Back wall (pulled forward)
-  frontZ: -2.5,   // Entrance area
-  leftX: -2,      // Narrower interior
-  rightX: 2,
+  // Front section (first shack)
+  frontZ: -2,
+  midZ: -6,      // Where the two shacks meet
+  backZ: -10,    // Back of second shack
+  leftX: -3,
+  rightX: 3,
 };
 
-// Shelf placements inside the shack - centered and pulled away from walls
+// Uniform shelf height for all shelves
+const SHELF_HEIGHT_LOW = 1.2;
+const SHELF_HEIGHT_HIGH = 2.8;
+
+// Shelf placements - uniform heights, spread across both shacks
 const SHELF_PLACEMENTS = [
-  // Back wall shelves (2 levels) - centered on back wall
+  // === FRONT SHACK SHELVES ===
+  // Back wall of front section (lower)
   {
-    id: 'shelf-back-lower',
-    position: [0, 1.0, SHACK_INTERIOR.backZ],
+    id: 'shelf-front-back-lower',
+    position: [0, SHELF_HEIGHT_LOW, -5],
     rotation: [0, 0, 0],
+    cardRotation: [0, 0, 0],
     shelfIndex: 0,
   },
+  // Back wall of front section (upper)
   {
-    id: 'shelf-back-upper',
-    position: [0, 2.4, SHACK_INTERIOR.backZ],
+    id: 'shelf-front-back-upper',
+    position: [0, SHELF_HEIGHT_HIGH, -5],
     rotation: [0, 0, 0],
+    cardRotation: [0, 0, 0],
     shelfIndex: 1,
   },
-  // Left wall shelf - pulled inward
+  // Left wall front section
   {
-    id: 'shelf-left',
-    position: [SHACK_INTERIOR.leftX + 0.3, 1.6, -4],
+    id: 'shelf-front-left',
+    position: [-2.5, SHELF_HEIGHT_LOW, -4],
     rotation: [0, Math.PI / 2, 0],
+    cardRotation: [0, Math.PI / 2, 0],
     shelfIndex: 2,
   },
-  // Right wall shelf - pulled inward
+  // Right wall front section
   {
-    id: 'shelf-right',
-    position: [SHACK_INTERIOR.rightX - 0.3, 1.6, -4],
+    id: 'shelf-front-right',
+    position: [2.5, SHELF_HEIGHT_LOW, -4],
     rotation: [0, -Math.PI / 2, 0],
+    cardRotation: [0, -Math.PI / 2, 0],
     shelfIndex: 3,
+  },
+  // === BACK SHACK SHELVES ===
+  // Back wall of back section (lower)
+  {
+    id: 'shelf-back-back-lower',
+    position: [0, SHELF_HEIGHT_LOW, -8.5],
+    rotation: [0, Math.PI, 0],  // Facing forward
+    cardRotation: [0, Math.PI, 0],
+    shelfIndex: 4,
+  },
+  // Back wall of back section (upper)
+  {
+    id: 'shelf-back-back-upper',
+    position: [0, SHELF_HEIGHT_HIGH, -8.5],
+    rotation: [0, Math.PI, 0],
+    cardRotation: [0, Math.PI, 0],
+    shelfIndex: 5,
   },
 ];
 
-// Neon sign configuration - rotated to face outward
+// Neon sign configuration
 const NEON_SIGN = {
   id: 'neon-open-sign',
   url: '/models/props/neonOpenSign.glb',
-  position: [0, 3.5, -2.5],  // Lower and at entrance
-  rotation: [0, 0, 0],        // Face forward (toward player)
-  scale: 0.5,
-  emissiveIntensity: 1.5,
+  position: [0, 5, -1],
+  rotation: [0, 0, 0],
+  scale: 0.8,
+  emissiveIntensity: 2,
   emissiveColor: '#ff00ff',
 };
 
@@ -106,30 +135,37 @@ function ShopProps({ cards = [], onCardClick, onPropClick }) {
     return assignments;
   }, [cards]);
 
-  // Calculate card position on a shelf
-  const getCardPosition = (shelf, slotIndex) => {
+  // Calculate card position and rotation on a shelf
+  const getCardTransform = (shelf, slotIndex) => {
     const { cardsPerShelf, cardSpacing, cardYOffset } = SHELF_CONFIG;
     const totalWidth = (cardsPerShelf - 1) * cardSpacing;
-    const startX = -totalWidth / 2;
+    const startOffset = -totalWidth / 2;
 
-    // Base position from shelf
     const [sx, sy, sz] = shelf.position;
-    const rotation = shelf.rotation[1]; // Y rotation
+    const yRotation = shelf.rotation[1];
 
-    // Calculate offset based on slot
-    const localX = startX + slotIndex * cardSpacing;
+    const localOffset = startOffset + slotIndex * cardSpacing;
 
-    // Apply rotation to get world position
-    if (Math.abs(rotation) < 0.1) {
-      // Facing forward (back wall)
-      return [sx + localX, sy + cardYOffset, sz + 0.3];
-    } else if (rotation > 0) {
-      // Left wall (rotated 90 degrees)
-      return [sx + 0.3, sy + cardYOffset, sz + localX];
+    let position;
+    // Calculate world position based on shelf rotation
+    if (Math.abs(yRotation) < 0.1) {
+      // Facing forward (Z+)
+      position = [sx + localOffset, sy + cardYOffset, sz + 0.5];
+    } else if (Math.abs(yRotation - Math.PI) < 0.1 || Math.abs(yRotation + Math.PI) < 0.1) {
+      // Facing backward (Z-)
+      position = [sx - localOffset, sy + cardYOffset, sz - 0.5];
+    } else if (yRotation > 0) {
+      // Facing right (X+)
+      position = [sx + 0.5, sy + cardYOffset, sz + localOffset];
     } else {
-      // Right wall (rotated -90 degrees)
-      return [sx - 0.3, sy + cardYOffset, sz - localX];
+      // Facing left (X-)
+      position = [sx - 0.5, sy + cardYOffset, sz - localOffset];
     }
+
+    return {
+      position,
+      rotation: shelf.cardRotation,
+    };
   };
 
   return (
@@ -147,19 +183,12 @@ function ShopProps({ cards = [], onCardClick, onPropClick }) {
         />
       </Suspense>
 
-      {/* Neon sign lights */}
+      {/* Neon sign glow */}
       <pointLight
-        position={[0, 4.5, -0.5]}
-        intensity={2}
+        position={[0, 5, -0.5]}
+        intensity={3}
         color="#ff00ff"
-        distance={8}
-        decay={2}
-      />
-      <pointLight
-        position={[0, 4.5, -0.5]}
-        intensity={1}
-        color="#00ffff"
-        distance={6}
+        distance={10}
         decay={2}
       />
 
@@ -178,41 +207,28 @@ function ShopProps({ cards = [], onCardClick, onPropClick }) {
           </Suspense>
 
           {/* Cards on this shelf */}
-          {shelfCards.map(({ card, slotIndex }) => (
-            <Card3D
-              key={`${shelf.id}-card-${slotIndex}`}
-              card={card}
-              position={getCardPosition(shelf, slotIndex)}
-              onClick={() => onCardClick?.(card)}
-              index={shelf.shelfIndex * SHELF_CONFIG.cardsPerShelf + slotIndex}
-              scale={SHELF_CONFIG.cardScale}
-            />
-          ))}
+          {shelfCards.map(({ card, slotIndex }) => {
+            const { position, rotation } = getCardTransform(shelf, slotIndex);
+            return (
+              <group key={`${shelf.id}-card-${slotIndex}`} rotation={rotation}>
+                <Card3D
+                  card={card}
+                  position={position}
+                  onClick={() => onCardClick?.(card)}
+                  index={shelf.shelfIndex * SHELF_CONFIG.cardsPerShelf + slotIndex}
+                  scale={SHELF_CONFIG.cardScale}
+                />
+              </group>
+            );
+          })}
         </group>
       ))}
 
-      {/* Interior ambient lighting */}
-      <pointLight
-        position={[0, 3, -5]}
-        intensity={0.8}
-        color="#ffcc77"
-        distance={10}
-        decay={2}
-      />
-      <pointLight
-        position={[-2, 2, -4]}
-        intensity={0.4}
-        color="#ffaa55"
-        distance={6}
-        decay={2}
-      />
-      <pointLight
-        position={[2, 2, -4]}
-        intensity={0.4}
-        color="#ffaa55"
-        distance={6}
-        decay={2}
-      />
+      {/* Interior lighting for double shack */}
+      <pointLight position={[0, 3, -4]} intensity={1} color="#ffcc77" distance={12} decay={2} />
+      <pointLight position={[0, 3, -7]} intensity={1} color="#ffcc77" distance={12} decay={2} />
+      <pointLight position={[-2, 2.5, -5]} intensity={0.5} color="#ffaa55" distance={8} decay={2} />
+      <pointLight position={[2, 2.5, -5]} intensity={0.5} color="#ffaa55" distance={8} decay={2} />
     </group>
   );
 }

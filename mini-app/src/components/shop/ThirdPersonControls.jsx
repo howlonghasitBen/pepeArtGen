@@ -28,11 +28,11 @@ function ThirdPersonControls({
   const cameraPitch = useRef(0.3); // Vertical angle (0.3 = slightly above)
   const cameraDistance = useRef(4);
 
-  // Movement state
-  const moveSpeed = 0.12;
-  const rotationSpeed = 0.08;
-  const cameraLerpFactor = 0.08; // Smooth camera following
-  const lookLerpFactor = 0.12;
+  // Movement state - snappier controls
+  const moveSpeed = 0.18;           // Faster movement
+  const rotationSpeed = 0.25;       // Faster turning
+  const cameraLerpFactor = 0.25;    // Snappier camera follow
+  const lookLerpFactor = 0.3;       // Snappier look-at
 
   const velocity = useRef(new THREE.Vector3());
   const isMoving = useRef(false);
@@ -50,11 +50,11 @@ function ThirdPersonControls({
   const lastMouseX = useRef(0);
   const lastMouseY = useRef(0);
 
-  // Boundaries
+  // Boundaries - expanded for larger double-shack
   const bounds = {
     minX: -12,
     maxX: 12,
-    minZ: -6,
+    minZ: -10,   // Allow going into back of double shack
     maxZ: 25,
   };
 
@@ -240,15 +240,15 @@ function ThirdPersonControls({
   useFrame((state, delta) => {
     if (!enabled) return;
 
-    // Handle camera joystick input
+    // Handle camera joystick input - increased sensitivity for snappier feel
     if (cameraInput) {
       const camX = cameraInput.x || 0;
       const camY = cameraInput.y || 0;
 
       if (Math.abs(camX) > 0.1 || Math.abs(camY) > 0.1) {
-        // Rotate camera based on joystick
-        cameraYaw.current -= camX * 0.03;
-        cameraPitch.current = Math.max(0.1, Math.min(0.8, cameraPitch.current + camY * 0.02));
+        // Rotate camera based on joystick - faster rotation
+        cameraYaw.current -= camX * 0.06;
+        cameraPitch.current = Math.max(0.1, Math.min(0.8, cameraPitch.current + camY * 0.04));
       }
     }
 
