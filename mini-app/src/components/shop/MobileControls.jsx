@@ -120,20 +120,35 @@ function MobileControls({ onInputChange, onCameraChange, visible = true }) {
     onCameraChange?.({ x: 0, y: 0 });
   }, [onCameraChange]);
 
+  // Helper to check if a point is within an element's bounds (with padding)
+  const isWithinElement = useCallback((element, x, y, padding = 30) => {
+    if (!element) return false;
+    const rect = element.getBoundingClientRect();
+    return (
+      x >= rect.left - padding &&
+      x <= rect.right + padding &&
+      y >= rect.top - padding &&
+      y <= rect.bottom + padding
+    );
+  }, []);
+
   // Touch event handlers
   useEffect(() => {
     if (!visible) return;
 
     const handleTouchStart = (e) => {
       for (const touch of e.changedTouches) {
-        const isLeftSide = touch.clientX < window.innerWidth / 2;
+        const { clientX, clientY, identifier } = touch;
 
-        if (isLeftSide && moveTouchId.current === null) {
+        // Check if touch is within movement joystick area
+        if (moveTouchId.current === null && isWithinElement(moveJoystickRef.current, clientX, clientY)) {
           e.preventDefault();
-          handleMoveStart(touch.clientX, touch.clientY, touch.identifier);
-        } else if (!isLeftSide && camTouchId.current === null) {
+          handleMoveStart(clientX, clientY, identifier);
+        }
+        // Check if touch is within camera joystick area
+        else if (camTouchId.current === null && isWithinElement(camJoystickRef.current, clientX, clientY)) {
           e.preventDefault();
-          handleCamStart(touch.clientX, touch.clientY, touch.identifier);
+          handleCamStart(clientX, clientY, identifier);
         }
       }
     };
