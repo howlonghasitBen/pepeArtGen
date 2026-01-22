@@ -15,63 +15,63 @@ import Card3D from './Card3D';
 
 // Shelf configuration - unified sizing
 const SHELF_CONFIG = {
-  scale: 1.5,              // Unified scale for all shelves
-  cardScale: 0.65,         // Card scale to fit shelves
-  cardsPerShelf: 4,        // Cards per shelf row
-  cardSpacing: 0.9,        // Horizontal spacing between cards
-  cardYOffset: 0.7,        // Height offset for cards on shelf surface
+  scale: 1.2,              // Reduced scale to fit interior
+  cardScale: 0.55,         // Card scale to fit shelves
+  cardsPerShelf: 3,        // Cards per shelf row (reduced for tighter fit)
+  cardSpacing: 0.75,       // Horizontal spacing between cards
+  cardYOffset: 0.6,        // Height offset for cards on shelf surface
 };
 
-// Shack interior dimensions (approximate, relative to shack position)
-// Shack is at [0, 0, -5] with scale 7.5, so interior is roughly:
-// X: -4 to 4, Y: 0 to 5, Z: -8 to -2
+// Shack interior dimensions - adjusted based on visual feedback
+// Shack is at [0, 0, -5] with scale 7.5
+// Interior is narrower than expected from screenshots
 const SHACK_INTERIOR = {
   centerX: 0,
   floorY: 0,
-  backZ: -7,
-  frontZ: -2,
-  leftX: -3.5,
-  rightX: 3.5,
+  backZ: -5.5,    // Back wall (pulled forward)
+  frontZ: -2.5,   // Entrance area
+  leftX: -2,      // Narrower interior
+  rightX: 2,
 };
 
-// Shelf placements inside the shack
+// Shelf placements inside the shack - centered and pulled away from walls
 const SHELF_PLACEMENTS = [
-  // Back wall shelves (2 levels)
+  // Back wall shelves (2 levels) - centered on back wall
   {
     id: 'shelf-back-lower',
-    position: [0, 1.2, SHACK_INTERIOR.backZ + 0.5],
+    position: [0, 1.0, SHACK_INTERIOR.backZ],
     rotation: [0, 0, 0],
     shelfIndex: 0,
   },
   {
     id: 'shelf-back-upper',
-    position: [0, 2.8, SHACK_INTERIOR.backZ + 0.5],
+    position: [0, 2.4, SHACK_INTERIOR.backZ],
     rotation: [0, 0, 0],
     shelfIndex: 1,
   },
-  // Left wall shelf
+  // Left wall shelf - pulled inward
   {
     id: 'shelf-left',
-    position: [SHACK_INTERIOR.leftX + 0.5, 1.8, -4.5],
+    position: [SHACK_INTERIOR.leftX + 0.3, 1.6, -4],
     rotation: [0, Math.PI / 2, 0],
     shelfIndex: 2,
   },
-  // Right wall shelf
+  // Right wall shelf - pulled inward
   {
     id: 'shelf-right',
-    position: [SHACK_INTERIOR.rightX - 0.5, 1.8, -4.5],
+    position: [SHACK_INTERIOR.rightX - 0.3, 1.6, -4],
     rotation: [0, -Math.PI / 2, 0],
     shelfIndex: 3,
   },
 ];
 
-// Neon sign configuration
+// Neon sign configuration - rotated to face outward
 const NEON_SIGN = {
   id: 'neon-open-sign',
   url: '/models/props/neonOpenSign.glb',
-  position: [0, 4.5, -1],  // Above entrance
-  rotation: [0, Math.PI, 0],
-  scale: 0.6,
+  position: [0, 3.5, -2.5],  // Lower and at entrance
+  rotation: [0, 0, 0],        // Face forward (toward player)
+  scale: 0.5,
   emissiveIntensity: 1.5,
   emissiveColor: '#ff00ff',
 };

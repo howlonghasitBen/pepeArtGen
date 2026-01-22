@@ -200,14 +200,14 @@ function SurfShackShop({ onBack }) {
             onPropClick={(prop) => console.log('Clicked prop:', prop.id)}
           />
 
-          {/* Shopkeeper Pepe - inside the shack */}
+          {/* Shopkeeper Pepe - inside the shack, behind counter area */}
           <MeshyPepeCharacter
-            position={[2, 0, -5]}
-            rotation={[0, -Math.PI / 4, 0]}
+            position={[1.2, 0, -4.5]}
+            rotation={[0, -Math.PI / 3, 0]}
             playerName="Shopkeeper"
             isMoving={false}
             isLocalPlayer={false}
-            scale={1}
+            scale={0.9}
           />
 
           {/* Player character - Meshy AI Pepe with animations */}
