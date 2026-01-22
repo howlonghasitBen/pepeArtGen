@@ -1,165 +1,215 @@
 /**
  * ShopProps.jsx
  *
- * Container component for all Meshy AI generated props in the shop.
- * Includes neon sign and card shelf configurations.
+ * Container component for Meshy AI generated props and card displays.
+ * Shelves are positioned inside the shack with cards displayed on them.
  */
 
-import { Suspense } from 'react';
+import { Suspense, useMemo } from 'react';
 import MeshyModel, { preloadModel } from './MeshyModel';
+import Card3D from './Card3D';
 
 // ============================================
-// PROP CONFIGURATIONS
+// CONFIGURATION
 // ============================================
 
-const SHOP_PROPS = [
-  // Neon "OPEN" sign - centered above the entrance
-  {
-    id: 'neon-open-sign',
-    url: '/models/props/neonOpenSign.glb',
-    position: [0, 4, 5],  // Above entrance (adjust Y for height, Z for door position)
-    rotation: [0, Math.PI, 0],  // Face outward toward visitors
-    scale: 0.5,  // Adjust based on model size
-    emissiveIntensity: 1.5,
-    emissiveColor: '#ff00ff',  // Neon pink glow
-    category: 'props',
-  },
-];
+// Shelf configuration - unified sizing
+const SHELF_CONFIG = {
+  scale: 1.5,              // Unified scale for all shelves
+  cardScale: 0.65,         // Card scale to fit shelves
+  cardsPerShelf: 4,        // Cards per shelf row
+  cardSpacing: 0.9,        // Horizontal spacing between cards
+  cardYOffset: 0.7,        // Height offset for cards on shelf surface
+};
 
-const DISPLAY_PROPS = [
-  // ============================================
-  // WALL SHELVES - Along the back and side walls
-  // ============================================
+// Shack interior dimensions (approximate, relative to shack position)
+// Shack is at [0, 0, -5] with scale 7.5, so interior is roughly:
+// X: -4 to 4, Y: 0 to 5, Z: -8 to -2
+const SHACK_INTERIOR = {
+  centerX: 0,
+  floorY: 0,
+  backZ: -7,
+  frontZ: -2,
+  leftX: -3.5,
+  rightX: 3.5,
+};
 
-  // Back wall - left shelf
+// Shelf placements inside the shack
+const SHELF_PLACEMENTS = [
+  // Back wall shelves (2 levels)
   {
-    id: 'shelf-wall-back-left',
-    url: '/models/props/cardShelf.glb',
-    position: [-4, 1.5, -4.5],  // Against back wall, left side
-    rotation: [0, 0, 0],  // Facing forward
-    scale: 1.2,
-    category: 'displays',
+    id: 'shelf-back-lower',
+    position: [0, 1.2, SHACK_INTERIOR.backZ + 0.5],
+    rotation: [0, 0, 0],
+    shelfIndex: 0,
   },
-  // Back wall - right shelf
   {
-    id: 'shelf-wall-back-right',
-    url: '/models/props/cardShelf.glb',
-    position: [4, 1.5, -4.5],  // Against back wall, right side
-    rotation: [0, 0, 0],  // Facing forward
-    scale: 1.2,
-    category: 'displays',
+    id: 'shelf-back-upper',
+    position: [0, 2.8, SHACK_INTERIOR.backZ + 0.5],
+    rotation: [0, 0, 0],
+    shelfIndex: 1,
   },
   // Left wall shelf
   {
-    id: 'shelf-wall-left',
-    url: '/models/props/cardShelf.glb',
-    position: [-5.5, 1.5, 0],  // Against left wall
-    rotation: [0, Math.PI / 2, 0],  // Rotated to face inward
-    scale: 1.2,
-    category: 'displays',
+    id: 'shelf-left',
+    position: [SHACK_INTERIOR.leftX + 0.5, 1.8, -4.5],
+    rotation: [0, Math.PI / 2, 0],
+    shelfIndex: 2,
   },
   // Right wall shelf
   {
-    id: 'shelf-wall-right',
-    url: '/models/props/cardShelf.glb',
-    position: [5.5, 1.5, 0],  // Against right wall
-    rotation: [0, -Math.PI / 2, 0],  // Rotated to face inward
-    scale: 1.2,
-    category: 'displays',
-  },
-
-  // ============================================
-  // FLOOR SHELVES - 2 sets of 2 back-to-back
-  // ============================================
-
-  // Floor set 1 - Left side of shop
-  {
-    id: 'shelf-floor-1a',
-    url: '/models/props/cardShelf.glb',
-    position: [-3, 0, -1],  // Left floor area, facing one way
-    rotation: [0, 0, 0],
-    scale: 1.0,
-    category: 'displays',
-  },
-  {
-    id: 'shelf-floor-1b',
-    url: '/models/props/cardShelf.glb',
-    position: [-3, 0, -2],  // Back-to-back with 1a
-    rotation: [0, Math.PI, 0],  // Facing opposite direction
-    scale: 1.0,
-    category: 'displays',
-  },
-
-  // Floor set 2 - Right side of shop
-  {
-    id: 'shelf-floor-2a',
-    url: '/models/props/cardShelf.glb',
-    position: [3, 0, -1],  // Right floor area, facing one way
-    rotation: [0, 0, 0],
-    scale: 1.0,
-    category: 'displays',
-  },
-  {
-    id: 'shelf-floor-2b',
-    url: '/models/props/cardShelf.glb',
-    position: [3, 0, -2],  // Back-to-back with 2a
-    rotation: [0, Math.PI, 0],  // Facing opposite direction
-    scale: 1.0,
-    category: 'displays',
+    id: 'shelf-right',
+    position: [SHACK_INTERIOR.rightX - 0.5, 1.8, -4.5],
+    rotation: [0, -Math.PI / 2, 0],
+    shelfIndex: 3,
   },
 ];
 
-// Combine all props
-const ALL_PROPS = [...SHOP_PROPS, ...DISPLAY_PROPS];
+// Neon sign configuration
+const NEON_SIGN = {
+  id: 'neon-open-sign',
+  url: '/models/props/neonOpenSign.glb',
+  position: [0, 4.5, -1],  // Above entrance
+  rotation: [0, Math.PI, 0],
+  scale: 0.6,
+  emissiveIntensity: 1.5,
+  emissiveColor: '#ff00ff',
+};
 
-// Preload all models
-export function preloadAllModels() {
-  ALL_PROPS.forEach(prop => {
-    if (prop.url) {
-      preloadModel(prop.url);
+// ============================================
+// COMPONENT
+// ============================================
+
+function ShopProps({ cards = [], onCardClick, onPropClick }) {
+  // Distribute cards across shelves
+  const shelfCardAssignments = useMemo(() => {
+    if (!cards.length) return [];
+
+    const assignments = [];
+    let cardIndex = 0;
+
+    SHELF_PLACEMENTS.forEach((shelf) => {
+      const shelfCards = [];
+      for (let i = 0; i < SHELF_CONFIG.cardsPerShelf && cardIndex < cards.length; i++) {
+        shelfCards.push({
+          card: cards[cardIndex],
+          slotIndex: i,
+        });
+        cardIndex++;
+      }
+      assignments.push({
+        shelf,
+        cards: shelfCards,
+      });
+    });
+
+    return assignments;
+  }, [cards]);
+
+  // Calculate card position on a shelf
+  const getCardPosition = (shelf, slotIndex) => {
+    const { cardsPerShelf, cardSpacing, cardYOffset } = SHELF_CONFIG;
+    const totalWidth = (cardsPerShelf - 1) * cardSpacing;
+    const startX = -totalWidth / 2;
+
+    // Base position from shelf
+    const [sx, sy, sz] = shelf.position;
+    const rotation = shelf.rotation[1]; // Y rotation
+
+    // Calculate offset based on slot
+    const localX = startX + slotIndex * cardSpacing;
+
+    // Apply rotation to get world position
+    if (Math.abs(rotation) < 0.1) {
+      // Facing forward (back wall)
+      return [sx + localX, sy + cardYOffset, sz + 0.3];
+    } else if (rotation > 0) {
+      // Left wall (rotated 90 degrees)
+      return [sx + 0.3, sy + cardYOffset, sz + localX];
+    } else {
+      // Right wall (rotated -90 degrees)
+      return [sx - 0.3, sy + cardYOffset, sz - localX];
     }
-  });
-}
-
-function ShopProps({ onPropClick }) {
-  if (ALL_PROPS.length === 0) {
-    return null;
-  }
+  };
 
   return (
     <group name="shop-props">
-      {ALL_PROPS.map((prop) => (
-        <Suspense key={prop.id} fallback={null}>
-          <MeshyModel
-            url={prop.url}
-            position={prop.position}
-            rotation={prop.rotation || [0, 0, 0]}
-            scale={prop.scale || 1}
-            animate={prop.animate}
-            floatSpeed={prop.floatSpeed}
-            floatAmplitude={prop.floatAmplitude}
-            rotateSpeed={prop.rotateSpeed}
-            emissiveIntensity={prop.emissiveIntensity}
-            emissiveColor={prop.emissiveColor}
-            metalness={prop.metalness}
-            roughness={prop.roughness}
-            onClick={() => onPropClick?.(prop)}
-          />
-        </Suspense>
-      ))}
+      {/* Neon sign above entrance */}
+      <Suspense fallback={null}>
+        <MeshyModel
+          url={NEON_SIGN.url}
+          position={NEON_SIGN.position}
+          rotation={NEON_SIGN.rotation}
+          scale={NEON_SIGN.scale}
+          emissiveIntensity={NEON_SIGN.emissiveIntensity}
+          emissiveColor={NEON_SIGN.emissiveColor}
+          onClick={() => onPropClick?.(NEON_SIGN)}
+        />
+      </Suspense>
 
-      {/* Add point light for neon sign glow effect */}
+      {/* Neon sign lights */}
       <pointLight
-        position={[0, 4, 5.5]}
+        position={[0, 4.5, -0.5]}
         intensity={2}
         color="#ff00ff"
         distance={8}
         decay={2}
       />
       <pointLight
-        position={[0, 4, 5.5]}
+        position={[0, 4.5, -0.5]}
         intensity={1}
         color="#00ffff"
+        distance={6}
+        decay={2}
+      />
+
+      {/* Shelves with cards */}
+      {shelfCardAssignments.map(({ shelf, cards: shelfCards }) => (
+        <group key={shelf.id}>
+          {/* Shelf model */}
+          <Suspense fallback={null}>
+            <MeshyModel
+              url="/models/props/cardShelf.glb"
+              position={shelf.position}
+              rotation={shelf.rotation}
+              scale={SHELF_CONFIG.scale}
+              onClick={() => onPropClick?.(shelf)}
+            />
+          </Suspense>
+
+          {/* Cards on this shelf */}
+          {shelfCards.map(({ card, slotIndex }) => (
+            <Card3D
+              key={`${shelf.id}-card-${slotIndex}`}
+              card={card}
+              position={getCardPosition(shelf, slotIndex)}
+              onClick={() => onCardClick?.(card)}
+              index={shelf.shelfIndex * SHELF_CONFIG.cardsPerShelf + slotIndex}
+              scale={SHELF_CONFIG.cardScale}
+            />
+          ))}
+        </group>
+      ))}
+
+      {/* Interior ambient lighting */}
+      <pointLight
+        position={[0, 3, -5]}
+        intensity={0.8}
+        color="#ffcc77"
+        distance={10}
+        decay={2}
+      />
+      <pointLight
+        position={[-2, 2, -4]}
+        intensity={0.4}
+        color="#ffaa55"
+        distance={6}
+        decay={2}
+      />
+      <pointLight
+        position={[2, 2, -4]}
+        intensity={0.4}
+        color="#ffaa55"
         distance={6}
         decay={2}
       />
@@ -169,23 +219,6 @@ function ShopProps({ onPropClick }) {
 
 export default ShopProps;
 
-// ============================================
-// POSITION ADJUSTMENT GUIDE
-// ============================================
-/*
-If models appear in wrong positions, adjust these values:
-
-NEON SIGN:
-- position[1] (Y): Raise/lower the sign
-- position[2] (Z): Move closer/further from building
-- scale: Make bigger/smaller
-
-SHELVES:
-- Wall shelves position[1] (Y): Height on wall
-- Floor shelves: Currently at Y=0 (floor level)
-- scale: Adjust size to fit space
-- rotation[1] (Y): Rotate to face different direction
-
-After running the app, check the console for any loading errors
-and visually confirm positions, then adjust values here.
-*/
+// Preload models
+preloadModel('/models/props/neonOpenSign.glb');
+preloadModel('/models/props/cardShelf.glb');

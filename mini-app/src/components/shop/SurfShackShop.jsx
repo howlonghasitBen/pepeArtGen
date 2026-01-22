@@ -3,7 +3,6 @@ import { Canvas } from "@react-three/fiber";
 import { Sky, Environment, Loader } from "@react-three/drei";
 import { useAllCards } from "../../hooks/useAllCards";
 import MeshySurfShack from "./MeshySurfShack";
-import CardBar from "./CardBar";
 import ThirdPersonControls from "./ThirdPersonControls";
 import MeshyPepeCharacter from "./MeshyPepeCharacter";
 import ShaderOcean from "./ShaderOcean";
@@ -24,9 +23,9 @@ function SurfShackShop({ onBack }) {
   const [mobileInput, setMobileInput] = useState({ x: 0, y: 0 });
   const [cameraInput, setCameraInput] = useState({ x: 0, y: 0 });
 
-  // Character state
-  const [characterPosition, setCharacterPosition] = useState([0, 0, 6]);
-  const [characterRotation, setCharacterRotation] = useState(0);
+  // Character state - spawn in front of the shack entrance
+  const [characterPosition, setCharacterPosition] = useState([0, 0, 2]);
+  const [characterRotation, setCharacterRotation] = useState(Math.PI); // Face the shack
   const [isMoving, setIsMoving] = useState(false);
 
   // Check for mobile device and orientation
@@ -190,16 +189,21 @@ function SurfShackShop({ onBack }) {
             waterColor="#006994"
             distortionScale={2}
           />
-          <MeshySurfShack position={[0, 3, 0]} scale={7.5} />
-          <CardBar cards={cards} onCardClick={handleCardClick} />
 
-          {/* Meshy AI generated props (neon sign, shelves) */}
-          <ShopProps onPropClick={(prop) => console.log('Clicked prop:', prop.id)} />
+          {/* Surf Shack - positioned at back edge of beach */}
+          <MeshySurfShack position={[0, 0, -5]} scale={7.5} />
 
-          {/* Shopkeeper Pepe - stationary behind the counter */}
+          {/* Shelves with cards inside the shack */}
+          <ShopProps
+            cards={cards}
+            onCardClick={handleCardClick}
+            onPropClick={(prop) => console.log('Clicked prop:', prop.id)}
+          />
+
+          {/* Shopkeeper Pepe - inside the shack */}
           <MeshyPepeCharacter
-            position={[0, 0, -3]}
-            rotation={[0, Math.PI, 0]}
+            position={[2, 0, -5]}
+            rotation={[0, -Math.PI / 4, 0]}
             playerName="Shopkeeper"
             isMoving={false}
             isLocalPlayer={false}
