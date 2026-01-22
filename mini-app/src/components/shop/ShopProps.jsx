@@ -207,10 +207,10 @@ function ShopProps({ cards = [], onCardClick, onPropClick }) {
           {shelfCards.map(({ card, slotIndex }) => {
             const { position, rotation } = getCardTransform(shelf, slotIndex);
             return (
-              <group key={`${shelf.id}-card-${slotIndex}`} rotation={rotation}>
+              <group key={`${shelf.id}-card-${slotIndex}`} position={position} rotation={rotation}>
                 <Card3D
                   card={card}
-                  position={position}
+                  position={[0, 0, 0]}
                   onClick={() => onCardClick?.(card)}
                   index={shelf.shelfIndex * SHELF_CONFIG.cardsPerShelf + slotIndex}
                   scale={SHELF_CONFIG.cardScale}
