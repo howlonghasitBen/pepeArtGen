@@ -13,13 +13,13 @@ import Card3D from './Card3D';
 // CONFIGURATION
 // ============================================
 
-// Shelf configuration - larger shelves for better visibility
+// Shelf configuration - adjusted for better fit
 const SHELF_CONFIG = {
-  scale: 2.4,              // 20% larger (was 2.0)
+  scale: 2.2,              // Reduced from 2.4
   cardScale: 0.7,          // Card scale to fit shelves
   cardsPerShelf: 4,        // Cards per shelf row
-  cardSpacing: 1.0,        // Horizontal spacing between cards
-  cardYOffset: 0.9,        // Height offset for cards on shelf surface
+  cardSpacing: 0.9,        // Horizontal spacing between cards (slightly tighter for smaller shelf)
+  cardYOffset: 0.8,        // Height offset for cards on shelf surface
 };
 
 // Double shack interior dimensions (centered on beach plane)
@@ -34,9 +34,9 @@ const SHACK_INTERIOR = {
   rightX: 4,
 };
 
-// Uniform shelf height for all shelves (raised by 1)
-const SHELF_HEIGHT_LOW = 2.2;   // was 1.2
-const SHELF_HEIGHT_HIGH = 3.8;  // was 2.8
+// Uniform shelf height for all shelves (increased vertical spacing by 0.5)
+const SHELF_HEIGHT_LOW = 2.2;
+const SHELF_HEIGHT_HIGH = 4.3;  // was 3.8, now +0.5 more spacing
 
 // Shelf placements - all on side walls, flush with building
 const SHELF_PLACEMENTS = [
