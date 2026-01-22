@@ -20,8 +20,8 @@ const SHELF_CONFIG = {
   cardsPerRow: 4,          // Cards per shelf row (horizontally)
   rowsPerShelf: 3,         // Number of rows per shelf (vertically)
   cardSpacing: 0.9,        // Horizontal spacing between cards (slightly tighter for smaller shelf)
-  rowSpacing: 0.6,         // Vertical spacing between rows (increased from 0.5)
-  cardYOffset: 0.2,        // Height offset - cards grounded at floor + 0.2
+  rowSpacing: 1.2,         // Vertical spacing between rows (increased from 0.6)
+  cardYOffset: 1.5,        // Absolute floor position (floor 0 + 1.5)
 };
 
 // Double shack interior dimensions (centered on beach plane)
@@ -68,20 +68,20 @@ const SHELF_PLACEMENTS = [
     shelfIndex: 2,
   },
   // === BACK WALL (2 shelves) ===
-  // Back center-left
+  // Back center-left (facing forward toward entrance)
   {
     id: 'shelf-back-left',
     position: [-2.0, SHELF_HEIGHT, 7],
-    rotation: [0, Math.PI, 0],
-    cardRotation: [0, Math.PI, 0],
+    rotation: [0, 0, 0],
+    cardRotation: [0, 0, 0],
     shelfIndex: 3,
   },
-  // Back center-right
+  // Back center-right (facing forward toward entrance)
   {
     id: 'shelf-back-right',
     position: [2.0, SHELF_HEIGHT, 7],
-    rotation: [0, Math.PI, 0],
-    cardRotation: [0, Math.PI, 0],
+    rotation: [0, 0, 0],
+    cardRotation: [0, 0, 0],
     shelfIndex: 4,
   },
   // === RIGHT WALL (3 shelves) ===
@@ -168,23 +168,23 @@ function ShopProps({ cards = [], onCardClick, onPropClick }) {
 
     // Calculate horizontal offset based on column
     const localOffset = startOffset + col * cardSpacing;
-    // Calculate vertical offset based on row (bottom to top)
-    const verticalOffset = cardYOffset + row * rowSpacing;
+    // Calculate absolute vertical position (cardYOffset is absolute floor + 1.5)
+    const absoluteY = cardYOffset + row * rowSpacing;
 
     let position;
     // Calculate world position based on shelf rotation
     if (Math.abs(yRotation) < 0.1) {
       // Facing forward (Z+)
-      position = [sx + localOffset, sy + verticalOffset, sz + 0.5];
+      position = [sx + localOffset, absoluteY, sz + 0.5];
     } else if (Math.abs(yRotation - Math.PI) < 0.1 || Math.abs(yRotation + Math.PI) < 0.1) {
       // Facing backward (Z-)
-      position = [sx - localOffset, sy + verticalOffset, sz - 0.5];
+      position = [sx - localOffset, absoluteY, sz - 0.5];
     } else if (yRotation > 0) {
       // Facing right (X+)
-      position = [sx + 0.5, sy + verticalOffset, sz + localOffset];
+      position = [sx + 0.5, absoluteY, sz + localOffset];
     } else {
       // Facing left (X-)
-      position = [sx - 0.5, sy + verticalOffset, sz - localOffset];
+      position = [sx - 0.5, absoluteY, sz - localOffset];
     }
 
     return {
