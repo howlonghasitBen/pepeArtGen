@@ -233,7 +233,7 @@ function SurfShackShop({ onBack }) {
       <Loader />
 
       {/* Mobile controls */}
-      {isMobile && !selectedCard && !isPortrait && (
+      {isMobile && !selectedCard && (
         <MobileControls
           onInputChange={handleMobileInput}
           onCameraChange={handleCameraInput}
