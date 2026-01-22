@@ -89,7 +89,6 @@ function MeshyPepeCharacter({
   }, [isMoving, isRunning]);
 
   // Update position, rotation, and animation mixer
-  const idleTime = useRef(0);
   useFrame((state, delta) => {
     if (!groupRef.current) return;
 
@@ -98,18 +97,10 @@ function MeshyPepeCharacter({
       mixerRef.current.update(delta);
     }
 
-    // Always sync position from props (X and Z from controls)
+    // Always sync position from props (X, Y, Z from controls)
     groupRef.current.position.x = position[0];
+    groupRef.current.position.y = position[1];
     groupRef.current.position.z = position[2];
-
-    // Handle Y position with idle bob when not moving
-    if (!isMoving) {
-      idleTime.current += delta;
-      groupRef.current.position.y = position[1] + Math.sin(idleTime.current * 2) * 0.02;
-    } else {
-      idleTime.current = 0;
-      groupRef.current.position.y = position[1];
-    }
 
     // Sync rotation from props
     groupRef.current.rotation.y = rotation[1];

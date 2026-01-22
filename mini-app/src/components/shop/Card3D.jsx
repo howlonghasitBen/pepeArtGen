@@ -38,16 +38,12 @@ function Card3D({ card, position, onClick, index = 0, scale = 1.0 }) {
     }
   }, [card]);
 
-  // Animation
+  // Animation - hover effects only, no idle floating
   useFrame((state) => {
     if (!meshRef.current) return;
 
     const time = state.clock.elapsedTime;
-    const { FLOAT_AMPLITUDE, FLOAT_SPEED, HOVER_SCALE } = CARD_LAYOUT.CARD_3D;
-
-    // Gentle floating animation
-    meshRef.current.position.y =
-      position[1] + Math.sin(time * FLOAT_SPEED + index * 0.5) * FLOAT_AMPLITUDE;
+    const { HOVER_SCALE } = CARD_LAYOUT.CARD_3D;
 
     // Hover effect
     const targetScale = hovered ? HOVER_SCALE : 1;
