@@ -15,87 +15,98 @@ import Card3D from './Card3D';
 
 // Shelf configuration - larger shelves for better visibility
 const SHELF_CONFIG = {
-  scale: 2.0,              // Larger scale for bigger shelves
+  scale: 2.4,              // 20% larger (was 2.0)
   cardScale: 0.7,          // Card scale to fit shelves
   cardsPerShelf: 4,        // Cards per shelf row
   cardSpacing: 1.0,        // Horizontal spacing between cards
   cardYOffset: 0.9,        // Height offset for cards on shelf surface
 };
 
-// Double shack interior dimensions
-// Front shack at [0, 2.5, -3], back shack at [0, 2.5, -9]
-// Combined interior spans roughly Z = -2 to -10
+// Double shack interior dimensions (centered on beach plane)
+// Front shack at [0, 5.25, 13], back shack at [0, 5.25, 7]
 const SHACK_INTERIOR = {
   centerX: 0,
   floorY: 0,
-  // Front section (first shack)
-  frontZ: -2,
-  midZ: -6,      // Where the two shacks meet
-  backZ: -10,    // Back of second shack
-  leftX: -3,
-  rightX: 3,
+  frontZ: 15,      // Front of front shack (entrance)
+  midZ: 10,        // Where the two shacks meet
+  backZ: 5,        // Back of back shack
+  leftX: -4,       // Flush with walls
+  rightX: 4,
 };
 
-// Uniform shelf height for all shelves
-const SHELF_HEIGHT_LOW = 1.2;
-const SHELF_HEIGHT_HIGH = 2.8;
+// Uniform shelf height for all shelves (raised by 1)
+const SHELF_HEIGHT_LOW = 2.2;   // was 1.2
+const SHELF_HEIGHT_HIGH = 3.8;  // was 2.8
 
-// Shelf placements - on interior walls of the double shack
+// Shelf placements - all on side walls, flush with building
 const SHELF_PLACEMENTS = [
-  // === CENTER BACK SHELVES (visible from entrance) ===
-  // Center back wall (lower)
+  // === FRONT SHACK - LEFT WALL ===
   {
-    id: 'shelf-center-lower',
-    position: [0, SHELF_HEIGHT_LOW, -5],
-    rotation: [0, 0, 0],
-    cardRotation: [0, 0, 0],
+    id: 'shelf-front-left-lower',
+    position: [-4.0, SHELF_HEIGHT_LOW, 12],
+    rotation: [0, Math.PI / 2, 0],
+    cardRotation: [0, Math.PI / 2, 0],
     shelfIndex: 0,
   },
-  // Center back wall (upper)
   {
-    id: 'shelf-center-upper',
-    position: [0, SHELF_HEIGHT_HIGH, -5],
-    rotation: [0, 0, 0],
-    cardRotation: [0, 0, 0],
+    id: 'shelf-front-left-upper',
+    position: [-4.0, SHELF_HEIGHT_HIGH, 12],
+    rotation: [0, Math.PI / 2, 0],
+    cardRotation: [0, Math.PI / 2, 0],
     shelfIndex: 1,
   },
-  // === LEFT WALL SHELVES (inside structure, facing right toward center) ===
+  // === FRONT SHACK - RIGHT WALL ===
   {
-    id: 'shelf-left-front',
-    position: [-3.5, SHELF_HEIGHT_LOW, -3.5],
-    rotation: [0, Math.PI / 2, 0],  // Facing right (+X)
-    cardRotation: [0, Math.PI / 2, 0],
+    id: 'shelf-front-right-lower',
+    position: [4.0, SHELF_HEIGHT_LOW, 12],
+    rotation: [0, -Math.PI / 2, 0],
+    cardRotation: [0, -Math.PI / 2, 0],
     shelfIndex: 2,
   },
   {
-    id: 'shelf-left-back',
-    position: [-3.5, SHELF_HEIGHT_LOW, -6.5],
-    rotation: [0, Math.PI / 2, 0],
-    cardRotation: [0, Math.PI / 2, 0],
+    id: 'shelf-front-right-upper',
+    position: [4.0, SHELF_HEIGHT_HIGH, 12],
+    rotation: [0, -Math.PI / 2, 0],
+    cardRotation: [0, -Math.PI / 2, 0],
     shelfIndex: 3,
   },
-  // === RIGHT WALL SHELVES (inside structure, facing left toward center) ===
+  // === BACK SHACK - LEFT WALL ===
   {
-    id: 'shelf-right-front',
-    position: [3.5, SHELF_HEIGHT_LOW, -3.5],
-    rotation: [0, -Math.PI / 2, 0],  // Facing left (-X)
-    cardRotation: [0, -Math.PI / 2, 0],
+    id: 'shelf-back-left-lower',
+    position: [-4.0, SHELF_HEIGHT_LOW, 8],
+    rotation: [0, Math.PI / 2, 0],
+    cardRotation: [0, Math.PI / 2, 0],
     shelfIndex: 4,
   },
   {
-    id: 'shelf-right-back',
-    position: [3.5, SHELF_HEIGHT_LOW, -6.5],
+    id: 'shelf-back-left-upper',
+    position: [-4.0, SHELF_HEIGHT_HIGH, 8],
+    rotation: [0, Math.PI / 2, 0],
+    cardRotation: [0, Math.PI / 2, 0],
+    shelfIndex: 5,
+  },
+  // === BACK SHACK - RIGHT WALL ===
+  {
+    id: 'shelf-back-right-lower',
+    position: [4.0, SHELF_HEIGHT_LOW, 8],
     rotation: [0, -Math.PI / 2, 0],
     cardRotation: [0, -Math.PI / 2, 0],
-    shelfIndex: 5,
+    shelfIndex: 6,
+  },
+  {
+    id: 'shelf-back-right-upper',
+    position: [4.0, SHELF_HEIGHT_HIGH, 8],
+    rotation: [0, -Math.PI / 2, 0],
+    cardRotation: [0, -Math.PI / 2, 0],
+    shelfIndex: 7,
   },
 ];
 
-// Neon sign configuration
+// Neon sign configuration (positioned at front entrance)
 const NEON_SIGN = {
   id: 'neon-open-sign',
   url: '/models/props/neonOpenSign.glb',
-  position: [0, 5, -1],
+  position: [0, 6, 15],  // Above front shack entrance
   rotation: [0, 0, 0],
   scale: 0.8,
   emissiveIntensity: 2,
@@ -182,7 +193,7 @@ function ShopProps({ cards = [], onCardClick, onPropClick }) {
 
       {/* Neon sign glow */}
       <pointLight
-        position={[0, 5, -0.5]}
+        position={[0, 6, 15.5]}
         intensity={3}
         color="#ff00ff"
         distance={10}
@@ -221,11 +232,11 @@ function ShopProps({ cards = [], onCardClick, onPropClick }) {
         </group>
       ))}
 
-      {/* Interior lighting for double shack */}
-      <pointLight position={[0, 3, -4]} intensity={1} color="#ffcc77" distance={12} decay={2} />
-      <pointLight position={[0, 3, -7]} intensity={1} color="#ffcc77" distance={12} decay={2} />
-      <pointLight position={[-2, 2.5, -5]} intensity={0.5} color="#ffaa55" distance={8} decay={2} />
-      <pointLight position={[2, 2.5, -5]} intensity={0.5} color="#ffaa55" distance={8} decay={2} />
+      {/* Interior lighting for double shack (centered on beach) */}
+      <pointLight position={[0, 4, 12]} intensity={1} color="#ffcc77" distance={12} decay={2} />
+      <pointLight position={[0, 4, 8]} intensity={1} color="#ffcc77" distance={12} decay={2} />
+      <pointLight position={[-2, 3.5, 10]} intensity={0.5} color="#ffaa55" distance={8} decay={2} />
+      <pointLight position={[2, 3.5, 10]} intensity={0.5} color="#ffaa55" distance={8} decay={2} />
     </group>
   );
 }
