@@ -49,7 +49,7 @@ const SHELF_PLACEMENTS = [
   // Front left
   {
     id: 'shelf-left-front',
-    position: [-3.6, SHELF_HEIGHT, 13.5],
+    position: [-4, SHELF_HEIGHT, 14.5],
     rotation: [0, Math.PI / 2, 0],
     cardRotation: [0, Math.PI / 2, 0],
     shelfIndex: 0,
@@ -57,7 +57,7 @@ const SHELF_PLACEMENTS = [
   // Back left corner
   {
     id: 'shelf-left-back',
-    position: [-3.6, SHELF_HEIGHT, 9.5],
+    position: [-4, SHELF_HEIGHT, 10.5],
     rotation: [0, Math.PI / 2, 0],
     cardRotation: [0, Math.PI / 2, 0],
     shelfIndex: 1,
@@ -83,7 +83,7 @@ const SHELF_PLACEMENTS = [
   // Back right corner
   {
     id: 'shelf-right-back',
-    position: [3.6, SHELF_HEIGHT, 9.5],
+    position: [4, SHELF_HEIGHT, 10.5],
     rotation: [0, -Math.PI / 2, 0],
     cardRotation: [0, -Math.PI / 2, 0],
     shelfIndex: 4,
@@ -91,7 +91,7 @@ const SHELF_PLACEMENTS = [
   // Front right
   {
     id: 'shelf-right-front',
-    position: [3.6, SHELF_HEIGHT, 13.5],
+    position: [4, SHELF_HEIGHT, 14.5],
     rotation: [0, -Math.PI / 2, 0],
     cardRotation: [0, -Math.PI / 2, 0],
     shelfIndex: 5,
