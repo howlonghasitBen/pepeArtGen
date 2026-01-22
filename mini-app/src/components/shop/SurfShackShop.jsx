@@ -19,7 +19,6 @@ function SurfShackShop({ onBack }) {
   const [playerName, setPlayerName] = useState(null);
   const [showNameModal, setShowNameModal] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
-  const [isPortrait, setIsPortrait] = useState(false);
   const [mobileInput, setMobileInput] = useState({ x: 0, y: 0 });
   const [cameraInput, setCameraInput] = useState({ x: 0, y: 0 });
 
@@ -28,21 +27,16 @@ function SurfShackShop({ onBack }) {
   const [characterRotation, setCharacterRotation] = useState(Math.PI); // Face the shack
   const [isMoving, setIsMoving] = useState(false);
 
-  // Check for mobile device and orientation
+  // Check for mobile device
   useEffect(() => {
     const checkMobile = () => {
       const mobile = window.innerWidth < 1024 || "ontouchstart" in window;
       setIsMobile(mobile);
-      if (mobile) {
-        setIsPortrait(window.innerHeight > window.innerWidth);
-      }
     };
     checkMobile();
     window.addEventListener("resize", checkMobile);
-    window.addEventListener("orientationchange", checkMobile);
     return () => {
       window.removeEventListener("resize", checkMobile);
-      window.removeEventListener("orientationchange", checkMobile);
     };
   }, []);
 
@@ -245,26 +239,6 @@ function SurfShackShop({ onBack }) {
           onCameraChange={handleCameraInput}
           visible={!selectedCard}
         />
-      )}
-
-      {/* Landscape mode prompt for mobile */}
-      {isMobile && isPortrait && (
-        <div className="landscape-prompt">
-          <div className="landscape-prompt-content">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <rect x="4" y="2" width="16" height="20" rx="2" />
-              <path d="M12 18h.01" />
-            </svg>
-            <div className="rotate-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M21 12a9 9 0 11-9-9" />
-                <path d="M21 3v9h-9" />
-              </svg>
-            </div>
-            <h3>Rotate Your Device</h3>
-            <p>Please rotate to landscape mode for the best experience</p>
-          </div>
-        </div>
       )}
 
       {/* Card detail modal */}
