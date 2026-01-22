@@ -21,7 +21,7 @@ const SHELF_CONFIG = {
   rowsPerShelf: 3,         // Number of rows per shelf (vertically)
   cardSpacing: 0.9,        // Horizontal spacing between cards (slightly tighter for smaller shelf)
   rowSpacing: 1.0,         // Vertical spacing between rows
-  cardYOffset: 1.1,        // Absolute floor position (floor 0 + 1.1)
+  cardYOffset: 1.0,        // Absolute floor position (floor 0 + 1.0)
 };
 
 // Double shack interior dimensions (centered on beach plane)
@@ -42,13 +42,13 @@ const SHELF_HEIGHT = 1.9;  // Floor level shelves
 // Shelf placements - U-shaped layout along left, back, and right walls
 // Forms a U when viewed from entrance (Z=15 looking toward Z=5)
 // Spacing increased to 4 units between shelves on side walls to prevent overlap
-// Left and right wall shelves moved 1.5 units toward entrance
+// Left and right wall shelves moved forward 0.4 units, back wall pushed back 1 unit
 const SHELF_PLACEMENTS = [
   // === LEFT WALL (2 shelves) ===
   // Front left
   {
     id: 'shelf-left-front',
-    position: [-4.0, SHELF_HEIGHT, 13.5],
+    position: [-4.0, SHELF_HEIGHT, 13.9],
     rotation: [0, Math.PI / 2, 0],
     cardRotation: [0, Math.PI / 2, 0],
     shelfIndex: 0,
@@ -56,7 +56,7 @@ const SHELF_PLACEMENTS = [
   // Back left corner
   {
     id: 'shelf-left-back',
-    position: [-4.0, SHELF_HEIGHT, 9.5],
+    position: [-4.0, SHELF_HEIGHT, 9.9],
     rotation: [0, Math.PI / 2, 0],
     cardRotation: [0, Math.PI / 2, 0],
     shelfIndex: 1,
@@ -65,7 +65,7 @@ const SHELF_PLACEMENTS = [
   // Back center-left (facing forward toward entrance)
   {
     id: 'shelf-back-left',
-    position: [-2.0, SHELF_HEIGHT, 7],
+    position: [-2.0, SHELF_HEIGHT, 6],
     rotation: [0, 0, 0],
     cardRotation: [0, 0, 0],
     shelfIndex: 2,
@@ -73,7 +73,7 @@ const SHELF_PLACEMENTS = [
   // Back center-right (facing forward toward entrance)
   {
     id: 'shelf-back-right',
-    position: [2.0, SHELF_HEIGHT, 7],
+    position: [2.0, SHELF_HEIGHT, 6],
     rotation: [0, 0, 0],
     cardRotation: [0, 0, 0],
     shelfIndex: 3,
@@ -82,7 +82,7 @@ const SHELF_PLACEMENTS = [
   // Back right corner
   {
     id: 'shelf-right-back',
-    position: [4.0, SHELF_HEIGHT, 9.5],
+    position: [4.0, SHELF_HEIGHT, 9.9],
     rotation: [0, -Math.PI / 2, 0],
     cardRotation: [0, -Math.PI / 2, 0],
     shelfIndex: 4,
@@ -90,7 +90,7 @@ const SHELF_PLACEMENTS = [
   // Front right
   {
     id: 'shelf-right-front',
-    position: [4.0, SHELF_HEIGHT, 13.5],
+    position: [4.0, SHELF_HEIGHT, 13.9],
     rotation: [0, -Math.PI / 2, 0],
     cardRotation: [0, -Math.PI / 2, 0],
     shelfIndex: 5,
