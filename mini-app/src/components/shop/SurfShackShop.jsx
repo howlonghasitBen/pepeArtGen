@@ -23,8 +23,8 @@ function SurfShackShop({ onBack }) {
   const [mobileInput, setMobileInput] = useState({ x: 0, y: 0 });
   const [cameraInput, setCameraInput] = useState({ x: 0, y: 0 });
 
-  // Character state - spawn in front of the shack entrance
-  const [characterPosition, setCharacterPosition] = useState([0, 0, 2]);
+  // Character state - spawn in front of the shack entrance (centered on beach)
+  const [characterPosition, setCharacterPosition] = useState([0, 0, 18]);
   const [characterRotation, setCharacterRotation] = useState(Math.PI); // Face the shack
   const [isMoving, setIsMoving] = useState(false);
 
@@ -190,11 +190,11 @@ function SurfShackShop({ onBack }) {
             distortionScale={2}
           />
 
-          {/* Surf Shack - two shacks back-to-back for larger interior */}
-          {/* Front shack - facing the beach */}
-          <MeshySurfShack position={[0, 4.25, -3]} scale={7.5} />
+          {/* Surf Shack - two shacks back-to-back, centered on beach plane */}
+          {/* Front shack - facing the beach (raised by 1) */}
+          <MeshySurfShack position={[0, 5.25, 13]} scale={7.5} />
           {/* Back shack - rotated 180° and positioned snugly behind */}
-          <MeshySurfShack position={[0, 4.25, -9]} rotation={[0, Math.PI, 0]} scale={7.5} />
+          <MeshySurfShack position={[0, 5.25, 7]} rotation={[0, Math.PI, 0]} scale={7.5} />
 
           {/* Shelves with cards inside the shack */}
           <ShopProps
@@ -205,7 +205,7 @@ function SurfShackShop({ onBack }) {
 
           {/* Shopkeeper Pepe - inside the double shack, off to the side */}
           <MeshyPepeCharacter
-            position={[3, 0, -5]}
+            position={[3, 0, 10]}
             rotation={[0, -Math.PI / 3, 0]}
             playerName="Shopkeeper"
             isMoving={false}

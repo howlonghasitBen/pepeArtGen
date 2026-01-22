@@ -12,8 +12,8 @@ function ThirdPersonControls({
 }) {
   const { camera } = useThree();
 
-  // Character state
-  const characterPos = useRef(new THREE.Vector3(0, 0, 6));
+  // Character state - spawning in front of shack entrance (Z=18)
+  const characterPos = useRef(new THREE.Vector3(0, 0, 18));
   const characterRotation = useRef(0); // Y-axis rotation
   const targetRotation = useRef(0);
 
@@ -50,12 +50,12 @@ function ThirdPersonControls({
   const lastMouseX = useRef(0);
   const lastMouseY = useRef(0);
 
-  // Boundaries - expanded for larger double-shack
+  // Boundaries - adjusted for beach-centered double-shack
   const bounds = {
     minX: -12,
     maxX: 12,
-    minZ: -10,   // Allow going into back of double shack
-    maxZ: 25,
+    minZ: 3,    // Behind back shack
+    maxZ: 27,   // Toward the ocean
   };
 
   // Handle keyboard input
