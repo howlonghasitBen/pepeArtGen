@@ -182,13 +182,9 @@ function SurfShackShop({ onBack }) {
           <fog attach="fog" args={["#87ceeb", 30, 80]} />
 
           {/* Scene elements */}
-          <ShaderOcean
-            position={[0, -0.5, 0]}
-            sunDirection={[100, 20, 100]}
-            waterColor="#006994"
-            distortionScale={2}
-          />
-          <MeshySurfShack position={[0, 0, 0]} scale={1} />
+          <Beach />
+          <Ocean />
+          <MeshySurfShack position={[0, 3, 0]} scale={7.5} />
           <CardBar cards={cards} onCardClick={handleCardClick} />
 
           {/* Meshy AI generated props (neon sign, shelves) */}
