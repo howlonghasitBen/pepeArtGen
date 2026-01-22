@@ -40,56 +40,53 @@ const SHACK_INTERIOR = {
 const SHELF_HEIGHT_LOW = 1.2;
 const SHELF_HEIGHT_HIGH = 2.8;
 
-// Shelf placements - uniform heights, spread across both shacks
+// Shelf placements - on interior walls of the double shack
 const SHELF_PLACEMENTS = [
-  // === FRONT SHACK SHELVES ===
-  // Back wall of front section (lower)
+  // === CENTER BACK SHELVES (visible from entrance) ===
+  // Center back wall (lower)
   {
-    id: 'shelf-front-back-lower',
+    id: 'shelf-center-lower',
     position: [0, SHELF_HEIGHT_LOW, -5],
     rotation: [0, 0, 0],
     cardRotation: [0, 0, 0],
     shelfIndex: 0,
   },
-  // Back wall of front section (upper)
+  // Center back wall (upper)
   {
-    id: 'shelf-front-back-upper',
+    id: 'shelf-center-upper',
     position: [0, SHELF_HEIGHT_HIGH, -5],
     rotation: [0, 0, 0],
     cardRotation: [0, 0, 0],
     shelfIndex: 1,
   },
-  // Left wall front section
+  // === LEFT WALL SHELVES (inside structure, facing right toward center) ===
   {
-    id: 'shelf-front-left',
-    position: [-2.5, SHELF_HEIGHT_LOW, -4],
-    rotation: [0, Math.PI / 2, 0],
+    id: 'shelf-left-front',
+    position: [-3.5, SHELF_HEIGHT_LOW, -3.5],
+    rotation: [0, Math.PI / 2, 0],  // Facing right (+X)
     cardRotation: [0, Math.PI / 2, 0],
     shelfIndex: 2,
   },
-  // Right wall front section
   {
-    id: 'shelf-front-right',
-    position: [2.5, SHELF_HEIGHT_LOW, -4],
-    rotation: [0, -Math.PI / 2, 0],
-    cardRotation: [0, -Math.PI / 2, 0],
+    id: 'shelf-left-back',
+    position: [-3.5, SHELF_HEIGHT_LOW, -6.5],
+    rotation: [0, Math.PI / 2, 0],
+    cardRotation: [0, Math.PI / 2, 0],
     shelfIndex: 3,
   },
-  // === BACK SHACK SHELVES ===
-  // Back wall of back section (lower)
+  // === RIGHT WALL SHELVES (inside structure, facing left toward center) ===
   {
-    id: 'shelf-back-back-lower',
-    position: [0, SHELF_HEIGHT_LOW, -8.5],
-    rotation: [0, Math.PI, 0],  // Facing forward
-    cardRotation: [0, Math.PI, 0],
+    id: 'shelf-right-front',
+    position: [3.5, SHELF_HEIGHT_LOW, -3.5],
+    rotation: [0, -Math.PI / 2, 0],  // Facing left (-X)
+    cardRotation: [0, -Math.PI / 2, 0],
     shelfIndex: 4,
   },
-  // Back wall of back section (upper)
   {
-    id: 'shelf-back-back-upper',
-    position: [0, SHELF_HEIGHT_HIGH, -8.5],
-    rotation: [0, Math.PI, 0],
-    cardRotation: [0, Math.PI, 0],
+    id: 'shelf-right-back',
+    position: [3.5, SHELF_HEIGHT_LOW, -6.5],
+    rotation: [0, -Math.PI / 2, 0],
+    cardRotation: [0, -Math.PI / 2, 0],
     shelfIndex: 5,
   },
 ];
