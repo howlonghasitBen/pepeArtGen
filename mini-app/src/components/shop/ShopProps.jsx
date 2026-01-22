@@ -15,10 +15,12 @@ import Card3D from './Card3D';
 
 // Shelf configuration - adjusted for better fit
 const SHELF_CONFIG = {
-  scale: 2.2,              // Reduced from 2.4
+  scale: 2.3,              // Increased from 2.2 (was 2.4, then 2.2, now 2.3)
   cardScale: 0.7,          // Card scale to fit shelves
-  cardsPerShelf: 4,        // Cards per shelf row
+  cardsPerRow: 4,          // Cards per shelf row (horizontally)
+  rowsPerShelf: 3,         // Number of rows per shelf (vertically)
   cardSpacing: 0.9,        // Horizontal spacing between cards (slightly tighter for smaller shelf)
+  rowSpacing: 0.5,         // Vertical spacing between rows
   cardYOffset: 0.2,        // Height offset - cards sit at bottom of shelf and fill upward
 };
 
@@ -34,9 +36,9 @@ const SHACK_INTERIOR = {
   rightX: 4,
 };
 
-// Uniform shelf height for all shelves (reduced by 0.3 to be flush with ground)
+// Uniform shelf height for all shelves (reduced by 0.3 to be flush with ground, then increased spacing by 0.6)
 const SHELF_HEIGHT_LOW = 1.9;   // was 2.2, then 2.1, now 1.9
-const SHELF_HEIGHT_HIGH = 4.0;  // was 4.3, then 4.2, now 4.0
+const SHELF_HEIGHT_HIGH = 4.6;  // was 4.3, then 4.2, then 4.0, now 4.6 (increased spacing by 0.6)
 
 // Shelf placements - all on side walls, flush with building
 // Ordered to fill bottom shelves first (0-3: all lower shelves, 4-7: all upper shelves)
@@ -131,15 +133,20 @@ function ShopProps({ cards = [], onCardClick, onPropClick }) {
 
     const assignments = [];
     let cardIndex = 0;
+    const cardsPerShelf = SHELF_CONFIG.cardsPerRow * SHELF_CONFIG.rowsPerShelf;
 
     SHELF_PLACEMENTS.forEach((shelf) => {
       const shelfCards = [];
-      for (let i = 0; i < SHELF_CONFIG.cardsPerShelf && cardIndex < cards.length; i++) {
-        shelfCards.push({
-          card: cards[cardIndex],
-          slotIndex: i,
-        });
-        cardIndex++;
+      // Fill all rows on this shelf
+      for (let row = 0; row < SHELF_CONFIG.rowsPerShelf && cardIndex < cards.length; row++) {
+        for (let col = 0; col < SHELF_CONFIG.cardsPerRow && cardIndex < cards.length; col++) {
+          shelfCards.push({
+            card: cards[cardIndex],
+            row: row,
+            col: col,
+          });
+          cardIndex++;
+        }
       }
       assignments.push({
         shelf,
@@ -151,30 +158,33 @@ function ShopProps({ cards = [], onCardClick, onPropClick }) {
   }, [cards]);
 
   // Calculate card position and rotation on a shelf
-  const getCardTransform = (shelf, slotIndex) => {
-    const { cardsPerShelf, cardSpacing, cardYOffset } = SHELF_CONFIG;
-    const totalWidth = (cardsPerShelf - 1) * cardSpacing;
+  const getCardTransform = (shelf, row, col) => {
+    const { cardsPerRow, cardSpacing, rowSpacing, cardYOffset } = SHELF_CONFIG;
+    const totalWidth = (cardsPerRow - 1) * cardSpacing;
     const startOffset = -totalWidth / 2;
 
     const [sx, sy, sz] = shelf.position;
     const yRotation = shelf.rotation[1];
 
-    const localOffset = startOffset + slotIndex * cardSpacing;
+    // Calculate horizontal offset based on column
+    const localOffset = startOffset + col * cardSpacing;
+    // Calculate vertical offset based on row (bottom to top)
+    const verticalOffset = cardYOffset + row * rowSpacing;
 
     let position;
     // Calculate world position based on shelf rotation
     if (Math.abs(yRotation) < 0.1) {
       // Facing forward (Z+)
-      position = [sx + localOffset, sy + cardYOffset, sz + 0.5];
+      position = [sx + localOffset, sy + verticalOffset, sz + 0.5];
     } else if (Math.abs(yRotation - Math.PI) < 0.1 || Math.abs(yRotation + Math.PI) < 0.1) {
       // Facing backward (Z-)
-      position = [sx - localOffset, sy + cardYOffset, sz - 0.5];
+      position = [sx - localOffset, sy + verticalOffset, sz - 0.5];
     } else if (yRotation > 0) {
       // Facing right (X+)
-      position = [sx + 0.5, sy + cardYOffset, sz + localOffset];
+      position = [sx + 0.5, sy + verticalOffset, sz + localOffset];
     } else {
       // Facing left (X-)
-      position = [sx - 0.5, sy + cardYOffset, sz - localOffset];
+      position = [sx - 0.5, sy + verticalOffset, sz - localOffset];
     }
 
     return {
@@ -222,15 +232,16 @@ function ShopProps({ cards = [], onCardClick, onPropClick }) {
           </Suspense>
 
           {/* Cards on this shelf */}
-          {shelfCards.map(({ card, slotIndex }) => {
-            const { position, rotation } = getCardTransform(shelf, slotIndex);
+          {shelfCards.map(({ card, row, col }) => {
+            const { position, rotation } = getCardTransform(shelf, row, col);
+            const cardIndex = shelf.shelfIndex * SHELF_CONFIG.cardsPerRow * SHELF_CONFIG.rowsPerShelf + row * SHELF_CONFIG.cardsPerRow + col;
             return (
-              <group key={`${shelf.id}-card-${slotIndex}`} position={position} rotation={rotation}>
+              <group key={`${shelf.id}-card-${row}-${col}`} position={position} rotation={rotation}>
                 <Card3D
                   card={card}
                   position={[0, 0, 0]}
                   onClick={() => onCardClick?.(card)}
-                  index={shelf.shelfIndex * SHELF_CONFIG.cardsPerShelf + slotIndex}
+                  index={cardIndex}
                   scale={SHELF_CONFIG.cardScale}
                 />
               </group>
