@@ -30,7 +30,7 @@ export const CARD_LAYOUT = {
     // Counter display (rotating cards on bar top)
     COUNTER: {
       MAX_CARDS: 5,
-      ROTATION_INTERVAL_MS: 30000, // 30 seconds
+      ROTATION_INTERVAL_MS: 60000, // 1 minute
       BAR_WIDTH: 10,
       Y_POSITION: 1.5,
       Z_POSITION: -3,
