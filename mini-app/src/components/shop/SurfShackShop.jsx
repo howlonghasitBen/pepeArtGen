@@ -190,8 +190,11 @@ function SurfShackShop({ onBack }) {
             distortionScale={2}
           />
 
-          {/* Surf Shack - positioned at back edge of beach */}
-          <MeshySurfShack position={[0, 0, -5]} scale={7.5} />
+          {/* Surf Shack - two shacks back-to-back for larger interior */}
+          {/* Front shack - facing the beach */}
+          <MeshySurfShack position={[0, 2.5, -3]} scale={7.5} />
+          {/* Back shack - rotated 180° and positioned snugly behind */}
+          <MeshySurfShack position={[0, 2.5, -9]} rotation={[0, Math.PI, 0]} scale={7.5} />
 
           {/* Shelves with cards inside the shack */}
           <ShopProps
@@ -200,9 +203,9 @@ function SurfShackShop({ onBack }) {
             onPropClick={(prop) => console.log('Clicked prop:', prop.id)}
           />
 
-          {/* Shopkeeper Pepe - inside the shack */}
+          {/* Shopkeeper Pepe - inside the double shack */}
           <MeshyPepeCharacter
-            position={[2, 0, -5]}
+            position={[1.5, 0, -6]}
             rotation={[0, -Math.PI / 4, 0]}
             playerName="Shopkeeper"
             isMoving={false}
