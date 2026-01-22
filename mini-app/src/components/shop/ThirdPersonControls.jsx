@@ -27,6 +27,8 @@ function ThirdPersonControls({
   const cameraYaw = useRef(0); // Horizontal orbit
   const cameraPitch = useRef(0.3); // Vertical angle (0.3 = slightly above)
   const cameraDistance = useRef(4);
+  const isPortrait = useRef(false);
+  const baseCameraDistance = useRef(4); // Base distance for landscape
 
   // Movement state - snappier controls
   const moveSpeed = 0.18;           // Faster movement
@@ -57,6 +59,30 @@ function ThirdPersonControls({
     minZ: 3,    // Behind back shack
     maxZ: 27,   // Toward the ocean
   };
+
+  // Detect portrait orientation and adjust camera distance
+  useEffect(() => {
+    const handleOrientationChange = () => {
+      const portrait = window.innerHeight > window.innerWidth;
+      isPortrait.current = portrait;
+
+      // In portrait mode, pull camera back further to see more of the scene
+      if (portrait) {
+        baseCameraDistance.current = 6; // Increased from 4 for portrait
+        cameraDistance.current = Math.max(cameraDistance.current, 6);
+      } else {
+        baseCameraDistance.current = 4; // Default for landscape
+        // Don't force reset if user has zoomed in/out
+      }
+    };
+
+    handleOrientationChange();
+    window.addEventListener('resize', handleOrientationChange);
+
+    return () => {
+      window.removeEventListener('resize', handleOrientationChange);
+    };
+  }, []);
 
   // Handle keyboard input
   useEffect(() => {
@@ -144,8 +170,9 @@ function ThirdPersonControls({
     };
 
     const handleWheel = (e) => {
-      // Zoom in/out
-      cameraDistance.current = Math.max(2, Math.min(8, cameraDistance.current + e.deltaY * 0.005));
+      // Zoom in/out - respect minimum distance based on orientation
+      const minDistance = isPortrait.current ? 4 : 2;
+      cameraDistance.current = Math.max(minDistance, Math.min(10, cameraDistance.current + e.deltaY * 0.005));
     };
 
     const handleContextMenu = (e) => {
