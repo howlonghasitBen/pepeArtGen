@@ -6,8 +6,7 @@ import MeshySurfShack from "./MeshySurfShack";
 import CardBar from "./CardBar";
 import ThirdPersonControls from "./ThirdPersonControls";
 import MeshyPepeCharacter from "./MeshyPepeCharacter";
-import Ocean from "./Ocean";
-import Beach from "./Beach";
+import ShaderOcean from "./ShaderOcean";
 import ShopProps from "./ShopProps";
 import CardDetailModal from "./CardDetailModal";
 import NameInputModal from "./NameInputModal";
@@ -183,8 +182,12 @@ function SurfShackShop({ onBack }) {
           <fog attach="fog" args={["#87ceeb", 30, 80]} />
 
           {/* Scene elements */}
-          <Beach />
-          <Ocean />
+          <ShaderOcean
+            position={[0, -0.5, 0]}
+            sunDirection={[100, 20, 100]}
+            waterColor="#006994"
+            distortionScale={2}
+          />
           <MeshySurfShack position={[0, 0, 0]} scale={1} />
           <CardBar cards={cards} onCardClick={handleCardClick} />
 
