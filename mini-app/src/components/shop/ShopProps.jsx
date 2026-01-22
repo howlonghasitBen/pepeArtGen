@@ -34,13 +34,15 @@ const SHACK_INTERIOR = {
   rightX: 4,
 };
 
-// Uniform shelf height for all shelves (reduced by 0.1 to sit on ground)
-const SHELF_HEIGHT_LOW = 2.1;   // was 2.2
-const SHELF_HEIGHT_HIGH = 4.2;  // was 4.3
+// Uniform shelf height for all shelves (reduced by 0.3 to be flush with ground)
+const SHELF_HEIGHT_LOW = 1.9;   // was 2.2, then 2.1, now 1.9
+const SHELF_HEIGHT_HIGH = 4.0;  // was 4.3, then 4.2, now 4.0
 
 // Shelf placements - all on side walls, flush with building
+// Ordered to fill bottom shelves first (0-3: all lower shelves, 4-7: all upper shelves)
 const SHELF_PLACEMENTS = [
-  // === FRONT SHACK - LEFT WALL ===
+  // === BOTTOM SHELVES (fill these first) ===
+  // Front left lower
   {
     id: 'shelf-front-left-lower',
     position: [-4.0, SHELF_HEIGHT_LOW, 12],
@@ -48,51 +50,56 @@ const SHELF_PLACEMENTS = [
     cardRotation: [0, Math.PI / 2, 0],
     shelfIndex: 0,
   },
-  {
-    id: 'shelf-front-left-upper',
-    position: [-4.0, SHELF_HEIGHT_HIGH, 12],
-    rotation: [0, Math.PI / 2, 0],
-    cardRotation: [0, Math.PI / 2, 0],
-    shelfIndex: 1,
-  },
-  // === FRONT SHACK - RIGHT WALL ===
+  // Front right lower
   {
     id: 'shelf-front-right-lower',
     position: [4.0, SHELF_HEIGHT_LOW, 12],
     rotation: [0, -Math.PI / 2, 0],
     cardRotation: [0, -Math.PI / 2, 0],
-    shelfIndex: 2,
+    shelfIndex: 1,
   },
-  {
-    id: 'shelf-front-right-upper',
-    position: [4.0, SHELF_HEIGHT_HIGH, 12],
-    rotation: [0, -Math.PI / 2, 0],
-    cardRotation: [0, -Math.PI / 2, 0],
-    shelfIndex: 3,
-  },
-  // === BACK SHACK - LEFT WALL ===
+  // Back left lower
   {
     id: 'shelf-back-left-lower',
     position: [-4.0, SHELF_HEIGHT_LOW, 8],
     rotation: [0, Math.PI / 2, 0],
     cardRotation: [0, Math.PI / 2, 0],
-    shelfIndex: 4,
+    shelfIndex: 2,
   },
-  {
-    id: 'shelf-back-left-upper',
-    position: [-4.0, SHELF_HEIGHT_HIGH, 8],
-    rotation: [0, Math.PI / 2, 0],
-    cardRotation: [0, Math.PI / 2, 0],
-    shelfIndex: 5,
-  },
-  // === BACK SHACK - RIGHT WALL ===
+  // Back right lower
   {
     id: 'shelf-back-right-lower',
     position: [4.0, SHELF_HEIGHT_LOW, 8],
     rotation: [0, -Math.PI / 2, 0],
     cardRotation: [0, -Math.PI / 2, 0],
+    shelfIndex: 3,
+  },
+  // === UPPER SHELVES (fill these after bottom shelves are full) ===
+  // Front left upper
+  {
+    id: 'shelf-front-left-upper',
+    position: [-4.0, SHELF_HEIGHT_HIGH, 12],
+    rotation: [0, Math.PI / 2, 0],
+    cardRotation: [0, Math.PI / 2, 0],
+    shelfIndex: 4,
+  },
+  // Front right upper
+  {
+    id: 'shelf-front-right-upper',
+    position: [4.0, SHELF_HEIGHT_HIGH, 12],
+    rotation: [0, -Math.PI / 2, 0],
+    cardRotation: [0, -Math.PI / 2, 0],
+    shelfIndex: 5,
+  },
+  // Back left upper
+  {
+    id: 'shelf-back-left-upper',
+    position: [-4.0, SHELF_HEIGHT_HIGH, 8],
+    rotation: [0, Math.PI / 2, 0],
+    cardRotation: [0, Math.PI / 2, 0],
     shelfIndex: 6,
   },
+  // Back right upper
   {
     id: 'shelf-back-right-upper',
     position: [4.0, SHELF_HEIGHT_HIGH, 8],
