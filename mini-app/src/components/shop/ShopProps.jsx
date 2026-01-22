@@ -20,8 +20,8 @@ const SHELF_CONFIG = {
   cardsPerRow: 4,          // Cards per shelf row (horizontally)
   rowsPerShelf: 3,         // Number of rows per shelf (vertically)
   cardSpacing: 0.9,        // Horizontal spacing between cards (slightly tighter for smaller shelf)
-  rowSpacing: 0.5,         // Vertical spacing between rows
-  cardYOffset: 0.2,        // Height offset - cards sit at bottom of shelf and fill upward
+  rowSpacing: 0.6,         // Vertical spacing between rows (increased from 0.5)
+  cardYOffset: 0.2,        // Height offset - cards grounded at floor + 0.2
 };
 
 // Double shack interior dimensions (centered on beach plane)
@@ -36,75 +36,75 @@ const SHACK_INTERIOR = {
   rightX: 4,
 };
 
-// Uniform shelf height for all shelves (reduced by 0.3 to be flush with ground, then increased spacing by 0.6)
-const SHELF_HEIGHT_LOW = 1.9;   // was 2.2, then 2.1, now 1.9
-const SHELF_HEIGHT_HIGH = 4.6;  // was 4.3, then 4.2, then 4.0, now 4.6 (increased spacing by 0.6)
+// Uniform shelf height - single level at floor height
+const SHELF_HEIGHT = 1.9;  // Floor level shelves
 
-// Shelf placements - all on side walls, flush with building
-// Ordered to fill bottom shelves first (0-3: all lower shelves, 4-7: all upper shelves)
+// Shelf placements - U-shaped layout along left, back, and right walls
+// Forms a U when viewed from entrance (Z=15 looking toward Z=5)
 const SHELF_PLACEMENTS = [
-  // === BOTTOM SHELVES (fill these first) ===
-  // Front left lower
+  // === LEFT WALL (3 shelves) ===
+  // Front left
   {
-    id: 'shelf-front-left-lower',
-    position: [-4.0, SHELF_HEIGHT_LOW, 12],
+    id: 'shelf-left-front',
+    position: [-4.0, SHELF_HEIGHT, 12],
     rotation: [0, Math.PI / 2, 0],
     cardRotation: [0, Math.PI / 2, 0],
     shelfIndex: 0,
   },
-  // Front right lower
+  // Mid left
   {
-    id: 'shelf-front-right-lower',
-    position: [4.0, SHELF_HEIGHT_LOW, 12],
-    rotation: [0, -Math.PI / 2, 0],
-    cardRotation: [0, -Math.PI / 2, 0],
+    id: 'shelf-left-mid',
+    position: [-4.0, SHELF_HEIGHT, 10],
+    rotation: [0, Math.PI / 2, 0],
+    cardRotation: [0, Math.PI / 2, 0],
     shelfIndex: 1,
   },
-  // Back left lower
+  // Back left corner
   {
-    id: 'shelf-back-left-lower',
-    position: [-4.0, SHELF_HEIGHT_LOW, 8],
+    id: 'shelf-left-back',
+    position: [-4.0, SHELF_HEIGHT, 8],
     rotation: [0, Math.PI / 2, 0],
     cardRotation: [0, Math.PI / 2, 0],
     shelfIndex: 2,
   },
-  // Back right lower
+  // === BACK WALL (2 shelves) ===
+  // Back center-left
   {
-    id: 'shelf-back-right-lower',
-    position: [4.0, SHELF_HEIGHT_LOW, 8],
-    rotation: [0, -Math.PI / 2, 0],
-    cardRotation: [0, -Math.PI / 2, 0],
+    id: 'shelf-back-left',
+    position: [-2.0, SHELF_HEIGHT, 7],
+    rotation: [0, Math.PI, 0],
+    cardRotation: [0, Math.PI, 0],
     shelfIndex: 3,
   },
-  // === UPPER SHELVES (fill these after bottom shelves are full) ===
-  // Front left upper
+  // Back center-right
   {
-    id: 'shelf-front-left-upper',
-    position: [-4.0, SHELF_HEIGHT_HIGH, 12],
-    rotation: [0, Math.PI / 2, 0],
-    cardRotation: [0, Math.PI / 2, 0],
+    id: 'shelf-back-right',
+    position: [2.0, SHELF_HEIGHT, 7],
+    rotation: [0, Math.PI, 0],
+    cardRotation: [0, Math.PI, 0],
     shelfIndex: 4,
   },
-  // Front right upper
+  // === RIGHT WALL (3 shelves) ===
+  // Back right corner
   {
-    id: 'shelf-front-right-upper',
-    position: [4.0, SHELF_HEIGHT_HIGH, 12],
+    id: 'shelf-right-back',
+    position: [4.0, SHELF_HEIGHT, 8],
     rotation: [0, -Math.PI / 2, 0],
     cardRotation: [0, -Math.PI / 2, 0],
     shelfIndex: 5,
   },
-  // Back left upper
+  // Mid right
   {
-    id: 'shelf-back-left-upper',
-    position: [-4.0, SHELF_HEIGHT_HIGH, 8],
-    rotation: [0, Math.PI / 2, 0],
-    cardRotation: [0, Math.PI / 2, 0],
+    id: 'shelf-right-mid',
+    position: [4.0, SHELF_HEIGHT, 10],
+    rotation: [0, -Math.PI / 2, 0],
+    cardRotation: [0, -Math.PI / 2, 0],
     shelfIndex: 6,
   },
-  // Back right upper
+  // Front right
   {
-    id: 'shelf-back-right-upper',
-    position: [4.0, SHELF_HEIGHT_HIGH, 8],
+    id: 'shelf-right-front',
+    position: [4.0, SHELF_HEIGHT, 12],
     rotation: [0, -Math.PI / 2, 0],
     cardRotation: [0, -Math.PI / 2, 0],
     shelfIndex: 7,
