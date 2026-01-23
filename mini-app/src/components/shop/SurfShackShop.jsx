@@ -11,7 +11,27 @@ import ShopProps from "./ShopProps";
 import CardDetailModal from "./CardDetailModal";
 import NameInputModal from "./NameInputModal";
 import MobileControls from "./MobileControls";
+import MeshyModel, { preloadModel } from "./MeshyModel";
+import CardPlayingField from "./CardPlayingField";
 import "./SurfShackShop.css";
+
+// Preload palm tree model
+preloadModel('/models/props/palmTree.glb');
+
+// Palm tree positions along the beach (left and right sides)
+// Y position adjusted to place base flush with ground
+const PALM_TREE_POSITIONS = [
+  // Left side of beach
+  { position: [-18, 6, 20], rotation: [0, 0.3, 0], scale: 7.2 },
+  { position: [-15, 6, 16], rotation: [0, -0.5, 0], scale: 8.0 },
+  { position: [-20, 6, 12], rotation: [0, 0.8, 0], scale: 6.4 },
+  { position: [-16, 6, 8], rotation: [0, -0.2, 0], scale: 7.6 },
+  // Right side of beach
+  { position: [18, 6, 20], rotation: [0, -0.4, 0], scale: 6.8 },
+  { position: [15, 6, 15], rotation: [0, 0.6, 0], scale: 8.4 },
+  { position: [20, 6, 10], rotation: [0, -0.7, 0], scale: 7.2 },
+  { position: [17, 6, 6], rotation: [0, 0.4, 0], scale: 6.0 },
+];
 
 function SurfShackShop({ onBack }) {
   const { cards, loading, error, usingSampleData } = useAllCards();
@@ -197,6 +217,20 @@ function SurfShackShop({ onBack }) {
             onPropClick={(prop) => console.log('Clicked prop:', prop.id)}
           />
 
+          {/* Palm trees along the beach */}
+          {PALM_TREE_POSITIONS.map((tree, index) => (
+            <MeshyModel
+              key={`palm-tree-${index}`}
+              url="/models/props/palmTree.glb"
+              position={tree.position}
+              rotation={tree.rotation}
+              scale={tree.scale}
+            />
+          ))}
+
+          {/* Trading card playing field on the wet sand */}
+          <CardPlayingField position={[0, 0.05, 22]} rotation={[0, Math.PI / 2, 0]} />
+
           {/* Shopkeeper Pepe - at the entrance, greeting visitors */}
           <MeshyPepeCharacter
             position={[2, 0, 14]}
@@ -205,6 +239,14 @@ function SurfShackShop({ onBack }) {
             isMoving={false}
             isLocalPlayer={false}
             scale={1}
+          />
+
+          {/* Coconut drink held by shopkeeper (positioned near extended hand) */}
+          <MeshyModel
+            url="/models/props/coconutDrink.glb"
+            position={[2.9, 1.1, 14]}
+            rotation={[-0.3, 0, 0.3]}
+            scale={0.15}
           />
 
           {/* Player character - Meshy AI Pepe with animations */}
