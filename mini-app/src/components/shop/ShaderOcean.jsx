@@ -5,7 +5,7 @@
  * Based on https://threejs.org/examples/webgl_shaders_ocean.html
  */
 
-import { useRef, useMemo } from 'react';
+import { useRef, useMemo, useState } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { useTexture } from '@react-three/drei';
 import * as THREE from 'three';
@@ -18,25 +18,56 @@ function ShaderOcean({
   waterColor = '#001e0f',
   distortionScale = 3.7,
   size = 10000,
+  isMobile = false,
 }) {
   const waterRef = useRef();
   const { scene } = useThree();
+  const [textureError, setTextureError] = useState(false);
 
-  // Load water normals texture
-  const waterNormals = useTexture(
-    'https://threejs.org/examples/textures/waternormals.jpg',
-    (texture) => {
-      texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
-    }
-  );
+  // Load water normals texture with error handling
+  let waterNormals;
+  try {
+    waterNormals = useTexture(
+      'https://threejs.org/examples/textures/waternormals.jpg',
+      (texture) => {
+        texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+      },
+      (error) => {
+        console.error('[ShaderOcean] Failed to load water normals texture:', error);
+        setTextureError(true);
+      }
+    );
+  } catch (error) {
+    console.error('[ShaderOcean] Texture loading error:', error);
+    setTextureError(true);
+  }
 
-  // Create water object
+  // Fallback to simple plane if texture fails to load
+  if (textureError || !waterNormals) {
+    return (
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={position} receiveShadow>
+        <planeGeometry args={[size, size, 1, 1]} />
+        <meshStandardMaterial
+          color={waterColor}
+          roughness={0.2}
+          metalness={0.8}
+          transparent
+          opacity={0.9}
+        />
+      </mesh>
+    );
+  }
+
+  // Create water object with mobile optimizations
   const water = useMemo(() => {
     const waterGeometry = new THREE.PlaneGeometry(size, size);
 
+    // Reduce texture resolution on mobile to save GPU memory
+    const textureSize = isMobile ? 256 : 512;
+
     const waterObj = new Water(waterGeometry, {
-      textureWidth: 512,
-      textureHeight: 512,
+      textureWidth: textureSize,
+      textureHeight: textureSize,
       waterNormals: waterNormals,
       sunDirection: new THREE.Vector3(...sunDirection).normalize(),
       sunColor: new THREE.Color(sunColor),
@@ -48,7 +79,7 @@ function ShaderOcean({
     waterObj.rotation.x = -Math.PI / 2;
 
     return waterObj;
-  }, [waterNormals, sunDirection, sunColor, waterColor, distortionScale, size, scene.fog]);
+  }, [waterNormals, sunDirection, sunColor, waterColor, distortionScale, size, scene.fog, isMobile]);
 
   // Animate water
   useFrame((state, delta) => {

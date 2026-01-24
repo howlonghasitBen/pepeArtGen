@@ -13,7 +13,7 @@
  *   />
  */
 
-import { useRef, useMemo } from 'react';
+import { useRef, useMemo, useEffect } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
@@ -78,6 +78,30 @@ function MeshyModel({
 
     return clone;
   }, [scene, castShadow, receiveShadow, emissiveIntensity, emissiveColor, metalness, roughness]);
+
+  // Cleanup cloned materials and geometries on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      if (clonedScene) {
+        clonedScene.traverse((child) => {
+          if (child.isMesh) {
+            // Dispose geometry
+            if (child.geometry) {
+              child.geometry.dispose();
+            }
+            // Dispose material (whether single material or array)
+            if (child.material) {
+              if (Array.isArray(child.material)) {
+                child.material.forEach(material => material.dispose());
+              } else {
+                child.material.dispose();
+              }
+            }
+          }
+        });
+      }
+    };
+  }, [clonedScene]);
 
   // Animation frame
   useFrame((state) => {
