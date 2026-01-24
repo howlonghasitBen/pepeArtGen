@@ -2,22 +2,22 @@ import { useRef, useEffect } from "react";
 import * as THREE from "three";
 
 // Create procedural sand texture with improved detail
-function createSandTexture() {
+function createSandTexture(size = 1024) {
   const canvas = document.createElement("canvas");
-  canvas.width = 1024;
-  canvas.height = 1024;
+  canvas.width = size;
+  canvas.height = size;
   const ctx = canvas.getContext("2d");
 
   // Base sand color with gradient variation
-  const gradient = ctx.createLinearGradient(0, 0, 512, 512);
+  const gradient = ctx.createLinearGradient(0, 0, size / 2, size / 2);
   gradient.addColorStop(0, "#f4d58d");
   gradient.addColorStop(0.5, "#e6c870");
   gradient.addColorStop(1, "#f9e4a8");
   ctx.fillStyle = gradient;
-  ctx.fillRect(0, 0, 1024, 1024);
+  ctx.fillRect(0, 0, size, size);
 
   // Add multi-layer noise for better texture
-  const imageData = ctx.getImageData(0, 0, 1024, 1024);
+  const imageData = ctx.getImageData(0, 0, size, size);
   const data = imageData.data;
 
   // Fine grain noise
@@ -29,12 +29,13 @@ function createSandTexture() {
   }
 
   // Medium grain noise layer
-  for (let y = 0; y < 1024; y += 4) {
-    for (let x = 0; x < 1024; x += 4) {
+  const step = Math.ceil(size / 256); // Scale step with texture size
+  for (let y = 0; y < size; y += step) {
+    for (let x = 0; x < size; x += step) {
       const noise = (Math.random() - 0.5) * 25;
-      for (let dy = 0; dy < 4 && y + dy < 1024; dy++) {
-        for (let dx = 0; dx < 4 && x + dx < 1024; dx++) {
-          const pixelIdx = ((y + dy) * 1024 + (x + dx)) * 4;
+      for (let dy = 0; dy < step && y + dy < size; dy++) {
+        for (let dx = 0; dx < step && x + dx < size; dx++) {
+          const pixelIdx = ((y + dy) * size + (x + dx)) * 4;
           if (pixelIdx < data.length) {
             data[pixelIdx] = Math.min(255, Math.max(0, data[pixelIdx] + noise));
             data[pixelIdx + 1] = Math.min(255, Math.max(0, data[pixelIdx + 1] + noise * 0.85));
@@ -47,10 +48,11 @@ function createSandTexture() {
 
   ctx.putImageData(imageData, 0, 0);
 
-  // Add darker spots (pebbles) with better blending
-  for (let i = 0; i < 350; i++) {
-    const x = Math.random() * 1024;
-    const y = Math.random() * 1024;
+  // Add darker spots (pebbles) with better blending - scale with texture size
+  const pebbleCount = Math.floor((size / 1024) * 350);
+  for (let i = 0; i < pebbleCount; i++) {
+    const x = Math.random() * size;
+    const y = Math.random() * size;
     const radius = 0.5 + Math.random() * 4;
     const darkness = Math.random() * 35;
 
@@ -72,21 +74,21 @@ function createSandTexture() {
 }
 
 // Create wet sand texture with improved reflections
-function createWetSandTexture() {
+function createWetSandTexture(size = 1024) {
   const canvas = document.createElement("canvas");
-  canvas.width = 1024;
-  canvas.height = 1024;
+  canvas.width = size;
+  canvas.height = size;
   const ctx = canvas.getContext("2d");
 
   // Darker, wet sand base with variation
-  const gradient = ctx.createLinearGradient(0, 0, 512, 512);
+  const gradient = ctx.createLinearGradient(0, 0, size / 2, size / 2);
   gradient.addColorStop(0, "#8a6d35");
   gradient.addColorStop(0.5, "#a08040");
   gradient.addColorStop(1, "#9a7845");
   ctx.fillStyle = gradient;
-  ctx.fillRect(0, 0, 1024, 1024);
+  ctx.fillRect(0, 0, size, size);
 
-  const imageData = ctx.getImageData(0, 0, 1024, 1024);
+  const imageData = ctx.getImageData(0, 0, size, size);
   const data = imageData.data;
 
   // Subtle noise for texture
@@ -99,10 +101,11 @@ function createWetSandTexture() {
 
   ctx.putImageData(imageData, 0, 0);
 
-  // Add water reflection spots
-  for (let i = 0; i < 200; i++) {
-    const x = Math.random() * 1024;
-    const y = Math.random() * 1024;
+  // Add water reflection spots - scale with texture size
+  const reflectionCount = Math.floor((size / 1024) * 200);
+  for (let i = 0; i < reflectionCount; i++) {
+    const x = Math.random() * size;
+    const y = Math.random() * size;
     const radius = 3 + Math.random() * 8;
 
     const reflectionGradient = ctx.createRadialGradient(x, y, 0, x, y, radius);
@@ -118,17 +121,18 @@ function createWetSandTexture() {
   }
 
   // Add wave-like patterns
-  for (let wave = 0; wave < 8; wave++) {
-    const y = wave * 128 + Math.random() * 64;
-    const amplitude = 20 + Math.random() * 15;
+  const waveCount = Math.floor((size / 1024) * 8);
+  for (let wave = 0; wave < waveCount; wave++) {
+    const y = wave * (size / waveCount) + Math.random() * (size / (waveCount * 2));
+    const amplitude = (size / 1024) * (20 + Math.random() * 15);
     ctx.beginPath();
     ctx.moveTo(0, y);
-    for (let x = 0; x < 1024; x += 2) {
-      const waveY = y + Math.sin(x * 0.02) * amplitude;
+    for (let x = 0; x < size; x += 2) {
+      const waveY = y + Math.sin(x * (20 / size)) * amplitude;
       ctx.lineTo(x, waveY);
     }
-    ctx.lineTo(1024, y + amplitude);
-    ctx.lineTo(1024, y - amplitude);
+    ctx.lineTo(size, y + amplitude);
+    ctx.lineTo(size, y - amplitude);
     ctx.closePath();
     ctx.fillStyle = `rgba(135, 200, 235, ${0.05 + Math.random() * 0.1})`;
     ctx.fill();
@@ -142,15 +146,28 @@ function createWetSandTexture() {
 }
 
 // Sandy beach - just sand planes
-function Beach() {
+function Beach({ isMobile = false }) {
   const sandTextureRef = useRef();
   const wetSandTextureRef = useRef();
 
-  // Create textures once
+  // Create textures once with mobile optimization
   useEffect(() => {
-    sandTextureRef.current = createSandTexture();
-    wetSandTextureRef.current = createWetSandTexture();
-  }, []);
+    const textureSize = isMobile ? 512 : 1024; // Half resolution on mobile saves ~75% GPU memory
+    sandTextureRef.current = createSandTexture(textureSize);
+    wetSandTextureRef.current = createWetSandTexture(textureSize);
+
+    // Cleanup textures on unmount to prevent memory leaks
+    return () => {
+      if (sandTextureRef.current) {
+        sandTextureRef.current.dispose();
+        sandTextureRef.current = null;
+      }
+      if (wetSandTextureRef.current) {
+        wetSandTextureRef.current.dispose();
+        wetSandTextureRef.current = null;
+      }
+    };
+  }, [isMobile]);
 
   // Shoreline at Z = 25 (edge of movable space)
   const shorelineZ = 25;

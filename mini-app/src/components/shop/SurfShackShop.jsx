@@ -1,4 +1,4 @@
-import { Suspense, useState, useCallback, useEffect } from "react";
+import { Suspense, useState, useCallback, useEffect, Component } from "react";
 import { Canvas } from "@react-three/fiber";
 import { Sky, Environment, Loader } from "@react-three/drei";
 import { useAllCards } from "../../hooks/useAllCards";
@@ -14,6 +14,45 @@ import MobileControls from "./MobileControls";
 import MeshyModel, { preloadModel } from "./MeshyModel";
 import CardPlayingField from "./CardPlayingField";
 import "./SurfShackShop.css";
+
+// Error Boundary to prevent page reloads on WebGL errors
+class WebGLErrorBoundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error('[WebGL Error Boundary] Caught error:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="webgl-error-screen">
+          <h2>3D Scene Error</h2>
+          <p>The 3D shop encountered an issue. This can happen on mobile devices with limited memory.</p>
+          <button onClick={this.props.onBack} className="shop-back-btn">
+            Return to Main Menu
+          </button>
+          <button
+            onClick={() => this.setState({ hasError: false, error: null })}
+            className="shop-back-btn"
+            style={{ marginLeft: '10px' }}
+          >
+            Try Again
+          </button>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
 
 // Preload palm tree model
 preloadModel('/models/props/palmTree.glb');
@@ -47,6 +86,10 @@ function SurfShackShop({ onBack }) {
   const [characterRotation, setCharacterRotation] = useState(Math.PI); // Face the shack
   const [isMoving, setIsMoving] = useState(false);
 
+  // WebGL context state for handling context loss on mobile
+  const [contextLost, setContextLost] = useState(false);
+  const [canvasKey, setCanvasKey] = useState(0);
+
   // Check for mobile device
   useEffect(() => {
     const checkMobile = () => {
@@ -68,6 +111,33 @@ function SurfShackShop({ onBack }) {
       setShowNameModal(false);
     }
   }, []);
+
+  // Handle WebGL context loss (critical for mobile)
+  useEffect(() => {
+    const handleContextLost = (event) => {
+      event.preventDefault();
+      console.warn('[WebGL] Context lost - preventing page reload');
+      setContextLost(true);
+    };
+
+    const handleContextRestored = () => {
+      console.log('[WebGL] Context restored - reloading scene');
+      setContextLost(false);
+      // Force Canvas remount by changing key
+      setCanvasKey(prev => prev + 1);
+    };
+
+    const canvas = document.querySelector('canvas');
+    if (canvas) {
+      canvas.addEventListener('webglcontextlost', handleContextLost);
+      canvas.addEventListener('webglcontextrestored', handleContextRestored);
+
+      return () => {
+        canvas.removeEventListener('webglcontextlost', handleContextLost);
+        canvas.removeEventListener('webglcontextrestored', handleContextRestored);
+      };
+    }
+  }, [canvasKey]); // Re-attach listeners after canvas remount
 
   const handleNameSubmit = useCallback((name) => {
     setPlayerName(name);
@@ -156,11 +226,29 @@ function SurfShackShop({ onBack }) {
         </div>
       )}
 
-      {/* 3D Canvas */}
-      <Canvas
-        shadows
-        camera={{ fov: 60, near: 0.1, far: 1000, position: [0, 3, 10] }}
-      >
+      {/* WebGL context lost warning */}
+      {contextLost && (
+        <div className="sample-data-notice" style={{ background: '#ff6b6b' }}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="12" />
+            <line x1="12" y1="16" x2="12.01" y2="16" />
+          </svg>
+          <span>Graphics memory low - scene reloading...</span>
+        </div>
+      )}
+
+      {/* 3D Canvas wrapped in Error Boundary */}
+      <WebGLErrorBoundary onBack={onBack}>
+        <Canvas
+          key={canvasKey}
+          shadows
+          camera={{ fov: 60, near: 0.1, far: 1000, position: [0, 3, 10] }}
+          gl={{
+            powerPreference: isMobile ? 'low-power' : 'high-performance',
+            antialias: !isMobile,
+          }}
+        >
         <Suspense fallback={null}>
           {/* Lighting */}
           <ambientLight intensity={0.5} />
@@ -168,7 +256,7 @@ function SurfShackShop({ onBack }) {
             position={[10, 20, 10]}
             intensity={1.5}
             castShadow
-            shadow-mapSize={[2048, 2048]}
+            shadow-mapSize={isMobile ? [1024, 1024] : [2048, 2048]}
             shadow-camera-far={60}
             shadow-camera-left={-25}
             shadow-camera-right={25}
@@ -196,12 +284,13 @@ function SurfShackShop({ onBack }) {
           <fog attach="fog" args={["#87ceeb", 30, 80]} />
 
           {/* Scene elements */}
-          <Beach />
+          <Beach isMobile={isMobile} />
           <ShaderOcean
             position={[0, -0.5, 0]}
             sunDirection={[100, 20, 100]}
             waterColor="#006994"
             distortionScale={2}
+            isMobile={isMobile}
           />
 
           {/* Surf Shack - two shacks back-to-back, centered on beach plane */}
@@ -217,16 +306,18 @@ function SurfShackShop({ onBack }) {
             onPropClick={(prop) => console.log('Clicked prop:', prop.id)}
           />
 
-          {/* Palm trees along the beach */}
-          {PALM_TREE_POSITIONS.map((tree, index) => (
-            <MeshyModel
-              key={`palm-tree-${index}`}
-              url="/models/props/palmTree.glb"
-              position={tree.position}
-              rotation={tree.rotation}
-              scale={tree.scale}
-            />
-          ))}
+          {/* Palm trees along the beach (fewer on mobile to save memory) */}
+          {PALM_TREE_POSITIONS
+            .filter((_, index) => !isMobile || index % 2 === 0) // Show every other tree on mobile
+            .map((tree, index) => (
+              <MeshyModel
+                key={`palm-tree-${index}`}
+                url="/models/props/palmTree.glb"
+                position={tree.position}
+                rotation={tree.rotation}
+                scale={tree.scale}
+              />
+            ))}
 
           {/* Trading card playing field on the wet sand */}
           <CardPlayingField position={[0, 0.05, 22]} rotation={[0, Math.PI / 2, 0]} />
@@ -270,6 +361,7 @@ function SurfShackShop({ onBack }) {
           />
         </Suspense>
       </Canvas>
+      </WebGLErrorBoundary>
 
       {/* Loading indicator for Three.js */}
       <Loader />

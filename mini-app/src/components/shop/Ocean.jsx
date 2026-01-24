@@ -3,7 +3,7 @@ import { useFrame, extend } from "@react-three/fiber";
 import * as THREE from "three";
 
 // PS2-style ocean with animated wave loops
-function Ocean() {
+function Ocean({ isMobile = false }) {
   const oceanRef = useRef();
   const foamRef = useRef();
   const waveGeometryRef = useRef();
@@ -12,9 +12,16 @@ function Ocean() {
   // Shoreline position (at edge of movable space, Z = 25)
   const shorelineZ = 25;
 
+  // Reduce polygon count and computation frequency on mobile
+  const oceanSegments = isMobile ? [40, 30] : [120, 80]; // Mobile: 1,200 vertices vs Desktop: 9,600
+  const foamSegments = isMobile ? [30, 4] : [60, 8];
+  const computeNormalsInterval = isMobile ? 3 : 1; // Only compute normals every 3rd frame on mobile
+  let frameCount = 0;
+
   // Create wave animation with multiple layers
   useFrame((state) => {
     const time = state.clock.elapsedTime;
+    frameCount++;
 
     // Animate main ocean surface
     if (waveGeometryRef.current) {
@@ -47,7 +54,10 @@ function Ocean() {
         }
 
         positions.needsUpdate = true;
-        waveGeometryRef.current.computeVertexNormals();
+        // Only compute vertex normals on interval (expensive operation)
+        if (frameCount % computeNormalsInterval === 0) {
+          waveGeometryRef.current.computeVertexNormals();
+        }
       }
     }
 
@@ -73,7 +83,10 @@ function Ocean() {
         }
 
         foamPositions.needsUpdate = true;
-        foamGeometryRef.current.computeVertexNormals();
+        // Only compute vertex normals on interval (expensive operation)
+        if (frameCount % computeNormalsInterval === 0) {
+          foamGeometryRef.current.computeVertexNormals();
+        }
       }
 
       // Animate foam opacity for breaking wave effect
@@ -128,7 +141,7 @@ function Ocean() {
       >
         <planeGeometry
           ref={waveGeometryRef}
-          args={[120, 80, 120, 80]} // PS2-level polygon count
+          args={[120, 80, ...oceanSegments]} // Adaptive polygon count: 1200 vertices mobile, 9600 desktop
         />
         <primitive object={oceanMaterial} />
       </mesh>
@@ -141,7 +154,7 @@ function Ocean() {
       >
         <planeGeometry
           ref={foamGeometryRef}
-          args={[120, 8, 60, 8]} // Foam strip
+          args={[120, 8, ...foamSegments]} // Foam strip with mobile optimization
         />
         <primitive object={foamMaterial} />
       </mesh>
