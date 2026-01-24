@@ -97,25 +97,20 @@ function MeshyPepeCharacter({
       mixerRef.current.update(delta);
     }
 
-    // Smooth interpolation for position (lerp factor controls smoothness)
-    const lerpFactor = isLocalPlayer ? 0.3 : 0.15; // Local player is more responsive
-    currentPosition.current.lerp(targetPosition.current, lerpFactor);
+    // Always sync position from props (X, Y, Z from controls)
+    groupRef.current.position.x = position[0];
+    groupRef.current.position.y = position[1];
+    groupRef.current.position.z = position[2];
 
-    // Smooth interpolation for rotation
-    let rotDiff = targetRotationY.current - currentRotationY.current;
-    // Handle wrap-around for rotation
-    while (rotDiff > Math.PI) rotDiff -= Math.PI * 2;
-    while (rotDiff < -Math.PI) rotDiff += Math.PI * 2;
-    currentRotationY.current += rotDiff * lerpFactor;
-
-    // Apply smoothed values to the group
-    groupRef.current.position.copy(currentPosition.current);
-    groupRef.current.rotation.y = currentRotationY.current;
+    // Sync rotation from props
+    groupRef.current.rotation.y = rotation[1];
   });
 
   return (
     <group
       ref={groupRef}
+      position={position}
+      rotation={rotation}
       scale={typeof scale === 'number' ? [scale, scale, scale] : scale}
     >
       {/* The character model */}

@@ -81,11 +81,10 @@ function ShaderOcean({
     return waterObj;
   }, [waterNormals, sunDirection, sunColor, waterColor, distortionScale, size, scene.fog, isMobile]);
 
-  // Animate water using stable clock time to prevent jitter
-  useFrame((state) => {
+  // Animate water
+  useFrame((state, delta) => {
     if (water.material.uniforms['time']) {
-      // Use the stable clock elapsed time instead of variable delta
-      water.material.uniforms['time'].value = state.clock.elapsedTime * 0.5;
+      water.material.uniforms['time'].value += delta;
     }
   });
 
