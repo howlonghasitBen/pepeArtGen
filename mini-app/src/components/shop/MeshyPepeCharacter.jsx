@@ -15,14 +15,20 @@ import { clone as SkeletonUtilsClone } from 'three/examples/jsm/utils/SkeletonUt
 useGLTF.preload('/models/props/pepeBlueAlohaShirtAnimations.glb');
 
 function MeshyPepeCharacter({
-  position = [0, 0, 0],
-  rotation = [0, 0, 0],
+  position,           // Static position array (for non-player characters)
+  rotation,           // Static rotation array (for non-player characters)
+  positionRef,        // Ref for dynamic position (for player character)
+  rotationRef,        // Ref for dynamic rotation (for player character)
   scale = 1,
   playerName = 'Player',
   isMoving = false,
   isRunning = false,
   isLocalPlayer = true,
 }) {
+  // Determine if using refs or static values
+  const useRefs = Boolean(positionRef && rotationRef);
+  const staticPosition = position || [0, 0, 0];
+  const staticRotation = rotation || [0, 0, 0];
   const groupRef = useRef();
   const mixerRef = useRef();
   const actionsRef = useRef({});
@@ -119,20 +125,24 @@ function MeshyPepeCharacter({
       mixerRef.current.update(delta);
     }
 
-    // Always sync position from props (X, Y, Z from controls)
-    groupRef.current.position.x = position[0];
-    groupRef.current.position.y = position[1];
-    groupRef.current.position.z = position[2];
-
-    // Sync rotation from props
-    groupRef.current.rotation.y = rotation[1];
+    if (useRefs) {
+      // For player character: read directly from refs (no lerp needed, ThirdPersonControls handles smoothing)
+      const pos = positionRef.current;
+      groupRef.current.position.set(pos[0], pos[1], pos[2]);
+      groupRef.current.rotation.y = rotationRef.current;
+    }
+    // For static characters (shopkeeper), position is set via JSX props and doesn't need updating
   });
+
+  // Initial position for static characters or starting position for dynamic
+  const initialPosition = useRefs ? positionRef.current : staticPosition;
+  const initialRotation = useRefs ? [0, rotationRef.current, 0] : staticRotation;
 
   return (
     <group
       ref={groupRef}
-      position={position}
-      rotation={rotation}
+      position={initialPosition}
+      rotation={initialRotation}
       scale={typeof scale === 'number' ? [scale, scale, scale] : scale}
     >
       {/* The character model */}

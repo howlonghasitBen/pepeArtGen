@@ -3,8 +3,8 @@ import { useThree, useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 
 function ThirdPersonControls({
-  onPositionChange,
-  onRotationChange,
+  positionRef,        // Ref to update character position directly
+  rotationRef,        // Ref to update character rotation directly
   onMovingChange,
   mobileInput,
   cameraInput,
@@ -337,9 +337,13 @@ function ThirdPersonControls({
     while (rotDiff < -Math.PI) rotDiff += Math.PI * 2;
     characterRotation.current += rotDiff * rotationSpeed;
 
-    // Notify parent of position/rotation changes
-    onPositionChange?.(characterPos.current.clone());
-    onRotationChange?.(characterRotation.current);
+    // Update position/rotation refs directly (no React state, no re-renders)
+    if (positionRef) {
+      positionRef.current = [characterPos.current.x, characterPos.current.y, characterPos.current.z];
+    }
+    if (rotationRef) {
+      rotationRef.current = characterRotation.current;
+    }
 
     // Calculate camera position (orbit around character)
     const targetCameraPos = new THREE.Vector3(

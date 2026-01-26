@@ -1,4 +1,4 @@
-import { Suspense, useState, useCallback, useEffect, Component } from "react";
+import { Suspense, useState, useCallback, useEffect, Component, useRef } from "react";
 import { Canvas } from "@react-three/fiber";
 import { Sky, Environment, Loader } from "@react-three/drei";
 import { useAllCards } from "../../hooks/useAllCards";
@@ -81,9 +81,10 @@ function SurfShackShop({ onBack }) {
   const [mobileInput, setMobileInput] = useState({ x: 0, y: 0 });
   const [cameraInput, setCameraInput] = useState({ x: 0, y: 0 });
 
-  // Character state - spawn in front of the shack entrance (centered on beach)
-  const [characterPosition, setCharacterPosition] = useState([0, 0, 18]);
-  const [characterRotation, setCharacterRotation] = useState(Math.PI); // Face the shack
+  // Character state - use refs to avoid re-renders on every frame
+  // Position/rotation are updated via refs to prevent jitter
+  const characterPositionRef = useRef([0, 0, 18]);
+  const characterRotationRef = useRef(Math.PI); // Face the shack
   const [isMoving, setIsMoving] = useState(false);
 
   // WebGL context state for handling context loss on mobile
@@ -334,8 +335,8 @@ function SurfShackShop({ onBack }) {
 
           {/* Player character - Meshy AI Pepe with animations */}
           <MeshyPepeCharacter
-            position={characterPosition}
-            rotation={[0, characterRotation, 0]}
+            positionRef={characterPositionRef}
+            rotationRef={characterRotationRef}
             playerName={playerName}
             isMoving={isMoving}
             isLocalPlayer={true}
@@ -344,8 +345,8 @@ function SurfShackShop({ onBack }) {
 
           {/* Third person camera controls */}
           <ThirdPersonControls
-            onPositionChange={(pos) => setCharacterPosition([pos.x, pos.y, pos.z])}
-            onRotationChange={setCharacterRotation}
+            positionRef={characterPositionRef}
+            rotationRef={characterRotationRef}
             onMovingChange={setIsMoving}
             mobileInput={isMobile ? mobileInput : null}
             cameraInput={isMobile ? cameraInput : null}
