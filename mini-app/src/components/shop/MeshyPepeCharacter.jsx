@@ -64,6 +64,28 @@ function MeshyPepeCharacter({
     };
   }, [clonedScene, animations]);
 
+  // Cleanup cloned materials and geometries on unmount
+  useEffect(() => {
+    return () => {
+      if (clonedScene) {
+        clonedScene.traverse((child) => {
+          if (child.isMesh) {
+            if (child.geometry) {
+              child.geometry.dispose();
+            }
+            if (child.material) {
+              if (Array.isArray(child.material)) {
+                child.material.forEach(mat => mat.dispose());
+              } else {
+                child.material.dispose();
+              }
+            }
+          }
+        });
+      }
+    };
+  }, [clonedScene]);
+
   // Handle animation transitions
   useEffect(() => {
     const actions = actionsRef.current;

@@ -86,6 +86,27 @@ function ShaderOceanInner({
     return waterObj;
   }, [waterNormals, sunDirection, sunColor, waterColor, distortionScale, size, scene.fog, isMobile]);
 
+  // Cleanup water geometry and material on unmount
+  useEffect(() => {
+    return () => {
+      if (water) {
+        if (water.geometry) {
+          water.geometry.dispose();
+        }
+        if (water.material) {
+          // Dispose render targets used by Water shader
+          if (water.material.uniforms) {
+            const uniforms = water.material.uniforms;
+            if (uniforms.mirrorSampler && uniforms.mirrorSampler.value) {
+              uniforms.mirrorSampler.value.dispose();
+            }
+          }
+          water.material.dispose();
+        }
+      }
+    };
+  }, [water]);
+
   // Animate water
   useFrame((state, delta) => {
     if (water && water.material.uniforms['time']) {

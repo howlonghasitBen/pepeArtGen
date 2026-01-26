@@ -18,17 +18,26 @@ function Card3D({ card, position, onClick, index = 0, scale = 1.0 }) {
   const cardHeight = baseScale;
   const cardWidth = cardHeight * (3 / 4); // Maintain 3:4 aspect ratio
 
-  // Load card image as texture
+  // Load card image as texture with proper cleanup
   useEffect(() => {
+    let loadedTexture = null;
+    let isMounted = true;
+
     if (card?.image || card?.imageData) {
       const imageUrl = card.image || card.imageData;
       const loader = new THREE.TextureLoader();
 
       loader.load(
         imageUrl,
-        (loadedTexture) => {
-          loadedTexture.colorSpace = THREE.SRGBColorSpace;
-          setTexture(loadedTexture);
+        (tex) => {
+          if (isMounted) {
+            tex.colorSpace = THREE.SRGBColorSpace;
+            loadedTexture = tex;
+            setTexture(tex);
+          } else {
+            // Component unmounted before texture loaded - dispose immediately
+            tex.dispose();
+          }
         },
         undefined,
         (error) => {
@@ -36,6 +45,14 @@ function Card3D({ card, position, onClick, index = 0, scale = 1.0 }) {
         }
       );
     }
+
+    // Cleanup: dispose texture when component unmounts or card changes
+    return () => {
+      isMounted = false;
+      if (loadedTexture) {
+        loadedTexture.dispose();
+      }
+    };
   }, [card]);
 
   // Animation - hover effects only, no idle floating
