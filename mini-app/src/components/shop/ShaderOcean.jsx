@@ -5,13 +5,38 @@
  * Based on https://threejs.org/examples/webgl_shaders_ocean.html
  */
 
-import { useRef, useMemo, useState } from 'react';
-import { useFrame, useThree } from '@react-three/fiber';
-import { useTexture } from '@react-three/drei';
+import { useRef, useMemo, useEffect, useState, Suspense } from 'react';
+import { useFrame, useThree, useLoader } from '@react-three/fiber';
 import * as THREE from 'three';
 import { Water } from 'three/examples/jsm/objects/Water.js';
 
-function ShaderOcean({
+// Fallback ocean component (simple animated plane)
+function FallbackOcean({ position = [0, -0.5, 0], waterColor = '#001e0f', size = 10000 }) {
+  const meshRef = useRef();
+
+  useFrame((state) => {
+    if (meshRef.current) {
+      // Simple wave animation using vertex displacement illusion via position
+      meshRef.current.position.y = position[1] + Math.sin(state.clock.elapsedTime * 0.5) * 0.05;
+    }
+  });
+
+  return (
+    <mesh ref={meshRef} rotation={[-Math.PI / 2, 0, 0]} position={position} receiveShadow>
+      <planeGeometry args={[size, size, 1, 1]} />
+      <meshStandardMaterial
+        color={waterColor}
+        roughness={0.2}
+        metalness={0.8}
+        transparent
+        opacity={0.9}
+      />
+    </mesh>
+  );
+}
+
+// Inner component that loads the texture
+function ShaderOceanInner({
   position = [0, -0.5, 0],
   sunDirection = [100, 20, 100],
   sunColor = '#ffffff',
@@ -22,44 +47,24 @@ function ShaderOcean({
 }) {
   const waterRef = useRef();
   const { scene } = useThree();
-  const [textureError, setTextureError] = useState(false);
 
-  // Load water normals texture with error handling
-  let waterNormals;
-  try {
-    waterNormals = useTexture(
-      'https://threejs.org/examples/textures/waternormals.jpg',
-      (texture) => {
-        texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
-      },
-      (error) => {
-        console.error('[ShaderOcean] Failed to load water normals texture:', error);
-        setTextureError(true);
-      }
-    );
-  } catch (error) {
-    console.error('[ShaderOcean] Texture loading error:', error);
-    setTextureError(true);
-  }
+  // Use THREE.TextureLoader directly for better error handling
+  const waterNormals = useLoader(
+    THREE.TextureLoader,
+    'https://threejs.org/examples/textures/waternormals.jpg'
+  );
 
-  // Fallback to simple plane if texture fails to load
-  if (textureError || !waterNormals) {
-    return (
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={position} receiveShadow>
-        <planeGeometry args={[size, size, 1, 1]} />
-        <meshStandardMaterial
-          color={waterColor}
-          roughness={0.2}
-          metalness={0.8}
-          transparent
-          opacity={0.9}
-        />
-      </mesh>
-    );
-  }
+  // Configure texture wrapping after load
+  useEffect(() => {
+    if (waterNormals) {
+      waterNormals.wrapS = waterNormals.wrapT = THREE.RepeatWrapping;
+    }
+  }, [waterNormals]);
 
   // Create water object with mobile optimizations
   const water = useMemo(() => {
+    if (!waterNormals) return null;
+
     const waterGeometry = new THREE.PlaneGeometry(size, size);
 
     // Reduce texture resolution on mobile to save GPU memory
@@ -83,12 +88,36 @@ function ShaderOcean({
 
   // Animate water
   useFrame((state, delta) => {
-    if (water.material.uniforms['time']) {
+    if (water && water.material.uniforms['time']) {
       water.material.uniforms['time'].value += delta;
     }
   });
 
+  if (!water) {
+    return <FallbackOcean position={position} waterColor={waterColor} size={size} />;
+  }
+
   return <primitive ref={waterRef} object={water} position={position} />;
+}
+
+// Main component with Suspense wrapper
+function ShaderOcean(props) {
+  const [hasError, setHasError] = useState(false);
+
+  // Reset error state when component remounts
+  useEffect(() => {
+    setHasError(false);
+  }, []);
+
+  if (hasError) {
+    return <FallbackOcean position={props.position} waterColor={props.waterColor} size={props.size} />;
+  }
+
+  return (
+    <Suspense fallback={<FallbackOcean position={props.position} waterColor={props.waterColor} size={props.size} />}>
+      <ShaderOceanInner {...props} />
+    </Suspense>
+  );
 }
 
 export default ShaderOcean;

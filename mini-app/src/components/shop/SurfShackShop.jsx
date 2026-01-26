@@ -332,14 +332,6 @@ function SurfShackShop({ onBack }) {
             scale={1}
           />
 
-          {/* Coconut drink held by shopkeeper (positioned near extended hand) */}
-          <MeshyModel
-            url="/models/props/coconutDrink.glb"
-            position={[2.9, 1.1, 14]}
-            rotation={[-0.3, 0, 0.3]}
-            scale={0.15}
-          />
-
           {/* Player character - Meshy AI Pepe with animations */}
           <MeshyPepeCharacter
             position={characterPosition}
