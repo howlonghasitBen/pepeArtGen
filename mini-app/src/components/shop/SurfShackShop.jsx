@@ -99,15 +99,6 @@ function SurfShackShop({ onBack }) {
     setAvailableAnimations(anims);
   }, []);
 
-  const handleEmoteSelect = useCallback((animName) => {
-    console.log('[Emote] Playing:', animName);
-    setCurrentEmote(animName);
-  }, []);
-
-  const handleEmoteComplete = useCallback(() => {
-    setCurrentEmote(null);
-  }, []);
-
   const toggleEmoteMenu = useCallback(() => {
     setEmoteMenuOpen(prev => !prev);
   }, []);
@@ -410,13 +401,15 @@ function SurfShackShop({ onBack }) {
       )}
 
       {/* Animation/Emote Menu */}
-      <AnimationMenu
-        animations={availableAnimations}
-        currentAnimation={currentEmote}
-        onSelectAnimation={handleSelectEmote}
-        visible={!selectedCard && !showNameModal}
-        position={isMobile ? 'bottom-right' : 'bottom-right'}
-      />
+      {!selectedCard && !showNameModal && (
+        <AnimationMenu
+          animations={availableAnimations}
+          currentAnimation={currentEmote}
+          onSelectAnimation={handleSelectEmote}
+          isOpen={emoteMenuOpen}
+          onToggle={toggleEmoteMenu}
+        />
+      )}
 
       {/* Card detail modal */}
       {selectedCard && (
