@@ -13,7 +13,7 @@ import NameInputModal from "./NameInputModal";
 import MobileControls from "./MobileControls";
 import MeshyModel, { preloadModel } from "./MeshyModel";
 import CardPlayingField from "./CardPlayingField";
-import AnimationMenu from "./AnimationMenu";
+import ShopkeeperChat from "./ShopkeeperChat";
 import "./SurfShackShop.css";
 
 // Error Boundary to prevent page reloads on WebGL errors
@@ -185,6 +185,13 @@ function SurfShackShop({ onBack }) {
     setEmoteMenuOpen(prev => !prev);
   }, []);
 
+  // Shopkeeper chat state
+  const [showShopkeeperChat, setShowShopkeeperChat] = useState(false);
+
+  const handleShopkeeperClick = useCallback(() => {
+    setShowShopkeeperChat(true);
+  }, []);
+
   // Show name input modal
   if (showNameModal) {
     return <NameInputModal onSubmit={handleNameSubmit} />;
@@ -207,19 +214,39 @@ function SurfShackShop({ onBack }) {
         </p>
       </div>
 
-      {/* Player info */}
+      {/* Player info with emote dropdown */}
       <div className="player-info">
         <span className="player-name">{playerName}</span>
-        <button
-          className="change-name-btn"
-          onClick={() => setShowNameModal(true)}
-          title="Change name"
-        >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-          </svg>
-        </button>
+        <div className="player-actions">
+          <button
+            className="emote-dropdown-btn"
+            onClick={toggleEmoteMenu}
+            title="Emotes (E)"
+          >
+            🎭
+          </button>
+          {emoteMenuOpen && (
+            <div className="emote-dropdown">
+              {availableAnimations
+                .filter(a => !['Walking', 'Running'].includes(a))
+                .map((anim, i) => (
+                  <button
+                    key={anim}
+                    className={`emote-option ${currentEmote === anim ? 'active' : ''}`}
+                    onClick={() => {
+                      handleSelectEmote(anim);
+                      toggleEmoteMenu();
+                    }}
+                  >
+                    {anim}
+                  </button>
+                ))}
+              {availableAnimations.filter(a => !['Walking', 'Running'].includes(a)).length === 0 && (
+                <span className="no-emotes-msg">No emotes available</span>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Back button */}
@@ -346,15 +373,17 @@ function SurfShackShop({ onBack }) {
           {/* Trading card playing field on the wet sand */}
           <CardPlayingField position={[0, 0.05, 22]} rotation={[0, Math.PI / 2, 0]} />
 
-          {/* Shopkeeper Pepe - at the entrance, greeting visitors */}
-          <MeshyPepeCharacter
-            position={[2, 0, 14]}
-            rotation={[0, Math.PI / 2, 0]}
-            playerName="Shopkeeper"
-            isMoving={false}
-            isLocalPlayer={false}
-            scale={1}
-          />
+          {/* Shopkeeper Pepe - clickable AI chat */}
+          <group onClick={handleShopkeeperClick} style={{ cursor: 'pointer' }}>
+            <MeshyPepeCharacter
+              position={[2, 0, 14]}
+              rotation={[0, Math.PI / 2, 0]}
+              playerName="surfGod69 🏄"
+              isMoving={false}
+              isLocalPlayer={false}
+              scale={1}
+            />
+          </group>
 
           {/* Player character - Meshy AI Pepe with animations */}
           <MeshyPepeCharacter
@@ -394,21 +423,17 @@ function SurfShackShop({ onBack }) {
         />
       )}
 
-      {/* Animation/Emote Menu */}
-      {!selectedCard && !showNameModal && (
-        <AnimationMenu
-          animations={availableAnimations}
-          currentAnimation={currentEmote}
-          onSelectAnimation={handleSelectEmote}
-          isOpen={emoteMenuOpen}
-          onToggle={toggleEmoteMenu}
-        />
-      )}
-
       {/* Card detail modal */}
       {selectedCard && (
         <CardDetailModal card={selectedCard} onClose={handleCloseModal} />
       )}
+
+      {/* Shopkeeper AI Chat */}
+      <ShopkeeperChat
+        isOpen={showShopkeeperChat}
+        onClose={() => setShowShopkeeperChat(false)}
+        cards={cards}
+      />
     </div>
   );
 }

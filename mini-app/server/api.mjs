@@ -30,6 +30,7 @@ import mintRoutes from "./mintRoutes.mjs";
 import screenshotRoutes from "./screenshotRoutes.mjs";
 import draftRoutes from "./draftRoutes.mjs";
 import deckRoutes from "./deckRoutes.mjs";
+import chatRoutes from "./chatRoutes.mjs";
 import { createPublicClient, http } from "viem";
 import { base, baseSepolia } from "viem/chains";
 
@@ -74,6 +75,9 @@ app.use("/api/drafts", draftRoutes);
 
 // Mount deck routes
 app.use("/api/decks", deckRoutes);
+
+// Mount chat routes (shopkeeper AI)
+app.use("/api/chat", chatRoutes);
 
 // IPFS metadata proxy endpoint (avoids CORS issues with Pinata gateway)
 app.get("/api/ipfs/metadata", async (req, res) => {
