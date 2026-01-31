@@ -1,16 +1,16 @@
 import express from 'express';
-import { GoogleGenAI } from "@google/genai";
+import Anthropic from '@anthropic-ai/sdk';
 
 const router = express.Router();
 
-// Initialize Gemini
-const genAI = process.env.GOOGLE_AI_API_KEY 
-  ? new GoogleGenAI({ apiKey: process.env.GOOGLE_AI_API_KEY })
+// Initialize Claude
+const anthropic = process.env.ANTHROPIC_API_KEY 
+  ? new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
   : null;
 
 /**
  * POST /api/chat/shopkeeper
- * Chat with the AI shopkeeper (surfGod69)
+ * Chat with the AI shopkeeper (surfGod69) - powered by Claude
  */
 router.post('/shopkeeper', async (req, res) => {
   try {
@@ -21,7 +21,7 @@ router.post('/shopkeeper', async (req, res) => {
     }
 
     // If no AI configured, return a fallback response
-    if (!genAI) {
+    if (!anthropic) {
       const fallbackResponses = [
         "Yo! The kelp network is vibing weird today... can't fully connect 🌊",
         "Waves are choppy rn, try again later dude 🏄",
@@ -33,30 +33,32 @@ router.post('/shopkeeper', async (req, res) => {
       });
     }
 
-    // Build the conversation
+    // Build conversation history for Claude
     const conversationHistory = messages.map(m => ({
-      role: m.role === 'assistant' ? 'model' : 'user',
-      parts: [{ text: m.content }]
+      role: m.role,
+      content: m.content
     }));
 
     // Add the new user message with context
     const fullUserMessage = cardContext 
-      ? `${userMessage}\n\n[Context for shopkeeper: ${cardContext}]`
+      ? `${userMessage}\n\n[Context - cards in shop: ${cardContext}]`
       : userMessage;
 
-    const model = genAI.getGenerativeModel({ 
-      model: "gemini-1.5-flash",
-      systemInstruction: systemPrompt
+    conversationHistory.push({
+      role: 'user',
+      content: fullUserMessage
     });
 
-    const chat = model.startChat({
-      history: conversationHistory,
+    const response = await anthropic.messages.create({
+      model: 'claude-3-5-sonnet-20241022',
+      max_tokens: 300,
+      system: systemPrompt,
+      messages: conversationHistory
     });
 
-    const result = await chat.sendMessage(fullUserMessage);
-    const response = result.response.text();
+    const responseText = response.content[0]?.text || "The waves took my words... try again? 🌊";
 
-    res.json({ response });
+    res.json({ response: responseText });
   } catch (error) {
     console.error('[Chat] Shopkeeper error:', error);
     
