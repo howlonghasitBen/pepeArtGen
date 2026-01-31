@@ -2,10 +2,10 @@
  * MeshyPepeCharacter.jsx
  *
  * Animated Pepe character using Meshy AI generated model.
- * Features Walking and Running animations.
+ * Features all animations from the GLB file with emote support.
  */
 
-import { useRef, useEffect, useMemo } from 'react';
+import { useRef, useEffect, useMemo, useState, useCallback } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useGLTF, Text } from '@react-three/drei';
 import * as THREE from 'three';
@@ -24,6 +24,9 @@ function MeshyPepeCharacter({
   isMoving = false,
   isRunning = false,
   isLocalPlayer = true,
+  emoteAnimation = null, // Custom animation to play (overrides movement)
+  onAnimationsLoaded,    // Callback with available animation names
+  onEmoteComplete,       // Callback when emote animation finishes
 }) {
   // Determine if using refs or static values
   const useRefs = Boolean(positionRef && rotationRef);
@@ -32,6 +35,7 @@ function MeshyPepeCharacter({
   const groupRef = useRef();
   const mixerRef = useRef();
   const actionsRef = useRef({});
+  const [currentEmote, setCurrentEmote] = useState(null);
 
   const { scene, animations } = useGLTF('/models/props/pepeBlueAlohaShirtAnimations.glb');
 
@@ -59,16 +63,31 @@ function MeshyPepeCharacter({
 
     // Create actions for each animation
     const actions = {};
+    const animationNames = [];
     animations.forEach((clip) => {
       actions[clip.name] = mixer.clipAction(clip);
+      animationNames.push(clip.name);
     });
     actionsRef.current = actions;
+
+    // Report available animations
+    if (onAnimationsLoaded) {
+      onAnimationsLoaded(animationNames);
+    }
+
+    // Listen for animation finished events
+    mixer.addEventListener('finished', (e) => {
+      if (currentEmote && onEmoteComplete) {
+        onEmoteComplete();
+      }
+      setCurrentEmote(null);
+    });
 
     return () => {
       mixer.stopAllAction();
       mixer.uncacheRoot(clonedScene);
     };
-  }, [clonedScene, animations]);
+  }, [clonedScene, animations, onAnimationsLoaded]);
 
   // Cleanup cloned materials and geometries on unmount
   useEffect(() => {
@@ -92,17 +111,47 @@ function MeshyPepeCharacter({
     };
   }, [clonedScene]);
 
-  // Handle animation transitions
+  // Handle emote animation
   useEffect(() => {
+    if (emoteAnimation && emoteAnimation !== currentEmote) {
+      const actions = actionsRef.current;
+      if (!actions || !actions[emoteAnimation]) return;
+
+      // Stop all current actions
+      Object.values(actions).forEach(action => {
+        if (action) action.fadeOut(0.2);
+      });
+
+      // Play the emote
+      const emoteAction = actions[emoteAnimation];
+      emoteAction.reset();
+      emoteAction.setEffectiveTimeScale(1);
+      emoteAction.setEffectiveWeight(1);
+      emoteAction.setLoop(THREE.LoopOnce, 1);
+      emoteAction.clampWhenFinished = true;
+      emoteAction.fadeIn(0.2);
+      emoteAction.play();
+      
+      setCurrentEmote(emoteAnimation);
+    }
+  }, [emoteAnimation, currentEmote]);
+
+  // Handle movement animations (when not doing emote)
+  useEffect(() => {
+    if (emoteAnimation || currentEmote) return; // Skip if emoting
+
     const actions = actionsRef.current;
     if (!actions || Object.keys(actions).length === 0) return;
 
     const walkAction = actions['Walking'];
     const runAction = actions['Running'];
+    const idleAction = actions['Idle']; // If exists
 
-    // Stop all actions first
+    // Fade out all actions first
     Object.values(actions).forEach(action => {
-      if (action) action.stop();
+      if (action && action.isRunning()) {
+        action.fadeOut(0.2);
+      }
     });
 
     if (isMoving) {
@@ -111,10 +160,20 @@ function MeshyPepeCharacter({
         activeAction.reset();
         activeAction.setEffectiveTimeScale(1);
         activeAction.setEffectiveWeight(1);
+        activeAction.setLoop(THREE.LoopRepeat);
+        activeAction.fadeIn(0.2);
         activeAction.play();
       }
+    } else if (idleAction) {
+      // Play idle if available and not moving
+      idleAction.reset();
+      idleAction.setEffectiveTimeScale(1);
+      idleAction.setEffectiveWeight(1);
+      idleAction.setLoop(THREE.LoopRepeat);
+      idleAction.fadeIn(0.2);
+      idleAction.play();
     }
-  }, [isMoving, isRunning]);
+  }, [isMoving, isRunning, emoteAnimation, currentEmote]);
 
   // Update position, rotation, and animation mixer
   useFrame((state, delta) => {

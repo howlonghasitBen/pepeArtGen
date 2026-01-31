@@ -13,6 +13,7 @@ import NameInputModal from "./NameInputModal";
 import MobileControls from "./MobileControls";
 import MeshyModel, { preloadModel } from "./MeshyModel";
 import CardPlayingField from "./CardPlayingField";
+import AnimationMenu from "./AnimationMenu";
 import "./SurfShackShop.css";
 
 // Error Boundary to prevent page reloads on WebGL errors
@@ -87,6 +88,30 @@ function SurfShackShop({ onBack }) {
   const characterRotationRef = useRef(Math.PI); // Face the shack
   const [isMoving, setIsMoving] = useState(false);
 
+  // Animation/Emote state
+  const [availableAnimations, setAvailableAnimations] = useState([]);
+  const [currentEmote, setCurrentEmote] = useState(null);
+  const [emoteMenuOpen, setEmoteMenuOpen] = useState(false);
+
+  // Emote menu handlers
+  const handleAnimationsLoaded = useCallback((anims) => {
+    console.log('[Animations] Available:', anims);
+    setAvailableAnimations(anims);
+  }, []);
+
+  const handleEmoteSelect = useCallback((animName) => {
+    console.log('[Emote] Playing:', animName);
+    setCurrentEmote(animName);
+  }, []);
+
+  const handleEmoteComplete = useCallback(() => {
+    setCurrentEmote(null);
+  }, []);
+
+  const toggleEmoteMenu = useCallback(() => {
+    setEmoteMenuOpen(prev => !prev);
+  }, []);
+
   // WebGL context state for handling context loss on mobile
   const [contextLost, setContextLost] = useState(false);
   const [canvasKey, setCanvasKey] = useState(0);
@@ -160,6 +185,19 @@ function SurfShackShop({ onBack }) {
 
   const handleCameraInput = useCallback((input) => {
     setCameraInput(input);
+  }, []);
+
+  // Animation/Emote handlers
+  const handleAnimationsLoaded = useCallback((animations) => {
+    setAvailableAnimations(animations);
+  }, []);
+
+  const handleSelectEmote = useCallback((animationName) => {
+    setCurrentEmote(animationName);
+  }, []);
+
+  const handleEmoteComplete = useCallback(() => {
+    setCurrentEmote(null);
   }, []);
 
   // Show name input modal
@@ -341,6 +379,9 @@ function SurfShackShop({ onBack }) {
             isMoving={isMoving}
             isLocalPlayer={true}
             scale={1}
+            emoteAnimation={currentEmote}
+            onAnimationsLoaded={handleAnimationsLoaded}
+            onEmoteComplete={handleEmoteComplete}
           />
 
           {/* Third person camera controls */}
@@ -367,6 +408,15 @@ function SurfShackShop({ onBack }) {
           visible={!selectedCard}
         />
       )}
+
+      {/* Animation/Emote Menu */}
+      <AnimationMenu
+        animations={availableAnimations}
+        currentAnimation={currentEmote}
+        onSelectAnimation={handleSelectEmote}
+        visible={!selectedCard && !showNameModal}
+        position={isMobile ? 'bottom-right' : 'bottom-right'}
+      />
 
       {/* Card detail modal */}
       {selectedCard && (
