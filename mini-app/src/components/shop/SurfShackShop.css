@@ -71,31 +71,70 @@
   text-shadow: 0 0 10px rgba(0, 255, 136, 0.4);
 }
 
-.change-name-btn {
+.player-actions {
+  position: relative;
+}
+
+.emote-dropdown-btn {
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 6px;
-  padding: 5px;
+  padding: 5px 8px;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  font-size: 16px;
   transition: all 0.2s ease;
 }
 
-.change-name-btn:hover {
+.emote-dropdown-btn:hover {
   background: rgba(0, 255, 136, 0.2);
   border-color: rgba(0, 255, 136, 0.5);
+  transform: scale(1.1);
 }
 
-.change-name-btn svg {
-  width: 16px;
-  height: 16px;
-  color: rgba(255, 255, 255, 0.7);
+.emote-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 8px;
+  background: rgba(20, 30, 50, 0.95);
+  border: 1px solid rgba(0, 255, 136, 0.3);
+  border-radius: 8px;
+  padding: 8px;
+  min-width: 150px;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 200;
+  backdrop-filter: blur(10px);
 }
 
-.change-name-btn:hover svg {
+.emote-option {
+  display: block;
+  width: 100%;
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.8);
+  text-align: left;
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 13px;
+  transition: all 0.15s ease;
+}
+
+.emote-option:hover {
+  background: rgba(0, 255, 136, 0.2);
   color: #00ff88;
+}
+
+.emote-option.active {
+  background: rgba(0, 255, 136, 0.3);
+  color: #00ff88;
+}
+
+.no-emotes-msg {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 12px;
+  padding: 8px;
 }
 
 /* Sample data notice */
