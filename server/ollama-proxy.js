@@ -54,7 +54,7 @@ app.post('/api/generate', async (req, res) => {
     }
     
     // Only allow shopkeeper model for security
-    const allowedModels = ['surfgod-shopkeeper', 'surfgod'];
+    const allowedModels = ['surfgod-shopkeeper', 'surfgod-shopkeeper-v2', 'surfgod'];
     if (!allowedModels.includes(model)) {
       return res.status(403).json({ error: 'Model not allowed' });
     }
@@ -76,6 +76,49 @@ app.post('/api/generate', async (req, res) => {
     console.error('Proxy error:', error.message);
     res.status(500).json({ 
       error: 'Failed to get response from Ollama',
+      details: error.message 
+    });
+  }
+});
+
+// Chat endpoint for shopkeeper (handles conversation history)
+app.post('/api/chat/shopkeeper', async (req, res) => {
+  try {
+    const { messages = [], userMessage, cardContext = '', systemPrompt } = req.body;
+    
+    if (!userMessage) {
+      return res.status(400).json({ error: 'Missing userMessage' });
+    }
+    
+    // Build full prompt with conversation history
+    const conversationHistory = messages
+      .slice(-6) // Keep last 6 messages for context
+      .map(m => `${m.role === 'user' ? 'Player' : 'SurfGod69'}: ${m.content}`)
+      .join('\n');
+    
+    const fullPrompt = `${conversationHistory ? conversationHistory + '\n' : ''}Player: ${userMessage}${cardContext}\n\nSurfGod69:`;
+    
+    const response = await fetch(`${OLLAMA_HOST}/api/generate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        model: 'surfgod-shopkeeper-v2',
+        prompt: fullPrompt,
+        stream: false 
+      })
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Ollama returned ${response.status}`);
+    }
+    
+    const data = await response.json();
+    res.json({ response: data.response });
+    
+  } catch (error) {
+    console.error('Chat error:', error.message);
+    res.status(500).json({ 
+      error: 'Failed to get response',
       details: error.message 
     });
   }
