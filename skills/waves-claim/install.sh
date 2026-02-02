@@ -7,30 +7,43 @@ set -e
 SKILL_DIR="${OPENCLAW_SKILLS:-$HOME/.openclaw/skills}/waves-claim"
 REPO_URL="https://raw.githubusercontent.com/howlonghasitBen/pepeArtGen/main/skills/waves-claim"
 
-echo "🎴 Installing SURF Waves Cards claim skill..."
+echo "🎴 Installing SURF Waves Claim Skill..."
 
-# Create skill directory
+# Create directories
 mkdir -p "$SKILL_DIR/scripts"
 
-# Download skill files
+# Download files with error checking
+download_file() {
+  local url="$1"
+  local dest="$2"
+  local http_code
+  
+  http_code=$(curl -sL -w "%{http_code}" -o "$dest" "$url")
+  
+  if [ "$http_code" != "200" ]; then
+    echo "❌ Failed to download $url (HTTP $http_code)"
+    rm -f "$dest"
+    return 1
+  fi
+}
+
 echo "📥 Downloading skill files..."
-curl -sL "$REPO_URL/SKILL.md" > "$SKILL_DIR/SKILL.md"
-curl -sL "$REPO_URL/scripts/check-claim.sh" > "$SKILL_DIR/scripts/check-claim.sh"
-curl -sL "$REPO_URL/scripts/claim.sh" > "$SKILL_DIR/scripts/claim.sh"
+
+download_file "$REPO_URL/SKILL.md" "$SKILL_DIR/SKILL.md" || exit 1
+download_file "$REPO_URL/scripts/check-claim.sh" "$SKILL_DIR/scripts/check-claim.sh" || exit 1
+download_file "$REPO_URL/scripts/claim.sh" "$SKILL_DIR/scripts/claim.sh" || exit 1
 
 # Make scripts executable
 chmod +x "$SKILL_DIR/scripts/"*.sh
 
 echo ""
-echo "✅ Skill installed to: $SKILL_DIR"
+echo "✅ Installed to: $SKILL_DIR"
 echo ""
-echo "📋 Usage:"
-echo "  Check eligibility: $SKILL_DIR/scripts/check-claim.sh"
-echo "  Claim a card:      $SKILL_DIR/scripts/claim.sh"
+echo "📋 Prerequisites:"
+echo "   - Foundry cast: curl -L https://foundry.paradigm.xyz | bash"
+echo "   - jq: sudo apt install jq (or brew install jq)"
+echo "   - ETH on Base for gas (~0.0001 ETH)"
 echo ""
-echo "🔧 Requirements:"
-echo "  - Foundry (cast CLI)"
-echo "  - PRIVATE_KEY env var or ~/.config/clawtasks/credentials.json"
-echo "  - Base ETH for gas"
-echo ""
-echo "🌊 Happy claiming!"
+echo "🚀 Usage:"
+echo "   Check status:  $SKILL_DIR/scripts/check-claim.sh <wallet>"
+echo "   Claim card:    PRIVATE_KEY=0x... $SKILL_DIR/scripts/claim.sh"

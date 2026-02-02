@@ -1,9 +1,26 @@
+---
+name: waves-claim
+description: Claim free SURF Waves Card NFTs on Base. One random card every 2 hours.
+homepage: https://opensea.io/collection/surf-waves-cards
+metadata:
+  openclaw:
+    emoji: "🎴"
+    category: "web3"
+    requires:
+      bins: ["cast", "jq"]
+---
+
 # Waves Claim Skill
 
 Claim free SURF Waves Card NFTs on Base blockchain.
 
-## One-Click Install
+## Install
 
+```bash
+clawhub install waves-claim
+```
+
+Or one-click:
 ```bash
 curl -sL https://raw.githubusercontent.com/howlonghasitBen/pepeArtGen/main/skills/waves-claim/install.sh | bash
 ```
@@ -16,7 +33,7 @@ The WavesTCG ClaimVault distributes free trading card NFTs. Any wallet can claim
 
 | Property | Value |
 |----------|-------|
-| **ClaimVault** | `TBD - Update after deployment` |
+| **ClaimVault** | `0xAF1906B749339adaE38A1cba9740fffA168897c2` |
 | **NFT Contract** | `0xcc2d6ba8564541e6e51fe5522e26d4f4bbdd458b` |
 | **Network** | Base (Chain ID: 8453) |
 | **Cooldown** | 2 hours |
