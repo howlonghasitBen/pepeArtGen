@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { decodeEventLog } from 'viem';
+import ClaimSuccessModal from './ClaimSuccessModal';
 import './ClaimBanner.css';
 
 // ClaimVault contract on Base
@@ -27,6 +29,8 @@ export default function ClaimBanner() {
   const { address, isConnected } = useAccount();
   const [countdown, setCountdown] = useState(0);
   const [showBotInfo, setShowBotInfo] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [claimedTokenId, setClaimedTokenId] = useState(null);
 
   const isVaultActive = CLAIM_VAULT_ADDRESS !== '0x0000000000000000000000000000000000000000';
 
@@ -56,7 +60,29 @@ export default function ClaimBanner() {
 
   // Write claim
   const { writeContract, data: txHash, isPending } = useWriteContract();
-  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash: txHash });
+  const { isLoading: isConfirming, isSuccess, data: receipt } = useWaitForTransactionReceipt({ hash: txHash });
+
+  // Parse claimed token ID from receipt
+  useEffect(() => {
+    if (isSuccess && receipt) {
+      // Find the Claimed event - topic0 is keccak256("Claimed(address,uint256)")
+      const claimedEvent = receipt.logs.find(log => 
+        log.address.toLowerCase() === CLAIM_VAULT_ADDRESS.toLowerCase() &&
+        log.topics.length >= 2
+      );
+      
+      if (claimedEvent && claimedEvent.topics[2]) {
+        // Token ID is indexed (topics[2])
+        const tokenId = parseInt(claimedEvent.topics[2], 16);
+        setClaimedTokenId(tokenId);
+        setShowSuccessModal(true);
+      }
+      
+      refetchCanClaim();
+      refetchTime();
+      refetchAvailable();
+    }
+  }, [isSuccess, receipt]);
 
   // Countdown
   useEffect(() => {
@@ -75,15 +101,6 @@ export default function ClaimBanner() {
       return () => clearInterval(interval);
     }
   }, [timeUntil]);
-
-  // Refetch on success
-  useEffect(() => {
-    if (isSuccess) {
-      refetchCanClaim();
-      refetchTime();
-      refetchAvailable();
-    }
-  }, [isSuccess]);
 
   const handleClaim = () => {
     writeContract({
@@ -151,6 +168,14 @@ export default function ClaimBanner() {
           </code>
           <p className="bot-hint">Or add <code>waves-claim</code> skill to your agent's skills directory</p>
         </div>
+      )}
+
+      {showSuccessModal && claimedTokenId !== null && (
+        <ClaimSuccessModal
+          tokenId={claimedTokenId}
+          txHash={txHash}
+          onClose={() => setShowSuccessModal(false)}
+        />
       )}
     </div>
   );

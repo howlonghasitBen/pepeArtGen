@@ -1,0 +1,191 @@
+.claim-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.claim-modal-content {
+  background: linear-gradient(145deg, #1a1a2e 0%, #16213e 100%);
+  border-radius: 20px;
+  padding: 24px;
+  max-width: 400px;
+  width: 100%;
+  position: relative;
+  border: 1px solid rgba(79, 172, 254, 0.3);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.claim-modal-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: #fff;
+  font-size: 24px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.claim-modal-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.claim-success-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.claim-success-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+}
+
+.claim-success-header h2 {
+  margin: 0;
+  color: #fff;
+  font-size: 1.5rem;
+}
+
+.claim-token-badge {
+  display: inline-block;
+  background: rgba(79, 172, 254, 0.2);
+  color: #7dd3fc;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  margin-top: 8px;
+}
+
+.claim-card-container {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 16px;
+  min-height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.claim-card-image {
+  max-width: 100%;
+  max-height: 350px;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.claim-card-loading,
+.claim-card-placeholder {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.claim-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(79, 172, 254, 0.2);
+  border-top-color: #4facfe;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 12px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.claim-card-info {
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.claim-card-info h3 {
+  margin: 0 0 8px;
+  color: #fff;
+  font-size: 1.1rem;
+}
+
+.claim-card-desc {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.claim-opensea-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #2081E2 0%, #1868b7 100%);
+  color: #fff;
+  text-decoration: none;
+  padding: 14px 24px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 1rem;
+  transition: all 0.2s;
+  margin-bottom: 12px;
+}
+
+.claim-opensea-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(32, 129, 226, 0.4);
+}
+
+.claim-modal-links {
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.claim-modal-links a {
+  color: #7dd3fc;
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+.claim-modal-links a:hover {
+  text-decoration: underline;
+}
+
+.claim-done-btn {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+  padding: 12px;
+  border-radius: 10px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.claim-done-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+@media (max-width: 480px) {
+  .claim-modal-content {
+    padding: 20px 16px;
+  }
+
+  .claim-card-container {
+    min-height: 250px;
+  }
+
+  .claim-card-image {
+    max-height: 280px;
+  }
+}
