@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import './ClaimBanner.css';
 
-// ClaimVault contract - UPDATE AFTER DEPLOYMENT
-const CLAIM_VAULT_ADDRESS = import.meta.env.VITE_CLAIM_VAULT_ADDRESS || '0x0000000000000000000000000000000000000000';
+// ClaimVault contract on Base
+const CLAIM_VAULT_ADDRESS = import.meta.env.VITE_CLAIM_VAULT_ADDRESS || '0xAF1906B749339adaE38A1cba9740fffA168897c2';
 const NFT_CONTRACT = '0xcc2d6ba8564541e6e51fe5522e26d4f4bbdd458b';
 const SKILL_INSTALL_URL = 'https://raw.githubusercontent.com/howlonghasitBen/pepeArtGen/main/skills/waves-claim/install.sh';
 
