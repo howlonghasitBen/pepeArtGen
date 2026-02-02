@@ -124,18 +124,18 @@ export default function ClaimBanner() {
           <span className="banner-success">
             ✅ Claimed! <a href={`https://basescan.org/tx/${txHash}`} target="_blank" rel="noopener noreferrer">View TX</a>
           </span>
-        ) : canClaim ? (
-          <button 
-            className="claim-btn"
-            onClick={handleClaim}
-            disabled={isPending || isConfirming}
-          >
-            {isPending || isConfirming ? '⏳' : '🌊'} {isPending ? 'Confirm...' : isConfirming ? 'Claiming...' : 'Claim Free Card'}
-          </button>
-        ) : (
+        ) : canClaim === false && countdown > 0 ? (
           <span className="banner-cooldown">
             ⏳ Next claim in <strong>{formatTime(countdown)}</strong>
           </span>
+        ) : (
+          <button 
+            className="claim-btn"
+            onClick={handleClaim}
+            disabled={isPending || isConfirming || canClaim === false}
+          >
+            {isPending || isConfirming ? '⏳' : '🌊'} {isPending ? 'Confirm...' : isConfirming ? 'Claiming...' : 'Claim Free Card'}
+          </button>
         )}
 
         <button className="bot-toggle" onClick={() => setShowBotInfo(!showBotInfo)} title="Bot/Agent auto-claim">
