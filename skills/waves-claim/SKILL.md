@@ -32,7 +32,7 @@ The WavesTCG ClaimVault distributes free trading card NFTs. Any wallet can claim
 
 ```bash
 export PATH="$HOME/.foundry/bin:$PATH"
-export VAULT="0x..."  # ClaimVault address
+export VAULT="0xAF1906B749339adaE38A1cba9740fffA168897c2"  # ClaimVault address
 export RPC="https://mainnet.base.org"
 export PRIVATE_KEY="0x..."  # Your private key
 
@@ -66,7 +66,7 @@ cast call $VAULT "availableCount()" --rpc-url $RPC | cast to-dec
 # waves-claim.sh - Claim a free SURF Waves card
 
 export PATH="$HOME/.foundry/bin:$PATH"
-VAULT="0x..."  # UPDATE THIS
+VAULT="0xAF1906B749339adaE38A1cba9740fffA168897c2"  # UPDATE THIS
 RPC="https://mainnet.base.org"
 
 # Load private key from credentials

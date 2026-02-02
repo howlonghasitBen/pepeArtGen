@@ -1,0 +1,11 @@
+{
+  "contract": "ClaimVault",
+  "address": "0xAF1906B749339adaE38A1cba9740fffA168897c2",
+  "nftContract": "0xcc2d6ba8564541e6e51fe5522e26d4f4bbdd458b",
+  "network": "base",
+  "chainId": 8453,
+  "deployedAt": "2026-02-02T09:20:20-10:00",
+  "cooldownSeconds": 7200,
+  "deployer": "0x93709D98F406904845b44e5d8D47C9A7E6A250Ea",
+  "txHash": "0xc11b8607f9f04f2a4463812f2a221d0164013a74571cc65b658044e36b5ff660"
+}
