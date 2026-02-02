@@ -21,6 +21,8 @@ import InfoModal from "./components/InfoModal";
 import CardEditorScreen from "./components/editor/CardEditorScreen";
 import DeckBuilder from "./components/deck/DeckBuilder";
 import SurfShackShop from "./components/shop/SurfShackShop";
+import ClaimScreen from "./components/claim/ClaimScreen";
+import ClaimBanner from "./components/ClaimBanner";
 import "./App.css";
 
 // Configuration
@@ -241,6 +243,11 @@ function AppContent() {
     setExpandedMenu(null);
   };
 
+  const handleOpenClaim = () => {
+    setScreen("claim");
+    setExpandedMenu(null);
+  };
+
   const handleEditorSave = (card) => {
     // Card saved, return to generator
     setCardToEdit(null);
@@ -276,6 +283,9 @@ function AppContent() {
           <p className="hero-subtitle">AI-Powered Trading Cards on Base</p>
         </div>
       </header>
+
+      {/* Free Claim Banner - inline between hero and main */}
+      <ClaimBanner />
 
       {/* Main Content */}
       <main className="main-content">
@@ -314,6 +324,13 @@ function AppContent() {
         <SurfShackShop onBack={handleCloseFullscreen} />
       )}
 
+      {/* Free Claim Screen */}
+      {screen === "claim" && (
+        <div className="fullscreen-overlay">
+          <ClaimScreen onBack={handleCloseFullscreen} />
+        </div>
+      )}
+
       {/* Collapsible Menus */}
       <div className={`collapsible-menus ${expandedMenu ? 'has-expanded' : ''}`}>
         {/* Editor Menu */}
@@ -350,11 +367,28 @@ function AppContent() {
       </div>
 
       {/* Bottom Bar */}
-      <div className={`bottom-bar ${screen === 'editor' || screen === 'deckbuilder' || screen === 'shop' ? 'hidden' : ''}`}>
+      <div className={`bottom-bar ${screen === 'editor' || screen === 'deckbuilder' || screen === 'shop' || screen === 'claim' ? 'hidden' : ''}`}>
         <div className="wallet-container">
           <WalletButtonWrapper />
         </div>
         <div className="bottom-bar-actions">
+          <button
+            className="nav-btn claim-btn"
+            onClick={handleOpenClaim}
+            title="Free Card Claim"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-6" />
+              <polyline points="12 15 12 3" />
+              <polyline points="8 7 12 3 16 7" />
+              <rect x="2" y="12" width="20" height="2" rx="1" />
+            </svg>
+          </button>
           <button
             className="nav-btn shop-btn"
             onClick={handleOpenShop}

@@ -333,6 +333,27 @@
   color: var(--text-primary);
 }
 
+/* Claim Button - Make it pop! */
+.nav-btn.claim-btn {
+  background: linear-gradient(180deg, #00ff88 0%, #00d9ff 100%);
+  border-color: #4dffa8 #008866 #008866 #4dffa8;
+  animation: claimPulse 2s ease-in-out infinite;
+}
+
+.nav-btn.claim-btn:hover {
+  background: linear-gradient(180deg, #00d9ff 0%, #00ff88 100%);
+  animation: none;
+}
+
+.nav-btn.claim-btn svg {
+  color: #000;
+}
+
+@keyframes claimPulse {
+  0%, 100% { box-shadow: 0 0 5px rgba(0, 255, 136, 0.5); }
+  50% { box-shadow: 0 0 15px rgba(0, 255, 136, 0.8); }
+}
+
 /* OpenSea Button */
 .opensea-btn {
   width: 40px;
